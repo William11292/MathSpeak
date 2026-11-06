@@ -2,7 +2,7 @@
 <title>Speak Math</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@1,6..72,500&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <script>
   window.MathJax = {
     tex: { packages: { '[+]': ['ams', 'html'] } },
@@ -13,371 +13,390 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
 <style>
-/* Layout: one working column. Input card, then a results band (Image across the top, LaTeX and Clean text side by side), the layer path, the log, and how it works. Faint graph-paper ground. */
+/* Layout: MathVoice-style shell. Retractable left sidebar (Math Workspace, MathSpeak Help, Export) + top bar. The workspace is split: input and edit chat on the left; Image, LaTeX and clean text stacked on the right, with the layer path pinned along the bottom. Grayscale wireframe; layer colors kept for highlighting. */
 :root {
-  --bg: #f3f5f8; --grid: #e3e8ef; --surface: #ffffff; --ink: #141a26; --muted: #5a6475; --line: #d4dae4;
-  --accent: #1d47c4; --accent-ink: #ffffff; --accent-soft: #e5ecfc; --rec: #c4321d; --ok: #1f7a4a;
+  --bg: #efefec; --surface: #ffffff; --surface-2: #f6f6f3; --sunk: #e6e6e2;
+  --ink: #151515; --muted: #55554f; --ink-3: #8b8b85; --line: #d2d2cd; --line-strong: #151515;
+  --accent: #151515; --accent-ink: #ffffff; --accent-soft: #e6e6e2; --rec: #c4321d; --ok: #1f7a4a;
   --l1: rgba(29,158,117,.22); --s1: #0f6e56;
   --l2: rgba(127,119,221,.26); --s2: #534ab7;
   --l3: rgba(216,90,48,.24); --s3: #993c1d;
   --l4: rgba(212,83,126,.24); --s4: #993556;
   --l5: rgba(186,117,23,.26); --s5: #854f0b;
-  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
-  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow: 3px 3px 0 var(--line-strong);
+  --side-w: 232px; --top-h: 64px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #10141c; --grid: #18202c; --surface: #171d28; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2a3344;
-  --accent: #7fa2ff; --accent-ink: #0c1222; --accent-soft: #1d2a4a; --rec: #ff7a63; --ok: #5fd09a;
+  --bg: #121212; --surface: #1b1b1a; --surface-2: #222221; --sunk: #0e0e0e;
+  --ink: #efefec; --muted: #a9a9a3; --ink-3: #77776f; --line: #3a3a37; --line-strong: #efefec;
+  --accent: #efefec; --accent-ink: #151515; --accent-soft: #2a2a28; --rec: #ff7a63; --ok: #5fd09a;
   --l1: rgba(93,202,165,.26); --s1: #5dcaa5; --l2: rgba(175,169,236,.28); --s2: #afa9ec; --l3: rgba(240,153,123,.26); --s3: #f0997b;
   --l4: rgba(237,147,177,.26); --s4: #ed93b1; --l5: rgba(239,159,39,.26); --s5: #ef9f27;
   color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #10141c; --grid: #18202c; --surface: #171d28; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2a3344;
-  --accent: #7fa2ff; --accent-ink: #0c1222; --accent-soft: #1d2a4a; --rec: #ff7a63; --ok: #5fd09a;
+  --bg: #121212; --surface: #1b1b1a; --surface-2: #222221; --sunk: #0e0e0e;
+  --ink: #efefec; --muted: #a9a9a3; --ink-3: #77776f; --line: #3a3a37; --line-strong: #efefec;
+  --accent: #efefec; --accent-ink: #151515; --accent-soft: #2a2a28; --rec: #ff7a63; --ok: #5fd09a;
   --l1: rgba(93,202,165,.26); --s1: #5dcaa5; --l2: rgba(175,169,236,.28); --s2: #afa9ec; --l3: rgba(240,153,123,.26); --s3: #f0997b;
   --l4: rgba(237,147,177,.26); --s4: #ed93b1; --l5: rgba(239,159,39,.26); --s5: #ef9f27;
   color-scheme: dark }
 
 * { box-sizing: border-box; }
-body {
-  background-color: var(--bg);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-  color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 32px 64px;
-}
-.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 24px; }
-header h1 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: clamp(2.4rem, 6vw, 3.4rem); line-height: 1; margin: 0 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
-header p { margin: 0; color: var(--muted); max-width: 62ch; }
-h2 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.7rem; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+h1, h2, h3, p { margin: 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ic { flex: none; display: block; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.eyebrow, .label { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.hint { font-size: 12.5px; color: var(--muted); }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 12px; min-width: 0; align-content: start; }
-.label { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.hint { font-size: 0.85rem; color: var(--muted); }
-.apikey { margin-top: 10px; font-size: 0.9rem; }
-.apikey summary { cursor: pointer; color: var(--muted); }
-.apikey .row { margin-top: 8px; }
-.apikey input { flex: 1 1 220px; min-width: 0; padding: 6px 8px; font: inherit; }
-textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; resize: vertical; }
-textarea#spoken { min-height: 92px; font-size: 1.15rem; }
-textarea#latex { font-family: var(--font-mono); font-size: 0.92rem; min-height: 150px; }
-textarea:focus-visible, button:focus-visible, select:focus-visible, [tabindex]:focus-visible, input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* ---------- Shell ---------- */
+.app { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+.side { background: var(--surface); border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+body.side-off { --side-w: 0px; }
+body.side-off .side { display: none; }
+.brand { height: var(--top-h); display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); flex: none; }
+.logo { width: 30px; height: 30px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+.brand b { font-size: 17px; letter-spacing: -.01em; }
+.side-sec { padding: 22px 10px 0; }
+.side-sec .eyebrow { padding: 0 10px 10px; }
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav button { display: flex; align-items: center; gap: 12px; width: 100%; height: 42px; padding: 0 12px; border: 1.5px solid transparent; background: none; text-align: left; font-weight: 600; font-size: 14px; border-radius: 0; color: var(--ink); cursor: pointer; }
+.nav button:hover { background: var(--surface-2); border-color: transparent; }
+.nav button[aria-current="page"] { border-color: var(--ink); box-shadow: var(--shadow); background: var(--surface); }
+.badge { margin-left: auto; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--sunk); display: grid; place-items: center; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.side-foot { margin-top: auto; border-top: 1px solid var(--line); padding: 16px 18px; display: grid; gap: 2px; }
+.side-foot b { font-size: 12.5px; }
+.side-foot span { font-size: 11.5px; color: var(--muted); }
 
-.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-button { font: inherit; font-weight: 700; font-size: 0.92rem; border-radius: 4px; padding: 9px 15px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-button:hover { border-color: var(--accent); }
+.main { min-width: 0; display: flex; flex-direction: column; }
+.top { height: var(--top-h); background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 20px; position: sticky; top: 0; z-index: 5; }
+.top h1 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+.top h1:focus { outline: none; }
+.top .status { margin-left: auto; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ib { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--surface); cursor: pointer; border-radius: 2px; padding: 0; color: var(--ink); flex: none; }
+.ib:hover { border-color: var(--ink); }
+.view { padding: 16px 20px 24px; min-width: 0; }
+.page { min-width: 0; }
+
+/* ---------- Controls ---------- */
+textarea { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 2px; padding: 10px 12px; resize: vertical; }
+textarea:hover { border-color: var(--ink-3); }
+textarea#spoken { min-height: 76px; font-size: 1.05rem; }
+textarea#latex { font-family: var(--font-mono); font-size: 0.88rem; min-height: 110px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: inherit; font-weight: 650; font-size: 13px; border-radius: 2px; padding: 8px 13px; cursor: pointer; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); }
+button:hover:not(:disabled) { background: var(--surface-2); }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary:hover:not(:disabled) { background: var(--accent); opacity: .88; }
+button.small { font-size: 12px; padding: 5px 10px; }
+button.ghost { border-color: transparent; background: transparent; }
 button.mic { display: inline-flex; gap: 8px; align-items: center; }
 button.mic .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 button.mic[aria-pressed="true"] { border-color: var(--rec); color: var(--rec); }
 button.mic[aria-pressed="true"] .dot { background: var(--rec); animation: pulse 1s infinite; }
-button:disabled { opacity: 0.5; cursor: default; }
+button:disabled { opacity: 0.35; cursor: not-allowed; border-style: dashed; }
 @keyframes pulse { 50% { opacity: 0.3; } }
-select { font: inherit; font-size: 0.9rem; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
-.status { font-size: 0.9rem; color: var(--muted); min-height: 1.4em; }
+select { font: inherit; font-size: 13px; padding: 7px 9px; border-radius: 2px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.status { font-size: 12.5px; color: var(--muted); min-height: 1.4em; }
 .status.err { color: var(--rec); } .status.ok { color: var(--ok); }
 .examples { display: flex; flex-wrap: wrap; gap: 6px; }
-.examples button { font-weight: 400; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+.examples button, .chips button { font-weight: 500; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--sunk); border-color: transparent; color: var(--ink); }
+.apikey { font-size: 13px; }
+.apikey summary { cursor: pointer; color: var(--muted); }
+.apikey .row { margin-top: 8px; }
+.apikey input { flex: 1 1 200px; min-width: 0; padding: 6px 8px; font: inherit; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); }
+kbd { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; background: var(--surface-2); }
 
-.results { display: grid; gap: 14px; }
-.res-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem; user-select: none; }
-.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.switch .track { width: 44px; height: 24px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; flex: none; }
-.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
-.switch input:checked + .track { background: var(--accent); }
-.switch input:checked + .track::after { transform: translateX(20px); }
-.res-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
-.res-grid .wide { grid-column: 1 / -1; }
-@media (max-width: 760px) { .res-grid { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Math Workspace: split screen ---------- */
+.pnl { background: var(--surface); border: 1px solid var(--line); min-width: 0; min-height: 0; }
+.pnl-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.pnl-h h2 { font-size: 14px; font-weight: 600; }
+.ws-grid { display: grid; grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr); gap: 16px;
+  height: calc(100vh - var(--top-h) - 40px); height: calc(100dvh - var(--top-h) - 40px); min-height: 520px; }
+.ws-left { display: grid; grid-template-rows: auto auto; align-content: start; gap: 16px; min-height: 0; min-width: 0; }
+.in-body { padding: 14px 16px; display: grid; gap: 10px; }
+.chat-pnl { display: grid; }
+.chat-pnl .composer { border-top: 0; }
 
-.stage { min-height: 170px; display: grid; place-items: center; padding: 24px 12px; background: var(--bg); border: 1px dashed var(--line); border-radius: 4px; overflow-x: auto; color: var(--ink); }
-.stage mjx-container { font-size: 170% !important; margin: 0 !important; }
-.stage .placeholder { color: var(--muted); font-style: italic; }
-mjx-container[jax="SVG"] { position: relative; }
-mjx-container[jax="SVG"][display="true"] { display: block; text-align: center; }
-mjx-assistive-mml { position: absolute !important; top: 0; left: 0; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(1px, 1px, 1px, 1px) !important; padding: 1px 0 0 0 !important; border: 0 !important; display: block !important; }
-
-.view { border-radius: 4px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); min-height: 150px; overflow-wrap: anywhere; min-width: 0; }
-.view.tex { font-family: var(--font-mono); font-size: 0.92rem; line-height: 2.1; }
-.view.clean { font-size: 1.1rem; line-height: 2; }
-.view .nd { border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 2px 0; }
-.explore .view .nd { cursor: pointer; }
-.view .nd.hl { background: var(--hc); }
-.view .nd.sel { outline: 2px solid var(--hs); outline-offset: 1px; }
-.explore .stage svg { cursor: pointer; }
-
-.layers { gap: 10px; }
-.chain { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.chain button { width: 100%; text-align: left; display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; align-items: start; font-weight: 400; padding: 8px 10px; border-color: transparent; background: transparent; }
-.chain button:hover { border-color: var(--line); }
-.chain button.cur { background: var(--bg); border-color: var(--line); }
-.chain .sw { width: 16px; height: 16px; border-radius: 3px; margin-top: 3px; }
-.chain .ttl { font-weight: 700; font-size: 0.92rem; }
-.chain code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; display: block; }
-.chain .say { font-size: 0.9rem; display: block; }
-kbd { font-family: var(--font-mono); font-size: 0.8rem; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; background: var(--bg); }
-
-.log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 14px 0; border-top: 1px solid var(--line); }
-.entry:first-child { border-top: 0; }
-.entry .eq { overflow-x: auto; min-width: 0; }
-.entry .eq mjx-container { margin: 0 !important; }
-.entry .meta { font-size: 0.82rem; color: var(--muted); }
-.entry code { font-family: var(--font-mono); font-size: 0.82rem; overflow-wrap: anywhere; color: var(--ink); }
-.entry .said { font-size: 0.9rem; }
-.entry .acts { display: flex; gap: 6px; align-items: start; }
-.entry .acts button { font-size: 0.8rem; padding: 5px 10px; font-weight: 400; }
-.tag { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; }
-.empty { color: var(--muted); padding: 10px 0; margin: 0; }
-
-.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
-.how div { padding: 14px 16px; border-left: 1px solid var(--line); min-width: 0; }
-.how div:first-child { border-left: 0; }
-.how b { display: block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
-.how span { font-size: 0.9rem; color: var(--muted); }
-@media (max-width: 720px) { .how { grid-template-columns: repeat(2, minmax(0, 1fr)); } .how div:nth-child(3) { border-left: 0; } .how div:nth-child(n+3) { border-top: 1px solid var(--line); } }
-footer { font-size: 0.85rem; color: var(--muted); }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) { .switch .track, .switch .track::after { transition: none; } button.mic[aria-pressed="true"] .dot { animation: none; } }
-
-/* ---------- Navigate & edit workspace: chat history on the left, the three equation views on the right ---------- */
-.res-tools { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-body.ws-open { overflow: hidden; }
-.ws {
-  position: fixed; inset: 0; z-index: 30; display: grid; grid-template-rows: auto minmax(0, 1fr);
-  background-color: var(--bg);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.ws-top {
-  display: flex; align-items: center; gap: 14px; background: var(--surface); border-bottom: 1px solid var(--line);
-  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
-}
-.ws-top h2 { font-size: 1.45rem; white-space: nowrap; }
-.ws-top .eqmini { margin-left: auto; min-width: 0; max-width: 55%; overflow-x: auto; color: var(--muted); }
-.ws-top .eqmini mjx-container { margin: 0 !important; }
-.ws-body {
-  display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr); gap: 16px; min-height: 0;
-  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
-}
-
-.ws-chat { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-height: 0; min-width: 0; }
-.ws-chat-head { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-button.small { font-weight: 400; font-size: 0.8rem; padding: 5px 10px; }
-.msgs { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.msg { max-width: 92%; display: grid; gap: 6px; min-width: 0; }
-.msg .who { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.msg .bub { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); font-size: 0.95rem; overflow-wrap: anywhere; min-width: 0; display: grid; gap: 8px; }
+.msgs { overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.msg { max-width: 92%; display: grid; gap: 5px; min-width: 0; }
+.msg .who { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.msg .bub { padding: 9px 12px; border: 1px solid var(--line); background: var(--surface-2); font-size: 0.92rem; overflow-wrap: anywhere; min-width: 0; display: grid; gap: 6px; }
 .msg.user { align-self: flex-end; }
 .msg.user .who { justify-content: flex-end; }
-.msg.user .bub { background: var(--accent-soft); border-color: transparent; }
+.msg.user .bub { background: var(--sunk); border-color: transparent; }
 .msg.sys { max-width: 100%; align-self: stretch; }
 .msg.sys .bub { background: transparent; border-style: dashed; }
 .msg .eqv { overflow-x: auto; padding: 2px 0; }
 .msg .eqv mjx-container { margin: 0 !important; }
-.msg code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
-.msg .said { font-size: 0.9rem; color: var(--muted); }
+.msg code { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.msg .said { font-size: 0.88rem; color: var(--muted); }
 .scope-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.04em; text-transform: none; padding: 1px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex: none; }
 .plan { display: grid; gap: 4px; border-top: 1px dashed var(--line); padding-top: 8px; }
-.pending { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.pending { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips button { font-weight: 400; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
-
-.composer { border-top: 1px solid var(--line); padding: 12px 16px 16px; display: grid; gap: 10px; }
+.composer { border-top: 1px solid var(--line); padding: 12px 16px 14px; display: grid; gap: 8px; background: var(--surface-2); }
 .scope-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.scope-btn { font-weight: 400; display: inline-flex; gap: 8px; align-items: center; padding: 4px 10px; font-size: 0.85rem; border-radius: 999px; }
-.scope-btn .x { color: var(--muted); }
-textarea#wsInput { min-height: 64px; font-size: 1rem; }
+.scope-btn { font-weight: 500; display: inline-flex; gap: 8px; align-items: center; padding: 3px 10px; font-size: 12.5px; border-radius: 999px; border-width: 1px; }
+textarea#wsInput { min-height: 52px; font-size: 0.95rem; }
 
-.ws-eq { overflow-y: auto; display: grid; gap: 14px; align-content: start; min-width: 0; min-height: 0; padding-bottom: 4px; }
-.ws-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
-.ws .stage { min-height: 150px; }
-.ws .view .nd, .ws .stage svg { cursor: pointer; }
+.ws-right { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; min-width: 0; }
+.outs { overflow-y: auto; display: flex; flex-direction: column; min-height: 0; border-bottom: 0; }
+.out { padding: 12px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.out:last-child { border-bottom: 0; }
+.out-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stage { min-height: 150px; display: grid; place-items: center; padding: 18px 12px; background: var(--surface-2); border: 1px dashed var(--line); overflow-x: auto; color: var(--ink); }
+.stage mjx-container { font-size: 160% !important; margin: 0 !important; }
+.stage svg { cursor: pointer; }
+.stage .placeholder { color: var(--muted); font-style: italic; }
+mjx-container[jax="SVG"] { position: relative; }
+mjx-container[jax="SVG"][display="true"] { display: block; text-align: center; }
+mjx-assistive-mml { position: absolute !important; top: 0; left: 0; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(1px, 1px, 1px, 1px) !important; padding: 1px 0 0 0 !important; border: 0 !important; display: block !important; }
+.vw { padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); overflow-wrap: anywhere; min-width: 0; max-height: 9.5em; overflow-y: auto; }
+.vw.tex { font-family: var(--font-mono); font-size: 0.88rem; line-height: 2.1; }
+.vw.clean { font-size: 1.05rem; line-height: 2; }
+.vw .nd { border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 2px 0; cursor: pointer; }
+.vw .nd.hl { background: var(--hc); }
+.vw .nd.sel { outline: 2px solid var(--hs); outline-offset: 1px; }
+
+/* Layer path: pinned along the bottom of the right side */
+.pathbar { border-top: 1.5px solid var(--line-strong); background: var(--surface-2); padding: 12px 16px 14px; display: grid; gap: 10px; }
 .path { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 0; padding: 0; list-style: none; }
 .path li { display: flex; align-items: center; gap: 4px; }
 .path li + li::before { content: "›"; color: var(--muted); padding: 0 2px; }
-.path button { font-weight: 400; font-size: 0.85rem; padding: 4px 10px; display: inline-flex; gap: 6px; align-items: center; }
-.path button[aria-current="true"] { font-weight: 700; background: var(--bg); border-color: var(--ink); }
-.selbox { display: grid; gap: 4px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
-.selbox .ttl { font-weight: 700; display: flex; gap: 8px; align-items: center; }
-.selbox code { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.path button { font-weight: 500; font-size: 12.5px; padding: 3px 10px; display: inline-flex; gap: 6px; align-items: center; border-width: 1px; border-color: var(--line); }
+.path button[aria-current="true"] { font-weight: 700; border-color: var(--ink); box-shadow: 2px 2px 0 var(--line-strong); }
+.selbox { display: grid; gap: 3px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+.selbox .ttl { font-weight: 700; font-size: 13.5px; display: flex; gap: 8px; align-items: center; }
+.selbox code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
 .selbox .inside { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
-.selbox .inside button { font-weight: 400; font-size: 0.8rem; padding: 3px 9px; display: inline-flex; gap: 6px; align-items: center; }
+.selbox .inside button { font-weight: 500; font-size: 12px; padding: 2px 9px; display: inline-flex; gap: 6px; align-items: center; border-width: 1px; border-color: var(--line); }
 .navpad { display: flex; gap: 6px; flex-wrap: wrap; }
-.navpad button { font-size: 0.85rem; padding: 7px 11px; font-weight: 400; }
-.navpad button.primary { font-weight: 700; margin-left: auto; }
+.navpad button { font-size: 12.5px; padding: 6px 11px; }
+.navpad button.primary { margin-left: auto; }
 
-@media (max-width: 860px) {
-  .ws-body { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
-  .ws-eq { overflow: visible; order: -1; }
-  .ws-chat { min-height: 75vh; }
-  .ws-two { grid-template-columns: minmax(0, 1fr); }
-  .ws-top .eqmini { display: none; }
+/* ---------- Help and Export pages ---------- */
+.page-head { padding: 6px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 18px; display: grid; gap: 4px; max-width: 1100px; }
+.page-head h2 { font-size: 26px; font-weight: 500; letter-spacing: -.02em; }
+.page-head p { color: var(--muted); max-width: 70ch; }
+.stack { display: grid; gap: 16px; max-width: 1100px; }
+.pnl-b { padding: 14px 16px; display: grid; gap: 10px; }
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.how div { padding: 14px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.how div:first-child { border-left: 0; }
+.how b { display: block; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+.how span { font-size: 0.9rem; color: var(--muted); }
+.say-list { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; margin: 0; padding: 0; list-style: none; }
+.say-list li { padding: 10px 16px; border-top: 1px solid var(--line); display: grid; gap: 2px; }
+.say-list li:nth-child(-n+2) { border-top: 0; }
+.say-list li:nth-child(odd) { border-right: 1px solid var(--line); }
+.say-list b { font-size: 13px; }
+.say-list span { font-size: 13px; color: var(--muted); }
+.exp-prev { min-height: 120px; }
+
+.log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 14px 16px; border-top: 1px solid var(--line); }
+.entry:first-child { border-top: 0; }
+.entry .eq { overflow-x: auto; min-width: 0; }
+.entry .eq mjx-container { margin: 0 !important; }
+.entry .meta { font-size: 0.8rem; color: var(--muted); }
+.entry code { font-family: var(--font-mono); font-size: 0.8rem; overflow-wrap: anywhere; color: var(--ink); }
+.entry .said { font-size: 0.9rem; }
+.entry .acts { display: flex; gap: 6px; align-items: start; }
+.tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 1px 6px; border-radius: 2px; background: var(--sunk); color: var(--ink); margin-left: 6px; }
+.empty { color: var(--muted); padding: 14px 16px; margin: 0; }
+footer { font-size: 0.82rem; color: var(--muted); }
+
+@media (max-width: 960px) {
+  .ws-grid { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+  .ws-right { order: -1; grid-template-rows: auto auto; }
+  .outs { overflow: visible; }
+  .how { grid-template-columns: repeat(2, minmax(0, 1fr)); } .how div:nth-child(3) { border-left: 0; } .how div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .say-list { grid-template-columns: minmax(0, 1fr); } .say-list li:nth-child(odd) { border-right: 0; } .say-list li:nth-child(2) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 720px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; inset: 0 auto 0 0; width: 250px; z-index: 20; box-shadow: 4px 0 0 var(--line-strong); }
+  .view { padding: 12px; }
   .navpad button.primary { margin-left: 0; }
 }
+@media (prefers-reduced-motion: reduce) { button.mic[aria-pressed="true"] .dot { animation: none; } }
 </style>
 
-<div class="wrap">
-  <header>
-    <h1>Speak Math</h1>
-    <p>Say or type an equation the way you'd read it out loud. Get the rendered image, the LaTeX, and a clean spoken version, then explore how the layers nest.</p>
-  </header>
+<div class="app">
+  <aside class="side" id="sidebar" aria-label="Speak Math">
+    <div class="brand"><span class="logo" aria-hidden="true">SM</span><b>Speak Math</b></div>
+    <div class="side-sec">
+      <p class="eyebrow">Workspace</p>
+      <nav class="nav" aria-label="Sections">
+        <button type="button" data-page="workspace" aria-current="page"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>Math Workspace</button>
+        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Help</button>
+        <button type="button" data-page="export"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>Export<span class="badge" id="logCount" aria-label="0 saved equations">0</span></button>
+      </nav>
+    </div>
+    <div class="side-foot">
+      <b>Move by keyboard</b>
+      <span>Focus a view, then <kbd>↑</kbd> out, <kbd>↓</kbd> in, <kbd>←</kbd> <kbd>→</kbd> neighbors.</span>
+    </div>
+  </aside>
 
-  <section class="card" aria-labelledby="in-label">
-    <label class="label" id="in-label" for="spoken">Input</label>
-    <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
-    <div class="examples" aria-label="Examples">
-      <button type="button" data-ex="integral from zero to one of x squared d x">integral</button>
-      <button type="button" data-ex="x equals negative b plus or minus the square root of b squared minus four a c end root all over two a">quadratic formula</button>
-      <button type="button" data-ex="sum from i equals one to n of i squared">summation</button>
-      <button type="button" data-ex="limit as x approaches zero of sine x over x">limit</button>
-      <button type="button" data-ex="\frac{d}{dx}\int_{0}^{x^{2}}\cos\left(t^{3}\right)dt">LaTeX: FTC</button>
-      <button type="button" data-ex="\begin{vmatrix} 2-\lambda & 1 \\ 1 & 2-\lambda \end{vmatrix}=\left(2-\lambda\right)^{2}-1=0">LaTeX: eigenvalues</button>
-    </div>
-    <div class="row">
-      <button type="button" class="mic" id="mic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="mic-text">Start dictation</span></button>
-      <button type="button" class="primary" id="submit">Submit</button>
-      <label class="sr" for="engine">Converter</label>
-      <select id="engine">
-        <option value="claude">Convert with Claude</option>
-        <option value="rules">Built-in rules only</option>
-      </select>
-    </div>
-    <details class="apikey" id="apikey" hidden>
-      <summary id="apikey-sum">Use your own Claude API key</summary>
-      <div class="row">
-        <label for="apikey-in">Anthropic API key</label>
-        <input id="apikey-in" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-        <button type="button" class="small" id="apikey-save">Save</button>
-        <button type="button" class="small" id="apikey-clear">Remove</button>
-      </div>
-      <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
-    </details>
-    <div class="status" id="status" role="status" aria-live="polite"></div>
-  </section>
+  <div class="main">
+    <header class="top">
+      <button type="button" class="ib" id="sideBtn" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar"></button>
+      <h1 id="pageTitle" tabindex="-1">Math Workspace</h1>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </header>
 
-  <section class="results" id="results" aria-labelledby="res-title">
-    <div class="res-head">
-      <h2 id="res-title">Results</h2>
-      <div class="res-tools">
-        <label class="switch" for="explore"><input type="checkbox" id="explore" role="switch"><span class="track" aria-hidden="true"></span><span>Explore layers</span></label>
-        <button type="button" class="primary" id="goEdit">Navigate &amp; edit →</button>
-      </div>
-    </div>
-    <div class="res-grid">
-      <article class="card wide" aria-labelledby="img-label">
-        <span class="label" id="img-label">Image</span>
-        <div class="stage" id="stage" tabindex="-1"><span class="placeholder">Your equation will appear here.</span></div>
-        <div class="row">
-          <button type="button" id="png">Save PNG</button>
-          <button type="button" id="svg">Save SVG</button>
+    <main class="view">
+      <!-- ===== Math Workspace ===== -->
+      <section class="page" id="page-workspace" aria-labelledby="pageTitle">
+        <div class="ws-grid">
+          <div class="ws-left">
+            <section class="pnl" aria-labelledby="in-label">
+              <div class="pnl-h"><h2 id="in-label">Equation input</h2><span class="hint">Say or type it the way you'd read it aloud</span></div>
+              <div class="in-body">
+                <label class="sr" for="spoken">Equation, in words or LaTeX</label>
+                <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
+                <div class="row">
+                  <button type="button" class="mic" id="mic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="mic-text">Start dictation</span></button>
+                  <button type="button" class="primary" id="submit">Submit</button>
+                  <label class="sr" for="engine">Converter</label>
+                  <select id="engine">
+                    <option value="claude">Convert with Claude</option>
+                    <option value="rules">Built-in rules only</option>
+                  </select>
+                </div>
+                <details class="apikey" id="apikey" hidden>
+                  <summary id="apikey-sum">Use your own Claude API key</summary>
+                  <div class="row">
+                    <label for="apikey-in">Anthropic API key</label>
+                    <input id="apikey-in" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+                    <button type="button" class="small" id="apikey-save">Save</button>
+                    <button type="button" class="small" id="apikey-clear">Remove</button>
+                  </div>
+                  <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
+                </details>
+              </div>
+            </section>
+
+            <section class="pnl chat-pnl" aria-label="Edit the selected layer">
+              <form class="composer" id="wsForm">
+                <div class="scope-row">
+                  <span class="label">Editing</span>
+                  <button type="button" class="scope-btn" id="wsScope"><span class="sw" id="wsScopeSw"></span><span id="wsScopeText">Whole equation</span></button>
+                </div>
+                <label class="sr" for="wsInput">Edit request</label>
+                <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say or type a change, like “make the exponent 3”"></textarea>
+                <div class="row" style="justify-content:space-between">
+                  <button type="button" class="mic" id="wsMic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="wsMicText">Dictate</span></button>
+                  <button type="submit" class="primary">Send</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="ws-right pnl">
+            <div class="outs">
+              <section class="out" aria-labelledby="img-label">
+                <div class="out-h"><h3 class="label" id="img-label">Image</h3></div>
+                <div class="stage" id="stage" tabindex="0"><span class="placeholder">Your equation will appear here.</span></div>
+              </section>
+              <section class="out" aria-labelledby="txt-label">
+                <div class="out-h"><h3 class="label" id="txt-label">Text · LaTeX</h3></div>
+                <div class="vw tex" id="latexView" tabindex="0"></div>
+                <label class="sr" for="latex">LaTeX source</label>
+                <textarea id="latex" spellcheck="false" hidden></textarea>
+              </section>
+              <section class="out" aria-labelledby="clean-label">
+                <div class="out-h"><h3 class="label" id="clean-label">Clean text equation</h3></div>
+                <div class="vw clean" id="cleanView" tabindex="0"></div>
+              </section>
+            </div>
+
+            <section class="pathbar" aria-label="Move between layers">
+              <div class="navpad" role="group" aria-label="Move between layers">
+                <button type="button" data-mv="ArrowUp">↑ Out a layer</button>
+                <button type="button" data-mv="ArrowDown">↓ In a layer</button>
+                <button type="button" data-mv="ArrowLeft">← Previous</button>
+                <button type="button" data-mv="ArrowRight">→ Next</button>
+                <button type="button" class="primary" id="wsEditThis">Edit this layer</button>
+              </div>
+              <div class="sr" id="announce" aria-live="polite"></div>
+            </section>
+          </div>
         </div>
-      </article>
+      </section>
 
-      <article class="card" aria-labelledby="txt-label">
-        <label class="label" id="txt-label" for="latex">Text · LaTeX</label>
-        <textarea id="latex" spellcheck="false"></textarea>
-        <div class="view tex" id="latexView" hidden></div>
-        <span class="hint" id="latex-hint">Edit the LaTeX and the image updates.</span>
-        <div class="row"><button type="button" id="copy">Copy LaTeX</button></div>
-      </article>
-
-      <article class="card" aria-labelledby="clean-label">
-        <span class="label" id="clean-label">Clean text equation</span>
-        <div class="view clean" id="cleanView"></div>
-        <span class="hint">The spoken form, rebuilt from the LaTeX with scope cues like "close quantity" and "end root".</span>
-        <div class="row">
-          <button type="button" id="speak">Read aloud</button>
-          <button type="button" id="copyClean">Copy text</button>
+      <!-- ===== MathSpeak Help ===== -->
+      <section class="page" id="page-help" hidden aria-labelledby="help-title">
+        <div class="page-head">
+          <h2 id="help-title">MathSpeak Help</h2>
+          <p>How to say an equation so it converts cleanly, and how to move around it once it's on screen.</p>
         </div>
-      </article>
-    </div>
-
-    <div class="card layers" id="layers" hidden aria-labelledby="layers-title">
-      <span class="label" id="layers-title">Layer path</span>
-      <p class="hint" id="layers-hint" style="margin:0">Hover any part of the image, the LaTeX or the clean text. Or focus a box and use <kbd>↑</kbd> to step out a layer, <kbd>↓</kbd> to step in, <kbd>←</kbd> <kbd>→</kbd> for neighbors.</p>
-      <ol class="chain" id="chain"></ol>
-      <div class="sr" id="announce" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <section class="card" aria-labelledby="log-title">
-    <div class="log-head">
-      <h2 id="log-title">Log</h2>
-      <span class="label" id="log-where">Saved in this browser</span>
-    </div>
-    <div id="entries"><p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p></div>
-  </section>
-
-  <section aria-labelledby="how-title" style="display:grid;gap:10px">
-    <h2 id="how-title">How it works</h2>
-    <div class="how">
-      <div><b>1 · Listen</b><span>The browser's speech recognition turns your voice into words.</span></div>
-      <div><b>2 · Translate</b><span>Claude converts the words to LaTeX. A built-in rule parser covers common phrases when Claude isn't available.</span></div>
-      <div><b>3 · Render</b><span>MathJax draws the LaTeX. The page also parses it into a tree of layers and rebuilds the clean spoken text from that tree.</span></div>
-      <div><b>4 · Explore and log</b><span>Each layer is tagged in all three results, so hovering one lights up the same layer everywhere. Every result is logged.</span></div>
-    </div>
-  </section>
-
-  <footer>Dictation uses your browser's speech recognition (Chrome or Edge work best). If the microphone is blocked here, open the page as a standalone file, or type instead.</footer>
-</div>
-
-<div class="ws" id="ws" hidden role="dialog" aria-modal="true" aria-labelledby="ws-title">
-  <div class="ws-top">
-    <button type="button" id="wsBack">← Results</button>
-    <h2 id="ws-title">Navigate &amp; edit</h2>
-    <div class="eqmini" id="wsMini" aria-hidden="true"></div>
-  </div>
-  <div class="ws-body">
-    <section class="ws-chat" aria-labelledby="chat-title">
-      <div class="ws-chat-head">
-        <span class="label" id="chat-title">Edit history</span>
-        <button type="button" class="small" id="wsClear">Start over</button>
-      </div>
-      <div class="msgs" id="msgs" aria-live="polite"></div>
-      <form class="composer" id="wsForm">
-        <div class="scope-row">
-          <span class="label">Editing</span>
-          <button type="button" class="scope-btn" id="wsScope"><span class="sw" id="wsScopeSw"></span><span id="wsScopeText">Whole equation</span></button>
+        <div class="stack">
+          <section class="pnl" aria-labelledby="how-title">
+            <div class="pnl-h"><h3 id="how-title" class="label">How it works</h3></div>
+            <div class="how">
+              <div><b>1 · Listen</b><span>The browser's speech recognition turns your voice into words.</span></div>
+              <div><b>2 · Translate</b><span>Claude converts the words to LaTeX. A built-in rule parser covers common phrases when Claude isn't available.</span></div>
+              <div><b>3 · Render</b><span>MathJax draws the LaTeX. The page also parses it into a tree of layers and rebuilds the clean spoken text from that tree.</span></div>
+              <div><b>4 · Navigate</b><span>Each layer is tagged in all three views, so selecting one lights up the same layer everywhere.</span></div>
+            </div>
+          </section>
+          <section class="pnl" aria-labelledby="say-title">
+            <div class="pnl-h"><h3 id="say-title" class="label">Scope cues</h3><span class="hint">Say these to mark where a group ends</span></div>
+            <ul class="say-list">
+              <li><b>“the quantity … close quantity”</b><span>Parentheses around a group</span></li>
+              <li><b>“square root of … end root”</b><span>Everything under the root</span></li>
+              <li><b>“… all over …”</b><span>Puts everything said so far on top of a fraction</span></li>
+              <li><b>“to the power of … end exponent”</b><span>A longer exponent</span></li>
+              <li><b>“integral from a to b of … d x”</b><span>Definite integral with limits</span></li>
+              <li><b>“sum from i equals 1 to n of …”</b><span>Summation with limits</span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="keys-title">
+            <div class="pnl-h"><h3 id="keys-title" class="label">Moving through layers</h3></div>
+            <ul class="say-list">
+              <li><b><kbd>↑</kbd> Out a layer</b><span>Select the group that contains this part</span></li>
+              <li><b><kbd>↓</kbd> In a layer</b><span>Select the first part inside this one</span></li>
+              <li><b><kbd>←</kbd> <kbd>→</kbd> Previous, next</b><span>Move to a neighbor in the same layer</span></li>
+              <li><b><kbd>Esc</kbd></b><span>Back to the whole equation</span></li>
+            </ul>
+          </section>
+          <footer>Dictation uses your browser's speech recognition (Chrome or Edge work best). If the microphone is blocked here, open the page as a standalone file, or type instead.</footer>
         </div>
-        <label class="sr" for="wsInput">Edit request</label>
-        <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say or type a change, like “make the exponent 3”"></textarea>
-        <div class="row" style="justify-content:space-between">
-          <button type="button" class="mic" id="wsMic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="wsMicText">Dictate</span></button>
-          <button type="submit" class="primary">Send</button>
-        </div>
-      </form>
-    </section>
+      </section>
 
-    <section class="ws-eq" aria-label="Equation views">
-      <div class="card">
-        <span class="label">Layer path</span>
-        <ol class="path" id="wsPath"></ol>
-        <div class="selbox" id="wsSel"></div>
-        <div class="navpad" role="group" aria-label="Move between layers">
-          <button type="button" data-mv="ArrowUp">↑ Out a layer</button>
-          <button type="button" data-mv="ArrowDown">↓ In a layer</button>
-          <button type="button" data-mv="ArrowLeft">← Previous</button>
-          <button type="button" data-mv="ArrowRight">→ Next</button>
-          <button type="button" class="primary" id="wsEditThis">Edit this layer</button>
+      <!-- ===== Export ===== -->
+      <section class="page" id="page-export" hidden aria-labelledby="export-title">
+        <div class="page-head">
+          <h2 id="export-title">Export</h2>
+          <p>Save the current equation as an image or copy it as text. Every submitted equation is kept in the log below.</p>
         </div>
-        <span class="hint">Click any part of the image, LaTeX or text to select it. Arrow keys also work inside each box.</span>
-      </div>
-      <article class="card">
-        <span class="label">Image</span>
-        <div class="stage" id="wsStage" tabindex="0"></div>
-      </article>
-      <div class="ws-two">
-        <article class="card"><span class="label">Text · LaTeX</span><div class="view tex" id="wsLatex" tabindex="0"></div></article>
-        <article class="card"><span class="label">Clean text equation</span><div class="view clean" id="wsClean" tabindex="0"></div></article>
-      </div>
-    </section>
+        <div class="stack">
+          <section class="pnl" aria-labelledby="cur-title">
+            <div class="pnl-h"><h3 id="cur-title" class="label">Current equation</h3></div>
+            <div class="pnl-b">
+              <div class="stage exp-prev" id="exportPrev"></div>
+              <div class="row">
+                <button type="button" id="png">Save PNG</button>
+                <button type="button" id="svg">Save SVG</button>
+                <button type="button" id="copy">Copy LaTeX</button>
+                <button type="button" id="copyClean">Copy clean text</button>
+              </div>
+            </div>
+          </section>
+          <section class="pnl" aria-labelledby="log-title">
+            <div class="pnl-h log-head"><h3 id="log-title" class="label">Log</h3><span class="hint" id="log-where">Saved in this browser</span></div>
+            <div id="entries"><p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p></div>
+          </section>
+        </div>
+      </section>
+    </main>
   </div>
 </div>
 
@@ -385,10 +404,11 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
 (() => {
   const $ = (id) => document.getElementById(id);
   const spoken = $('spoken'), latexEl = $('latex'), latexView = $('latexView'), cleanView = $('cleanView');
-  const stage = $('stage'), statusEl = $('status'), entriesEl = $('entries'), resultsEl = $('results');
+  const stage = $('stage'), statusEl = $('status'), entriesEl = $('entries');
   let current = { latex: '', source: 'typed' };
-  let L = null, explore = false, sel = null, inWs = false;
-  const live = () => (explore || inWs) && L;
+  let L = null, sel = null;
+  const live = () => !!L;
+  const exportPrev = $('exportPrev');
   let sample = null, downloads = null, logCol = null, localLog = [];
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const setStatus = (msg, kind) => { statusEl.textContent = msg || ''; statusEl.className = 'status' + (kind ? ' ' + kind : ''); };
@@ -938,7 +958,8 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     current.latex = latex;
     try { L = latex.trim() ? Layers.build(latex) : null; } catch (e) { L = null; }
     if (!opts.fromEditor) latexEl.value = latex;
-    if (sel != null && (!L || !L.byId.has(sel))) sel = null;
+    if (!L) sel = null;
+    else if (sel == null || !L.byId.has(sel)) sel = L.root.id;
     renderResults();
   }
 
@@ -946,17 +967,15 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     const tex = current.latex;
     if (!tex.trim()) {
       stage.innerHTML = '<span class="placeholder">Your equation will appear here.</span>';
+      exportPrev.innerHTML = '<span class="placeholder">Nothing to export yet.</span>';
       latexView.textContent = ''; cleanView.textContent = ''; renderChain(); return;
     }
-    let ok;
-    if (explore && L) {
-      ok = renderTex(stage, L.tagged);
-      if (!ok) ok = renderTex(stage, tex);
-    } else ok = renderTex(stage, tex);
-    if (!ok && mjReady()) setStatus('That LaTeX has an error. Edit it in the Text box to fix the render.', 'err');
+    let ok = L ? renderTex(stage, L.tagged) : false;
+    if (!ok) ok = renderTex(stage, tex);
+    if (!ok && mjReady()) setStatus('That LaTeX has an error. Fix the equation input and submit again.', 'err');
+    renderTex(exportPrev, tex);
     latexView.innerHTML = L ? L.html : esc(tex);
     cleanView.innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
-    if (inWs) renderWsViews();
     highlight();
   }
 
@@ -969,15 +988,15 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
   const colorIdx = (pos) => ((Math.max(pos, 1) - 1) % 5) + 1;
 
   function highlight() {
-    document.querySelectorAll('.view .nd.hl').forEach((e) => { e.classList.remove('hl', 'sel'); });
+    document.querySelectorAll('.vw .nd.hl').forEach((e) => { e.classList.remove('hl', 'sel'); });
     document.querySelectorAll('rect.mx-hl').forEach((r) => r.remove());
     if (!live() || sel == null) { renderChain(); return; }
     const chain = chainOf(sel);
-    const svgs = [stage, $('wsStage')].map((s) => s.querySelector('svg')).filter(Boolean);
+    const svgs = [stage.querySelector('svg')].filter(Boolean);
     chain.forEach((n, pos) => {
       if (pos === 0 && chain.length > 1) return;
       const ci = colorIdx(pos), isSel = n.id === sel;
-      document.querySelectorAll('.view [data-n="' + n.id + '"]').forEach((e) => {
+      document.querySelectorAll('.vw [data-n="' + n.id + '"]').forEach((e) => {
         e.classList.add('hl'); e.style.setProperty('--hc', 'var(--l' + ci + ')'); e.style.setProperty('--hs', 'var(--s' + ci + ')');
         if (isSel) e.classList.add('sel');
       });
@@ -998,29 +1017,7 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     g.insertBefore(r, g.firstChild);
   }
 
-  function renderChain(chain) {
-    renderWsNav(chain);
-    const ol = $('chain'); ol.textContent = '';
-    $('layers-hint').hidden = !!(chain && chain.length);
-    if (!chain || !chain.length) return;
-    chain.slice().reverse().forEach((n) => {
-      const pos = chain.indexOf(n);
-      const li = document.createElement('li');
-      const b = document.createElement('button'); b.type = 'button';
-      if (n.id === sel) b.classList.add('cur');
-      const sw = document.createElement('span'); sw.className = 'sw';
-      sw.style.background = pos === 0 && chain.length > 1 ? 'var(--line)' : 'var(--s' + colorIdx(pos) + ')';
-      const body = document.createElement('span');
-      const ttl = document.createElement('span'); ttl.className = 'ttl';
-      ttl.textContent = (pos === 0 ? 'Whole equation · ' : 'Layer ' + pos + ' · ') + L.label(n);
-      const code = document.createElement('code'); code.textContent = L.tex(n).replace(/\s+/g, ' ');
-      const say = document.createElement('span'); say.className = 'say'; say.textContent = '“' + Layers.plainText(L.speak(n)) + '”';
-      body.append(ttl, code, say);
-      b.append(sw, body);
-      b.onclick = () => select(n.id);
-      li.appendChild(b); ol.appendChild(li);
-    });
-  }
+  function renderChain(chain) { renderWsNav(chain); }
 
   function select(id) {
     if (id == null || id === sel) return;
@@ -1057,29 +1054,11 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     e.preventDefault(); move(e.key);
   }
   [stage, latexView, cleanView].forEach((v) => {
-    v.addEventListener('mouseover', (e) => { if (explore && L) select(nodeFromEvent(e)); });
-    v.addEventListener('click', (e) => { if (explore && L) select(nodeFromEvent(e)); });
+    v.addEventListener('click', (e) => { if (L) select(nodeFromEvent(e)); });
     v.addEventListener('keydown', navKey);
-    v.addEventListener('focus', () => { if (explore && L && sel == null) select(L.root.id); });
-  });
-  ['wsStage', 'wsLatex', 'wsClean'].forEach((id) => {
-    const v = $(id);
-    v.addEventListener('click', (e) => { if (inWs && L) select(nodeFromEvent(e)); });
-    v.addEventListener('keydown', navKey);
-    v.addEventListener('focus', () => { if (inWs && L && sel == null) select(L.root.id); });
+    v.addEventListener('focus', () => { if (L && sel == null) select(L.root.id); });
   });
 
-  function setExplore(on) {
-    explore = on; $('explore').checked = on;
-    resultsEl.classList.toggle('explore', on);
-    $('layers').hidden = !on;
-    latexEl.hidden = on; latexView.hidden = !on;
-    $('latex-hint').textContent = on ? 'Shown in tidied form while exploring. Turn off Explore layers to edit.' : 'Edit the LaTeX and the image updates.';
-    [stage, latexView, cleanView].forEach((v) => { if (on) v.setAttribute('tabindex', '0'); else v.removeAttribute('tabindex'); });
-    try { localStorage.setItem('speak-math-explore', on ? '1' : '0'); } catch (e) {}
-    renderResults();
-  }
-  $('explore').addEventListener('change', (e) => setExplore(e.target.checked));
 
   /* ---------- Convert ---------- */
   async function convert() {
@@ -1106,6 +1085,7 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
       if (!latex) latex = ruleParse(text);
       setStatus('');
       setLatex(latex);
+      chatNewEquation();
       const clean = L ? Layers.plainText(L.spokenHtml) : '';
       if (statusEl.className !== 'status err') setStatus(note || (method === 'claude' ? 'Converted with Claude and logged.' : method === 'latex' ? 'Rendered your LaTeX and logged it.' : 'Converted with the built-in rules and logged.'), note ? 'err' : 'ok');
       await addLog({ input: text, latex, clean, method, source: current.source, ts: Date.now() });
@@ -1130,6 +1110,7 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
   }
   function renderLog(list) {
     entriesEl.textContent = '';
+    $('logCount').textContent = list.length; $('logCount').setAttribute('aria-label', list.length + ' saved equation' + (list.length === 1 ? '' : 's'));
     if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p>'; return; }
     for (const e of list) {
       const row = document.createElement('div'); row.className = 'entry';
@@ -1143,7 +1124,7 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
       left.append(eq, said, code, meta);
       const acts = document.createElement('div'); acts.className = 'acts';
       const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Open';
-      open.onclick = () => { spoken.value = e.input; setLatex(e.latex); setStatus('Loaded from log.'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      open.onclick = () => { spoken.value = e.input; setLatex(e.latex); chatNewEquation(); go('workspace', true); setStatus('Loaded from log.'); };
       const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Delete'; del.setAttribute('aria-label', 'Delete entry: ' + e.input);
       del.onclick = () => removeLog(e.id);
       acts.append(open, del);
@@ -1234,13 +1215,8 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
       setStatus('Press Ctrl+C or ⌘C to copy.');
     }
   }
-  $('copy').onclick = () => copyText(current.latex, 'LaTeX', explore ? null : latexEl);
+  $('copy').onclick = () => copyText(current.latex, 'LaTeX', latexEl.hidden ? null : latexEl);
   $('copyClean').onclick = () => copyText(L ? Layers.plainText(L.spokenHtml) : '', 'Clean text');
-  $('speak').onclick = () => {
-    if (!('speechSynthesis' in window)) return setStatus('Read aloud isn\'t supported in this browser.', 'err');
-    const text = L ? Layers.plainText(L.spokenHtml) : ''; if (!text) return;
-    speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  };
 
   /* ---------- Navigate & edit workspace ---------- */
   let chat = [], chatFor = null, wsRec = null, wsListening = false;
@@ -1254,19 +1230,9 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     return { name: layerName(n, pos), color: swColor(pos, chain.length), tex: L.tex(n).replace(/\s+/g, ' '), said: Layers.plainText(L.speak(n)), pos, id: n.id };
   }
 
-  function renderWsViews() {
-    const tex = current.latex, ws = $('wsStage');
-    renderTex($('wsMini'), tex, false);
-    if (!tex.trim()) { ws.innerHTML = '<span class="placeholder">No equation yet.</span>'; $('wsLatex').textContent = ''; $('wsClean').textContent = ''; return; }
-    if (!(L && renderTex(ws, L.tagged))) renderTex(ws, tex);
-    $('wsLatex').innerHTML = L ? L.html : esc(tex);
-    $('wsClean').innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
-  }
-
   function renderWsNav(chain) {
-    if (!inWs) return;
-    const ol = $('wsPath'), box = $('wsSel'); ol.textContent = ''; box.textContent = '';
-    if (!L) { box.textContent = 'Couldn\'t read this LaTeX into layers. Edit the LaTeX on the results page first.'; return; }
+    const ol = $('wsPath') || document.createElement('ol'), box = $('wsSel') || document.createElement('div'); ol.textContent = ''; box.textContent = '';
+    if (!L) { box.textContent = 'Couldn\'t read this LaTeX into layers. Fix the equation input and submit again.'; return; }
     const c = chain && chain.length ? chain : [L.root];
     c.forEach((n, pos) => {
       const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
@@ -1304,18 +1270,18 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     $('wsScope').setAttribute('aria-label', sc.pos ? 'Editing ' + sc.name + '. Press to edit the whole equation instead.' : 'Editing the whole equation');
   }
 
-  function seedChat() {
-    chat = [
-      { role: 'sys', latex: current.latex, said: L ? Layers.plainText(L.spokenHtml) : '' },
-      { role: 'tip' },
-    ];
-    chatFor = current.latex;
+  const sysMsg = () => ({ role: 'sys', latex: current.latex, said: L ? Layers.plainText(L.spokenHtml) : '' });
+  function seedChat() { chat = [sysMsg(), { role: 'tip' }]; chatFor = current.latex; }
+  function chatNewEquation() {
+    if (chatFor === current.latex) return;
+    chat.push(sysMsg()); chatFor = current.latex; renderChat();
   }
   function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function chip(scope) {
     const c = el('span', 'scope-chip'); const s = el('span', 'sw'); s.style.background = scope.color; c.append(s, document.createTextNode(scope.name)); return c;
   }
   function renderChat() {
+    if (!msgsEl) return;
     msgsEl.textContent = '';
     for (const m of chat) {
       const wrap = el('div', 'msg ' + (m.role === 'user' ? 'user' : m.role === 'sys' ? 'sys' : 'bot'));
@@ -1361,7 +1327,6 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
   $('wsForm').addEventListener('submit', (e) => { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; });
   wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; } });
   wsInput.addEventListener('input', () => { if (!wsListening) lastVoice = false; });
-  $('wsClear').onclick = () => { seedChat(); renderChat(); };
   $('wsScope').onclick = () => { if (L) select(L.root.id); };
   $('wsEditThis').onclick = () => { wsInput.focus(); };
   document.querySelectorAll('.navpad [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
@@ -1383,21 +1348,36 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
     try { wsRec.start(); wsListening = true; lastVoice = true; wsMic.setAttribute('aria-pressed', 'true'); $('wsMicText').textContent = 'Stop'; } catch (e) {}
   };
 
-  function openWs() {
-    if (!current.latex.trim()) { setStatus('Submit an equation first.', 'err'); return; }
-    inWs = true; $('ws').hidden = false; document.body.classList.add('ws-open');
-    if (chatFor !== current.latex) seedChat();
-    if (L && sel == null) sel = L.root.id;
-    renderResults(); renderChat();
-    $('wsBack').focus();
+  /* ---------- Pages and sidebar ---------- */
+  const PAGES = { workspace: 'Math Workspace', help: 'MathSpeak Help', export: 'Export' };
+  function go(page, focus) {
+    if (!PAGES[page]) page = 'workspace';
+    Object.keys(PAGES).forEach((k) => { $('page-' + k).hidden = k !== page; });
+    document.querySelectorAll('.nav [data-page]').forEach((b) => { if (b.dataset.page === page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    $('pageTitle').textContent = PAGES[page]; document.title = PAGES[page] + ' · Speak Math';
+    if (page === 'workspace') highlight();
+    if (location.hash !== '#' + page) { try { history.replaceState(null, '', '#' + page); } catch (e) {} }
+    if (focus) $('pageTitle').focus();
+    if (matchMedia('(max-width: 720px)').matches && focus) setSide(false);
   }
-  function closeWs() {
-    inWs = false; $('ws').hidden = true; document.body.classList.remove('ws-open');
-    if (wsListening && wsRec) wsRec.stop();
-    renderResults(); $('goEdit').focus();
+  document.querySelectorAll('.nav [data-page]').forEach((b) => b.onclick = () => go(b.dataset.page, true));
+  window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+  const ICON = (d) => '<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const I_MENU = ICON('<path d="M4 6h16M4 12h16M4 18h16"/>');
+  const I_CLOSE = ICON('<rect x="3.5" y="4.5" width="17" height="15"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/>');
+  function setSide(open) {
+    document.body.classList.toggle('side-off', !open);
+    const b = $('sideBtn'); b.innerHTML = open ? I_CLOSE : I_MENU;
+    b.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-label', open ? 'Hide sidebar' : 'Show sidebar');
+    try { localStorage.setItem('speak-math-side', open ? '1' : '0'); } catch (e) {}
+    if (open && page() === 'workspace') requestAnimationFrame(highlight);
   }
-  $('goEdit').onclick = openWs;
-  $('wsBack').onclick = closeWs;
+  const page = () => Object.keys(PAGES).find((k) => !$('page-' + k).hidden);
+  $('sideBtn').onclick = () => setSide(document.body.classList.contains('side-off'));
+  let sideOpen = !matchMedia('(max-width: 720px)').matches;
+  try { const v = localStorage.getItem('speak-math-side'); if (v && sideOpen) sideOpen = v === '1'; } catch (e) {}
+  setSide(sideOpen);
+  go(location.hash.slice(1) || 'workspace');
 
   /* ---------- Wiring ---------- */
   $('submit').onclick = convert;
@@ -1408,11 +1388,11 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
 
   function boot() {
     setLatex(ruleParse(spoken.value));
+    seedChat(); renderChat();
     if (!logCol) renderLog(localLog);
   }
   loadLocal();
-  let startExplore = false; try { startExplore = localStorage.getItem('speak-math-explore') !== '0'; } catch (e) { startExplore = true; }
-  window.__mjReady = () => { boot(); setExplore(startExplore); };
+  window.__mjReady = () => { boot(); };
   if (mjReady()) window.__mjReady();
   setTimeout(() => { if (!mjReady()) { setLatex(ruleParse(spoken.value)); stage.textContent = 'The math renderer couldn\'t load. The LaTeX and clean text still work.'; renderLog(localLog); } }, 8000);
 
@@ -1450,7 +1430,6 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
       if (!has) engine.value = 'rules'; else engine.value = 'claude';
       sum.textContent = has ? 'Claude API key saved in this browser' : 'Use your own Claude API key';
       input.value = ''; input.placeholder = has ? 'Key saved. Paste a new one to replace it.' : 'sk-ant-…';
-      panel.open = !has;
     }
     const directSample = {
       async json(prompt, opts) {
