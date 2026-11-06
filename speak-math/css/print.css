@@ -1,0 +1,9 @@
+/* ---------- Printing (PDF export) ---------- */
+#printArea { display: none; }
+@media print {
+  @page { margin: 18mm; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  #printArea .paper { margin: 0; padding: 0; max-height: none; overflow: visible; font-size: 12pt; }
+  #printArea .pe, #printArea .ph { break-inside: avoid; }
+}

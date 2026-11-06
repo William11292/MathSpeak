@@ -1,0 +1,17 @@
+/* ---------- Export: saved equations list ---------- */
+.log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.selbar .row { margin-left: auto; gap: 6px; }
+.pick-all { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.pick-all input, .eq-pick input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; cursor: pointer; }
+#entries { display: grid; gap: 10px; padding: 12px; }
+.entry { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; background: var(--surface); border: 1px solid var(--line); min-height: 84px; }
+.entry.is-sel { border-color: var(--ink-3); }
+.eq-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid var(--line); cursor: pointer; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.eq-main { display: flex; align-items: center; gap: 14px; padding: 12px 18px; min-width: 0; }
+.eq-num { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; font-variant-numeric: tabular-nums; }
+.eq-body { display: grid; gap: 4px; min-width: 0; }
+.eq-body .eq { overflow-x: auto; min-width: 0; font-size: 125%; }
+.eq-body .eq mjx-container { margin: 0 !important; }
+.eq-body .ms { font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; }
+.entry .acts { display: flex; gap: 6px; align-items: center; padding: 0 14px; }
