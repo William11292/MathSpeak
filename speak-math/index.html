@@ -1,0 +1,1426 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Speak Math</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@1,6..72,500&family=JetBrains+Mono:wght@400;600&display=swap">
+<script>
+  window.MathJax = {
+    tex: { packages: { '[+]': ['ams', 'html'] } },
+    svg: { fontCache: 'none' },
+    options: { enableAssistiveMml: false },
+    startup: { typeset: false, ready() { MathJax.startup.defaultReady(); window.__mjReady && window.__mjReady(); } }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
+<style>
+/* Layout: one working column. Input card, then a results band (Image across the top, LaTeX and Clean text side by side), the layer path, the log, and how it works. Faint graph-paper ground. */
+:root {
+  --bg: #f3f5f8; --grid: #e3e8ef; --surface: #ffffff; --ink: #141a26; --muted: #5a6475; --line: #d4dae4;
+  --accent: #1d47c4; --accent-ink: #ffffff; --accent-soft: #e5ecfc; --rec: #c4321d; --ok: #1f7a4a;
+  --l1: rgba(29,158,117,.22); --s1: #0f6e56;
+  --l2: rgba(127,119,221,.26); --s2: #534ab7;
+  --l3: rgba(216,90,48,.24); --s3: #993c1d;
+  --l4: rgba(212,83,126,.24); --s4: #993556;
+  --l5: rgba(186,117,23,.26); --s5: #854f0b;
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10141c; --grid: #18202c; --surface: #171d28; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2a3344;
+  --accent: #7fa2ff; --accent-ink: #0c1222; --accent-soft: #1d2a4a; --rec: #ff7a63; --ok: #5fd09a;
+  --l1: rgba(93,202,165,.26); --s1: #5dcaa5; --l2: rgba(175,169,236,.28); --s2: #afa9ec; --l3: rgba(240,153,123,.26); --s3: #f0997b;
+  --l4: rgba(237,147,177,.26); --s4: #ed93b1; --l5: rgba(239,159,39,.26); --s5: #ef9f27;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10141c; --grid: #18202c; --surface: #171d28; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2a3344;
+  --accent: #7fa2ff; --accent-ink: #0c1222; --accent-soft: #1d2a4a; --rec: #ff7a63; --ok: #5fd09a;
+  --l1: rgba(93,202,165,.26); --s1: #5dcaa5; --l2: rgba(175,169,236,.28); --s2: #afa9ec; --l3: rgba(240,153,123,.26); --s3: #f0997b;
+  --l4: rgba(237,147,177,.26); --s4: #ed93b1; --l5: rgba(239,159,39,.26); --s5: #ef9f27;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 24px; }
+header h1 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: clamp(2.4rem, 6vw, 3.4rem); line-height: 1; margin: 0 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+h2 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 1.7rem; margin: 0; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.label { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.hint { font-size: 0.85rem; color: var(--muted); }
+textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; resize: vertical; }
+textarea#spoken { min-height: 92px; font-size: 1.15rem; }
+textarea#latex { font-family: var(--font-mono); font-size: 0.92rem; min-height: 150px; }
+textarea:focus-visible, button:focus-visible, select:focus-visible, [tabindex]:focus-visible, input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font: inherit; font-weight: 700; font-size: 0.92rem; border-radius: 4px; padding: 9px 15px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.mic { display: inline-flex; gap: 8px; align-items: center; }
+button.mic .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+button.mic[aria-pressed="true"] { border-color: var(--rec); color: var(--rec); }
+button.mic[aria-pressed="true"] .dot { background: var(--rec); animation: pulse 1s infinite; }
+button:disabled { opacity: 0.5; cursor: default; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+select { font: inherit; font-size: 0.9rem; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.status { font-size: 0.9rem; color: var(--muted); min-height: 1.4em; }
+.status.err { color: var(--rec); } .status.ok { color: var(--ok); }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.examples button { font-weight: 400; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+
+.results { display: grid; gap: 14px; }
+.res-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem; user-select: none; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 44px; height: 24px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; flex: none; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track::after { transform: translateX(20px); }
+.res-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.res-grid .wide { grid-column: 1 / -1; }
+@media (max-width: 760px) { .res-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.stage { min-height: 170px; display: grid; place-items: center; padding: 24px 12px; background: var(--bg); border: 1px dashed var(--line); border-radius: 4px; overflow-x: auto; color: var(--ink); }
+.stage mjx-container { font-size: 170% !important; margin: 0 !important; }
+.stage .placeholder { color: var(--muted); font-style: italic; }
+mjx-container[jax="SVG"] { position: relative; }
+mjx-container[jax="SVG"][display="true"] { display: block; text-align: center; }
+mjx-assistive-mml { position: absolute !important; top: 0; left: 0; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(1px, 1px, 1px, 1px) !important; padding: 1px 0 0 0 !important; border: 0 !important; display: block !important; }
+
+.view { border-radius: 4px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); min-height: 150px; overflow-wrap: anywhere; min-width: 0; }
+.view.tex { font-family: var(--font-mono); font-size: 0.92rem; line-height: 2.1; }
+.view.clean { font-size: 1.1rem; line-height: 2; }
+.view .nd { border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 2px 0; }
+.explore .view .nd { cursor: pointer; }
+.view .nd.hl { background: var(--hc); }
+.view .nd.sel { outline: 2px solid var(--hs); outline-offset: 1px; }
+.explore .stage svg { cursor: pointer; }
+
+.layers { gap: 10px; }
+.chain { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chain button { width: 100%; text-align: left; display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 10px; align-items: start; font-weight: 400; padding: 8px 10px; border-color: transparent; background: transparent; }
+.chain button:hover { border-color: var(--line); }
+.chain button.cur { background: var(--bg); border-color: var(--line); }
+.chain .sw { width: 16px; height: 16px; border-radius: 3px; margin-top: 3px; }
+.chain .ttl { font-weight: 700; font-size: 0.92rem; }
+.chain code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; display: block; }
+.chain .say { font-size: 0.9rem; display: block; }
+kbd { font-family: var(--font-mono); font-size: 0.8rem; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; background: var(--bg); }
+
+.log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+.entry:first-child { border-top: 0; }
+.entry .eq { overflow-x: auto; min-width: 0; }
+.entry .eq mjx-container { margin: 0 !important; }
+.entry .meta { font-size: 0.82rem; color: var(--muted); }
+.entry code { font-family: var(--font-mono); font-size: 0.82rem; overflow-wrap: anywhere; color: var(--ink); }
+.entry .said { font-size: 0.9rem; }
+.entry .acts { display: flex; gap: 6px; align-items: start; }
+.entry .acts button { font-size: 0.8rem; padding: 5px 10px; font-weight: 400; }
+.tag { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; }
+.empty { color: var(--muted); padding: 10px 0; margin: 0; }
+
+.how { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.how div { padding: 14px 16px; border-left: 1px solid var(--line); min-width: 0; }
+.how div:first-child { border-left: 0; }
+.how b { display: block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.how span { font-size: 0.9rem; color: var(--muted); }
+@media (max-width: 720px) { .how { grid-template-columns: repeat(2, minmax(0, 1fr)); } .how div:nth-child(3) { border-left: 0; } .how div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+footer { font-size: 0.85rem; color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .switch .track, .switch .track::after { transition: none; } button.mic[aria-pressed="true"] .dot { animation: none; } }
+
+/* ---------- Navigate & edit workspace: chat history on the left, the three equation views on the right ---------- */
+.res-tools { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+body.ws-open { overflow: hidden; }
+.ws {
+  position: fixed; inset: 0; z-index: 30; display: grid; grid-template-rows: auto minmax(0, 1fr);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ws-top {
+  display: flex; align-items: center; gap: 14px; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+}
+.ws-top h2 { font-size: 1.45rem; white-space: nowrap; }
+.ws-top .eqmini { margin-left: auto; min-width: 0; max-width: 55%; overflow-x: auto; color: var(--muted); }
+.ws-top .eqmini mjx-container { margin: 0 !important; }
+.ws-body {
+  display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr); gap: 16px; min-height: 0;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+}
+
+.ws-chat { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-height: 0; min-width: 0; }
+.ws-chat-head { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+button.small { font-weight: 400; font-size: 0.8rem; padding: 5px 10px; }
+.msgs { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.msg { max-width: 92%; display: grid; gap: 6px; min-width: 0; }
+.msg .who { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.msg .bub { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); font-size: 0.95rem; overflow-wrap: anywhere; min-width: 0; display: grid; gap: 8px; }
+.msg.user { align-self: flex-end; }
+.msg.user .who { justify-content: flex-end; }
+.msg.user .bub { background: var(--accent-soft); border-color: transparent; }
+.msg.sys { max-width: 100%; align-self: stretch; }
+.msg.sys .bub { background: transparent; border-style: dashed; }
+.msg .eqv { overflow-x: auto; padding: 2px 0; }
+.msg .eqv mjx-container { margin: 0 !important; }
+.msg code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.msg .said { font-size: 0.9rem; color: var(--muted); }
+.scope-chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.04em; text-transform: none; padding: 1px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.plan { display: grid; gap: 4px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.pending { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font-weight: 400; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+
+.composer { border-top: 1px solid var(--line); padding: 12px 16px 16px; display: grid; gap: 10px; }
+.scope-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scope-btn { font-weight: 400; display: inline-flex; gap: 8px; align-items: center; padding: 4px 10px; font-size: 0.85rem; border-radius: 999px; }
+.scope-btn .x { color: var(--muted); }
+textarea#wsInput { min-height: 64px; font-size: 1rem; }
+
+.ws-eq { overflow-y: auto; display: grid; gap: 14px; align-content: start; min-width: 0; min-height: 0; padding-bottom: 4px; }
+.ws-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.ws .stage { min-height: 150px; }
+.ws .view .nd, .ws .stage svg { cursor: pointer; }
+.path { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 0; padding: 0; list-style: none; }
+.path li { display: flex; align-items: center; gap: 4px; }
+.path li + li::before { content: "›"; color: var(--muted); padding: 0 2px; }
+.path button { font-weight: 400; font-size: 0.85rem; padding: 4px 10px; display: inline-flex; gap: 6px; align-items: center; }
+.path button[aria-current="true"] { font-weight: 700; background: var(--bg); border-color: var(--ink); }
+.selbox { display: grid; gap: 4px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.selbox .ttl { font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.selbox code { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.selbox .inside { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.selbox .inside button { font-weight: 400; font-size: 0.8rem; padding: 3px 9px; display: inline-flex; gap: 6px; align-items: center; }
+.navpad { display: flex; gap: 6px; flex-wrap: wrap; }
+.navpad button { font-size: 0.85rem; padding: 7px 11px; font-weight: 400; }
+.navpad button.primary { font-weight: 700; margin-left: auto; }
+
+@media (max-width: 860px) {
+  .ws-body { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .ws-eq { overflow: visible; order: -1; }
+  .ws-chat { min-height: 75vh; }
+  .ws-two { grid-template-columns: minmax(0, 1fr); }
+  .ws-top .eqmini { display: none; }
+  .navpad button.primary { margin-left: 0; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Speak Math</h1>
+    <p>Say or type an equation the way you'd read it out loud. Get the rendered image, the LaTeX, and a clean spoken version, then explore how the layers nest.</p>
+  </header>
+
+  <section class="card" aria-labelledby="in-label">
+    <label class="label" id="in-label" for="spoken">Input</label>
+    <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
+    <div class="examples" aria-label="Examples">
+      <button type="button" data-ex="integral from zero to one of x squared d x">integral</button>
+      <button type="button" data-ex="x equals negative b plus or minus the square root of b squared minus four a c end root all over two a">quadratic formula</button>
+      <button type="button" data-ex="sum from i equals one to n of i squared">summation</button>
+      <button type="button" data-ex="limit as x approaches zero of sine x over x">limit</button>
+      <button type="button" data-ex="\frac{d}{dx}\int_{0}^{x^{2}}\cos\left(t^{3}\right)dt">LaTeX: FTC</button>
+      <button type="button" data-ex="\begin{vmatrix} 2-\lambda & 1 \\ 1 & 2-\lambda \end{vmatrix}=\left(2-\lambda\right)^{2}-1=0">LaTeX: eigenvalues</button>
+    </div>
+    <div class="row">
+      <button type="button" class="mic" id="mic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="mic-text">Start dictation</span></button>
+      <button type="button" class="primary" id="submit">Submit</button>
+      <label class="sr" for="engine">Converter</label>
+      <select id="engine">
+        <option value="claude">Convert with Claude</option>
+        <option value="rules">Built-in rules only</option>
+      </select>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="results" id="results" aria-labelledby="res-title">
+    <div class="res-head">
+      <h2 id="res-title">Results</h2>
+      <div class="res-tools">
+        <label class="switch" for="explore"><input type="checkbox" id="explore" role="switch"><span class="track" aria-hidden="true"></span><span>Explore layers</span></label>
+        <button type="button" class="primary" id="goEdit">Navigate &amp; edit →</button>
+      </div>
+    </div>
+    <div class="res-grid">
+      <article class="card wide" aria-labelledby="img-label">
+        <span class="label" id="img-label">Image</span>
+        <div class="stage" id="stage" tabindex="-1"><span class="placeholder">Your equation will appear here.</span></div>
+        <div class="row">
+          <button type="button" id="png">Save PNG</button>
+          <button type="button" id="svg">Save SVG</button>
+        </div>
+      </article>
+
+      <article class="card" aria-labelledby="txt-label">
+        <label class="label" id="txt-label" for="latex">Text · LaTeX</label>
+        <textarea id="latex" spellcheck="false"></textarea>
+        <div class="view tex" id="latexView" hidden></div>
+        <span class="hint" id="latex-hint">Edit the LaTeX and the image updates.</span>
+        <div class="row"><button type="button" id="copy">Copy LaTeX</button></div>
+      </article>
+
+      <article class="card" aria-labelledby="clean-label">
+        <span class="label" id="clean-label">Clean text equation</span>
+        <div class="view clean" id="cleanView"></div>
+        <span class="hint">The spoken form, rebuilt from the LaTeX with scope cues like "close quantity" and "end root".</span>
+        <div class="row">
+          <button type="button" id="speak">Read aloud</button>
+          <button type="button" id="copyClean">Copy text</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="card layers" id="layers" hidden aria-labelledby="layers-title">
+      <span class="label" id="layers-title">Layer path</span>
+      <p class="hint" id="layers-hint" style="margin:0">Hover any part of the image, the LaTeX or the clean text. Or focus a box and use <kbd>↑</kbd> to step out a layer, <kbd>↓</kbd> to step in, <kbd>←</kbd> <kbd>→</kbd> for neighbors.</p>
+      <ol class="chain" id="chain"></ol>
+      <div class="sr" id="announce" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="log-title">
+    <div class="log-head">
+      <h2 id="log-title">Log</h2>
+      <span class="label" id="log-where">Saved in this browser</span>
+    </div>
+    <div id="entries"><p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p></div>
+  </section>
+
+  <section aria-labelledby="how-title" style="display:grid;gap:10px">
+    <h2 id="how-title">How it works</h2>
+    <div class="how">
+      <div><b>1 · Listen</b><span>The browser's speech recognition turns your voice into words.</span></div>
+      <div><b>2 · Translate</b><span>Claude converts the words to LaTeX. A built-in rule parser covers common phrases when Claude isn't available.</span></div>
+      <div><b>3 · Render</b><span>MathJax draws the LaTeX. The page also parses it into a tree of layers and rebuilds the clean spoken text from that tree.</span></div>
+      <div><b>4 · Explore and log</b><span>Each layer is tagged in all three results, so hovering one lights up the same layer everywhere. Every result is logged.</span></div>
+    </div>
+  </section>
+
+  <footer>Dictation uses your browser's speech recognition (Chrome or Edge work best). If the microphone is blocked here, open the page as a standalone file, or type instead.</footer>
+</div>
+
+<div class="ws" id="ws" hidden role="dialog" aria-modal="true" aria-labelledby="ws-title">
+  <div class="ws-top">
+    <button type="button" id="wsBack">← Results</button>
+    <h2 id="ws-title">Navigate &amp; edit</h2>
+    <div class="eqmini" id="wsMini" aria-hidden="true"></div>
+  </div>
+  <div class="ws-body">
+    <section class="ws-chat" aria-labelledby="chat-title">
+      <div class="ws-chat-head">
+        <span class="label" id="chat-title">Edit history</span>
+        <button type="button" class="small" id="wsClear">Start over</button>
+      </div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <form class="composer" id="wsForm">
+        <div class="scope-row">
+          <span class="label">Editing</span>
+          <button type="button" class="scope-btn" id="wsScope"><span class="sw" id="wsScopeSw"></span><span id="wsScopeText">Whole equation</span></button>
+        </div>
+        <label class="sr" for="wsInput">Edit request</label>
+        <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say or type a change, like “make the exponent 3”"></textarea>
+        <div class="row" style="justify-content:space-between">
+          <button type="button" class="mic" id="wsMic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="wsMicText">Dictate</span></button>
+          <button type="submit" class="primary">Send</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="ws-eq" aria-label="Equation views">
+      <div class="card">
+        <span class="label">Layer path</span>
+        <ol class="path" id="wsPath"></ol>
+        <div class="selbox" id="wsSel"></div>
+        <div class="navpad" role="group" aria-label="Move between layers">
+          <button type="button" data-mv="ArrowUp">↑ Out a layer</button>
+          <button type="button" data-mv="ArrowDown">↓ In a layer</button>
+          <button type="button" data-mv="ArrowLeft">← Previous</button>
+          <button type="button" data-mv="ArrowRight">→ Next</button>
+          <button type="button" class="primary" id="wsEditThis">Edit this layer</button>
+        </div>
+        <span class="hint">Click any part of the image, LaTeX or text to select it. Arrow keys also work inside each box.</span>
+      </div>
+      <article class="card">
+        <span class="label">Image</span>
+        <div class="stage" id="wsStage" tabindex="0"></div>
+      </article>
+      <div class="ws-two">
+        <article class="card"><span class="label">Text · LaTeX</span><div class="view tex" id="wsLatex" tabindex="0"></div></article>
+        <article class="card"><span class="label">Clean text equation</span><div class="view clean" id="wsClean" tabindex="0"></div></article>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const spoken = $('spoken'), latexEl = $('latex'), latexView = $('latexView'), cleanView = $('cleanView');
+  const stage = $('stage'), statusEl = $('status'), entriesEl = $('entries'), resultsEl = $('results');
+  let current = { latex: '', source: 'typed' };
+  let L = null, explore = false, sel = null, inWs = false;
+  const live = () => (explore || inWs) && L;
+  let sample = null, downloads = null, logCol = null, localLog = [];
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const setStatus = (msg, kind) => { statusEl.textContent = msg || ''; statusEl.className = 'status' + (kind ? ' ' + kind : ''); };
+  const mjReady = () => !!(window.MathJax && MathJax.tex2svg);
+
+  const NUM = { zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19, twenty:20, thirty:30, forty:40, fifty:50, hundred:100 };
+  const ORD = { first:1, second:2, third:3, fourth:4, fifth:5, sixth:6, seventh:7, eighth:8, ninth:9, tenth:10, nth:'n' };
+  const GREEK = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','pi','rho','sigma','tau','phi','chi','psi','omega'];
+  const FUNCS = { sine:'\\sin', sin:'\\sin', cosine:'\\cos', cos:'\\cos', tangent:'\\tan', tan:'\\tan', log:'\\log', ln:'\\ln', 'natural log':'\\ln', exp:'\\exp' };
+
+  function ruleParse(text) {
+    let s = ' ' + text.toLowerCase().replace(/[,?!;]/g, ' ').replace(/\s+/g, ' ') + ' ';
+    const R = (re, to) => { s = s.replace(re, to).replace(/\s+/g, " "); };
+    // multi-word phrases first
+    R(/\bnatural log of\b/g, ' \\ln '); R(/\bnatural log\b/g, ' \\ln ');
+    R(/\bplus or minus\b/g, ' \\pm '); R(/\bminus or plus\b/g, ' \\mp ');
+    R(/\bless than or equal to\b/g, ' \\le '); R(/\bgreater than or equal to\b/g, ' \\ge ');
+    R(/\bnot equal to\b|\bdoes not equal\b/g, ' \\neq '); R(/\bless than\b/g, ' < '); R(/\bgreater than\b/g, ' > ');
+    R(/\b(?:is )?equals?\b|\bis equal to\b/g, ' = ');
+    R(/\b(?:open|left) (?:paren|parenthesis|bracket)\b/g, ' ( '); R(/\b(?:close|right) (?:paren|parenthesis|bracket)\b/g, ' ) ');
+    R(/\b(?:close|end) quantity\b/g, ' ) '); R(/\bquantity\b/g, ' ( ');
+    R(/\binfinity\b/g, ' \\infty ');
+    R(/\bwith respect to (\w)\b/g, ' WRT$1 ');
+    // numbers
+    R(/\b(twenty|thirty|forty|fifty) (one|two|three|four|five|six|seven|eight|nine)\b/g, (_, a, b) => ' ' + (NUM[a] + NUM[b]) + ' ');
+    R(new RegExp('\\b(' + Object.keys(NUM).join('|') + ')\\b', 'g'), (_, w) => ' ' + NUM[w] + ' ');
+    R(/\bpoint (\d)/g, '.$1'); R(/(\d) \.(\d)/g, '$1.$2');
+    R(/\bnegative\b/g, ' - ');
+    // greek & functions
+    R(new RegExp('\\b(' + GREEK.join('|') + ')\\b', 'g'), (_, g) => ' \\' + g + ' ');
+    R(/\b(sine|cosine|tangent|sin|cos|tan|log|exp)(?: of)?\b/g, (_, f) => ' ' + FUNCS[f] + ' ');
+    // structures
+    R(/\bdeterminant of the (\d) by (\d) matrix ((?:\S+ ?)+)/g, (_, r, c, rest) => ' ' + matrix(+r, +c, rest, 'vmatrix') + ' ');
+    R(/\b(?:the )?(\d) by (\d) matrix ((?:\S+ ?)+)/g, (_, r, c, rest) => ' ' + matrix(+r, +c, rest, 'bmatrix') + ' ');
+    R(/\b(?:the )?integral from (.+?) to (.+?) of\b/g, ' \\int_{$1}^{$2} ');
+    R(/\b(?:the )?integral of\b/g, ' \\int ');
+    R(/\b(?:the )?sum from (.+?) to (.+?) of\b/g, ' \\sum_{$1}^{$2} ');
+    R(/\b(?:the )?product from (.+?) to (.+?) of\b/g, ' \\prod_{$1}^{$2} ');
+    R(/\b(?:the )?limit as (\S+) (?:approaches|goes to|tends to) (.+?) of\b/g, ' \\lim_{$1 \\to $2} ');
+    R(/\b(?:the )?derivative of (.+?) WRT(\w)\b/g, ' \\frac{d}{d$2}\\left( $1 \\right) ');
+    R(/\b(?:the )?derivative of\b/g, ' \\frac{d}{dx} ');
+    R(/\b(?:the )?(?:square )?root of (.+?) end root\b/g, ' \\sqrt{$1} ');
+    R(/\b(?:the )?cube root of (.+?) end root\b/g, ' \\sqrt[3]{$1} ');
+    R(/\b(?:the )?absolute value of (.+?) end absolute value\b/g, ' \\left| $1 \\right| ');
+    R(/\b(?:the )?absolute value of\b/g, ' ABS ');
+    R(/\b(?:the )?cube root of\b/g, ' CBRT '); R(/\b(?:the )?square root of\b/g, ' SQRT ');
+    R(/\bfraction (.+?) over (.+?) end fraction\b/g, ' \\frac{$1}{$2} ');
+    R(/\ball over\b/g, ' ALLOVER ');
+    R(/\bsquared\b/g, ' ^{2} '); R(/\bcubed\b/g, ' ^{3} ');
+    R(/\bto the power of (- )?(\S+)/g, (_, n, x) => ' ^{' + (n ? '-' : '') + x + '} ');
+    R(new RegExp('\\bto the (' + Object.keys(ORD).join('|') + ')(?: power)?\\b', 'g'), (_, o) => ' ^{' + ORD[o] + '} ');
+    R(/\bto the (- )?(\S+)/g, (_, n, x) => ' ^{' + (n ? '-' : '') + x + '} ');
+    R(/\b(?:sub|subscript) (\S+)/g, ' _{$1} ');
+    R(/\b([fgh])( prime)? of (\w)\b/g, (_, f, p, x) => ' ' + f + (p ? "'" : '') + '(' + x + ') ');
+    R(/\b(\w) prime\b/g, " $1' ");
+    R(/\bd (\w)\b(?=\s*$)/g, ' \\,d$1 ');
+    R(/\bd (\w)\b/g, ' \\,d$1 ');
+    R(/\bplus\b/g, ' + '); R(/\bminus\b/g, ' - ');
+    R(/\btimes\b|\bmultiplied by\b/g, ' \\cdot '); R(/\bdivided by\b/g, ' \\div ');
+    R(/\bfactorial\b/g, ' ! ');
+    R(/\b(?:the|of|and|is|all)\b/g, ' ');
+
+    // token pass: group parens, attach postfix pieces, apply SQRT / ABS / over
+    let toks = s.trim().split(/\s+/).filter(Boolean);
+    // group parentheses into single tokens
+    const grouped = []; const stack = [];
+    for (const t of toks) {
+      if (t === '(') { stack.push(grouped.length); grouped.push('('); }
+      else if (t === ')' && stack.length) {
+        const i = stack.pop(); const inner = grouped.splice(i + 1); grouped[i] = '\u0001' + finish(inner) + '\u0002';
+      } else grouped.push(t);
+    }
+    return finish(grouped).replace(/\u0001/g, '\\left(').replace(/\u0002/g, '\\right)');
+
+    function finish(tks) {
+      // attach ^ _ ' ! to previous
+      const a = [];
+      for (const t of tks) {
+        if (/^[\^_']/.test(t) && a.length) a[a.length - 1] += t;
+        else if (/^\\,d/.test(t) && a.length) a[a.length - 1] += t;
+        else a.push(t);
+      }
+      // ALLOVER: everything before (after last '=') over everything after
+      const ai = a.indexOf('ALLOVER');
+      if (ai > -1) {
+        const eq = a.lastIndexOf('=', ai);
+        const num = a.slice(eq + 1, ai), den = a.slice(ai + 1);
+        return [...a.slice(0, eq + 1), '\\frac{' + finish(num) + '}{' + finish(den) + '}'].join(' ');
+      }
+      // prefix ops take the next term
+      for (let i = a.length - 2; i >= 0; i--) {
+        if (a[i] === 'SQRT') a.splice(i, 2, '\\sqrt{' + strip(a[i + 1]) + '}');
+        else if (a[i] === 'CBRT') a.splice(i, 2, '\\sqrt[3]{' + strip(a[i + 1]) + '}');
+        else if (a[i] === 'ABS') a.splice(i, 2, '\\left|' + strip(a[i + 1]) + '\\right|');
+      }
+      // binary "over": term over term (function + argument counts as one term on the left)
+      for (let i = 1; i < a.length - 1; i++) {
+        if (a[i] === 'over') {
+          let L = i - 1;
+          if (L > 0 && /^\\(sin|cos|tan|log|ln)$/.test(a[L - 1])) L--;
+          const left = a.slice(L, i).join(' ');
+          a.splice(L, i - L + 2, '\\frac{' + strip(left) + '}{' + strip(a[i + 1]) + '}');
+          i = L;
+        }
+      }
+      return a.join(' ')
+        .replace(/\s*([\^_])\s*/g, '$1')
+        .replace(/(\d) (\d)/g, '$1$2')
+        .replace(/(\d) ([a-z\\])/g, '$1$2')
+        .replace(/\s+/g, ' ').trim();
+    }
+    function strip(t) { return t.startsWith('\u0001') && t.endsWith('\u0002') ? t.slice(1, -1) : t; }
+    function matrix(r, c, rest, env) {
+      const items = rest.trim().split(/\s+/); const need = r * c;
+      const cells = items.slice(0, need); const after = items.slice(need).join(' ');
+      const rows = []; for (let i = 0; i < r; i++) rows.push(cells.slice(i * c, i * c + c).join(' & '));
+      return '\\begin{' + env + '} ' + rows.join(' \\\\ ') + ' \\end{' + env + '} ' + after;
+    }
+  }
+
+
+  const looksLikeLatex = (t) => /\\[a-zA-Z]|[\^_{}]/.test(t);
+
+  /* ---------- Layer engine: LaTeX → tree → tagged LaTeX / LaTeX spans / spoken spans ---------- */
+  const Layers = (() => {
+    const RAW = new Set(['\\text', '\\textrm', '\\mbox', '\\operatorname', '\\textbf', '\\mathrm']);
+    const FN = { sin:'sine', cos:'cosine', tan:'tangent', sec:'secant', csc:'cosecant', cot:'cotangent', sinh:'hyperbolic sine', cosh:'hyperbolic cosine', tanh:'hyperbolic tangent', arcsin:'arcsine', arccos:'arccosine', arctan:'arctangent', log:'log', ln:'natural log', exp:'exp', max:'max', min:'min', det:'the determinant', arg:'arg', sup:'supremum', inf:'infimum', gcd:'gcd', dim:'dimension', ker:'kernel', deg:'degree', Pr:'probability' };
+    const BIG = { int:'integral', iint:'double integral', iiint:'triple integral', oint:'contour integral', sum:'sum', prod:'product', lim:'limit', bigcup:'union', bigcap:'intersection' };
+    const OPS = { '+':'plus', '-':'minus', '=':'equals', '<':'is less than', '>':'is greater than', ',':',', ';':';', '!':'factorial', "'":'prime', '/':'over', '|':'bar', ':':'colon', '.':'point',
+      '\\cdot':'times', '\\times':'times', '\\div':'divided by', '\\pm':'plus or minus', '\\mp':'minus or plus', '\\le':'is less than or equal to', '\\leq':'is less than or equal to',
+      '\\ge':'is greater than or equal to', '\\geq':'is greater than or equal to', '\\ne':'is not equal to', '\\neq':'is not equal to', '\\approx':'is approximately', '\\equiv':'is equivalent to',
+      '\\to':'goes to', '\\rightarrow':'goes to', '\\leftarrow':'gets', '\\gets':'gets', '\\mapsto':'maps to', '\\Rightarrow':'implies', '\\iff':'if and only if', '\\in':'in', '\\notin':'not in',
+      '\\sim':'is distributed as', '\\mid':'given', '\\ldots':'dot dot dot', '\\cdots':'dot dot dot', '\\dots':'dot dot dot', '\\propto':'is proportional to', '\\subset':'is a subset of',
+      '\\subseteq':'is a subset of', '\\cup':'union', '\\cap':'intersect', '\\forall':'for all', '\\exists':'there exists', '\\circ':'composed with', '\\otimes':'tensor', '\\ast':'star', '\\star':'star',
+      '\\prime':'prime', '\\top':'transpose', '\\perp':'is perpendicular to', '\\parallel':'is parallel to', '\\vert':'bar', '\\lvert':'bar', '\\rvert':'bar',
+      '\\,':'', '\\;':'', '\\:':'', '\\!':'', '\\ ':'', '\\quad':'', '\\qquad':'', '\\\\':'', '&':'' };
+    const SYM = { infty:'infinity', partial:'partial', nabla:'nabla', ell:'ell', emptyset:'the empty set', varnothing:'the empty set', varepsilon:'epsilon', epsilon:'epsilon', varphi:'phi', vartheta:'theta', hbar:'h bar', Re:'real part', Im:'imaginary part', aleph:'aleph' };
+    const ACC = { mathbf:'bold', boldsymbol:'bold', bm:'bold', hat:'hat', widehat:'hat', bar:'bar', overline:'bar', vec:'vector', tilde:'tilde', widetilde:'tilde', dot:'dot', ddot:'double dot', mathcal:'script', mathbb:'', mathit:'', mathsf:'', underline:'underline' };
+    const IGNORE = new Set(['displaystyle', 'textstyle', 'limits', 'nolimits', 'big', 'Big', 'bigg', 'Bigg', 'bigl', 'bigr', 'Bigl', 'Bigr', 'biggl', 'biggr', 'left.', 'middle']);
+    const SEP = new Set([',', ';', '\\quad', '\\qquad']);
+    const REL = new Set(['=', '<', '>', '\\le', '\\leq', '\\ge', '\\geq', '\\ne', '\\neq', '\\approx', '\\equiv', '\\Rightarrow', '\\iff', '\\mapsto', '\\gets', '\\leftarrow', '\\rightarrow', '\\sim', '\\propto', '\\in', '\\notin', '\\subset', '\\subseteq', '\\to', '\\perp', '\\parallel']);
+    const ADD = new Set(['+', '-', '\\pm', '\\mp']);
+    const FUNCVARS = new Set(['f', 'g', 'h', 'F', 'G', 'H', 'P', 'L', 'J', 'K', 'E', 'N', 'p', 'q', 'r', '\\sigma', '\\phi', '\\varphi', '\\psi', '\\ell']);
+    const ORD = { 1:'first', 2:'second', 3:'third', 4:'fourth', 5:'fifth', 6:'sixth', 7:'seventh', 8:'eighth', 9:'ninth', 10:'tenth' };
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    function tokenize(s) {
+      const t = []; let i = 0;
+      while (i < s.length) {
+        const c = s[i];
+        if (/\s/.test(c)) { i++; continue; }
+        if (c === '%') { while (i < s.length && s[i] !== '\n') i++; continue; }
+        if (c === '\\') {
+          const m = s.slice(i).match(/^\\([a-zA-Z]+|.)/);
+          if (!m) { i++; continue; }
+          const tok = '\\' + m[1]; i += m[0].length; t.push(tok);
+          if (RAW.has(tok)) {
+            while (/\s/.test(s[i] || '')) i++;
+            if (s[i] === '{') { let d = 1, j = i + 1; while (j < s.length && d) { if (s[j] === '{') d++; else if (s[j] === '}') d--; j++; } t.push('\u0000' + s.slice(i + 1, j - 1)); i = j; }
+          }
+          continue;
+        }
+        if (/[0-9]/.test(c)) { const m = s.slice(i).match(/^\d+(\.\d+)?/); t.push(m[0]); i += m[0].length; continue; }
+        t.push(c); i++;
+      }
+      return t;
+    }
+
+    function parse(src) {
+      const T = tokenize(src); let p = 0, nid = 0;
+      const mk = (o) => { o.id = nid++; return o; };
+      const atom = (k, tex, sp, extra) => mk(Object.assign({ t: 'atom', k, tex, sp }, extra || {}));
+      const isOp = (it, set) => it && it.t === 'atom' && it.k === 'op' && set.has(it.tex);
+
+      function readName() {
+        if (T[p] !== '{') return '';
+        p++; let s = ''; while (p < T.length && T[p] !== '}') s += T[p++]; p++; return s;
+      }
+      function parseArg() {
+        if (T[p] === '{') { p++; const r = parseRow((t) => t === '}'); if (T[p] === '}') p++; return r; }
+        if (p >= T.length) return atom('empty', '', '');
+        const a = parseAtom(); return a || atom('empty', '', '');
+      }
+      function postfix(a) {
+        while (T[p] === '^' || T[p] === '_') {
+          const k = T[p++] === '^' ? 'sup' : 'sub';
+          const arg = parseArg();
+          if (a.t !== 'script' || a[k]) a = mk({ t: 'script', base: a });
+          a[k] = arg;
+        }
+        return a;
+      }
+      function parseRow(stop) {
+        const items = [];
+        while (p < T.length && !stop(T[p]) && T[p] !== '}') {
+          let a = parseAtom();
+          if (!a) continue;
+          items.push(postfix(a));
+        }
+        return group(items);
+      }
+      function parseAtom() {
+        const tok = T[p++];
+        if (tok === '{') { const r = parseRow((t) => t === '}'); if (T[p] === '}') p++; if (r.t === 'row') r.braced = true; return r; }
+        if (tok === '^' || tok === '_') { p--; return atom('empty', '', ''); }
+        if (tok[0] === '\u0000') return atom('text', tok.slice(1), tok.slice(1));
+        if (/^\d/.test(tok)) return atom('num', tok, tok);
+        if (/^[a-zA-Z]$/.test(tok)) return atom('var', tok, tok);
+        if (tok === '(' || tok === '[') {
+          const close = tok === '(' ? ')' : ']';
+          const body = parseRow((t) => t === close);
+          let c = null; if (T[p] === close) { p++; c = close; }
+          return mk({ t: 'fence', open: tok, close: c, body });
+        }
+        if (tok[0] === '\\' && tok.length > 1) {
+          const name = tok.slice(1);
+          const PAIR = { lVert:'\\rVert', Vert:'\\Vert', lvert:'\\rvert', langle:'\\rangle', lfloor:'\\rfloor', lceil:'\\rceil' };
+          if (PAIR[name] && !(name === 'Vert' && T[p - 2] === '\\right')) { const cl = PAIR[name]; const body = parseRow((t) => t === cl); let c = null; if (T[p] === cl) { p++; c = cl; } return mk({ t: 'fence', open: tok, close: c, body }); }
+          if (name === '{') { const body = parseRow((t) => t === '\\}'); let c = null; if (T[p] === '\\}') { p++; c = '\\}'; } return mk({ t: 'fence', open: '\\{', close: c, body }); }
+          if (name === 'frac' || name === 'dfrac' || name === 'tfrac') { const num = parseArg(), den = parseArg(); return mk({ t: 'frac', cmd: tok, num, den }); }
+          if (name === 'sqrt') { let idx = null; if (T[p] === '[') { p++; idx = parseRow((t) => t === ']'); if (T[p] === ']') p++; } return mk({ t: 'sqrt', idx, body: parseArg() }); }
+          if (name === 'left') {
+            let open = T[p++]; if (open === '\\') open = '\\' + T[p++];
+            const body = parseRow((t) => t === '\\right'); p++;
+            let close = T[p++] || '.';
+            return mk({ t: 'fence', open, close, body, lr: true });
+          }
+          if (name === 'right') { p++; return null; }
+          if (name === 'begin') {
+            const env = readName(); const rows = []; let cells = [];
+            let colspec = '';
+            if (env === 'array' && T[p] === '{') colspec = readName();
+            while (p < T.length) {
+              const cell = parseRow((t) => t === '&' || t === '\\\\' || t === '\\end');
+              cells.push(cell);
+              const s = T[p++];
+              if (s === '&') continue;
+              rows.push(mk({ t: 'mrow', cells })); cells = [];
+              if (s === '\\end' || s === undefined) { readName(); break; }
+            }
+            const last = rows[rows.length - 1];
+            if (last && last.cells.length === 1 && last.cells[0].t === 'atom' && last.cells[0].k === 'empty' && rows.length > 1) rows.pop();
+            return mk({ t: 'matrix', env, rows, colspec });
+          }
+          if (Object.prototype.hasOwnProperty.call(ACC, name)) return mk({ t: 'acc', cmd: tok, name, body: parseArg() });
+          if (RAW.has(tok)) {
+            const raw = (T[p] || '')[0] === '\u0000' ? T[p++].slice(1) : '';
+            if (name === 'operatorname') return atom('fn', tok + '{' + raw + '}', raw, { name: raw });
+            return atom('text', tok + '{' + raw + '}', raw);
+          }
+          if (BIG[name]) return atom('big', tok, BIG[name], { name });
+          if (FN[name]) return atom('fn', tok, FN[name], { name });
+          if (Object.prototype.hasOwnProperty.call(OPS, tok)) return atom('op', tok, OPS[tok]);
+          if (IGNORE.has(name)) return null;
+          const cap = /^[A-Z][a-z]+$/.test(name) && name !== 'Re' && name !== 'Im';
+          return atom('sym', tok, SYM[name] || (name === 'Delta' ? 'delta' : cap ? 'capital ' + name.toLowerCase() : name.replace(/^var/, '')));
+        }
+        return atom('op', tok, Object.prototype.hasOwnProperty.call(OPS, tok) ? OPS[tok] : tok);
+      }
+
+      function joinDiffs(items) {
+        const out = [];
+        for (let i = 0; i < items.length; i++) {
+          const a = items[i], b = items[i + 1];
+          const isD = a && a.t === 'atom' && a.k === 'var' && a.tex === 'd' || (a && a.t === 'atom' && a.k === 'sym' && a.tex === '\\partial');
+          if (isD && b && (b.t === 'atom' && (b.k === 'var' || b.k === 'sym') || b.t === 'script' && b.base.t === 'atom' && b.base.k === 'var')) {
+            out.push(mk({ t: 'row', kids: [a, b], label: 'Differential' })); i++;
+          } else out.push(a);
+        }
+        return out;
+      }
+      function group(items) { return level(joinDiffs(items.filter(Boolean)), 0); }
+      const LEVELS = [[SEP, 'List'], [REL, null], [ADD, 'Sum']];
+      function level(items, L) {
+        if (items.length === 0) return atom('empty', '', '');
+        if (items.length === 1) return items[0];
+        if (L >= LEVELS.length) return term(items);
+        const [set, lab] = LEVELS[L];
+        if (!items.some((it) => isOp(it, set))) return level(items, L + 1);
+        const kids = []; let seg = [];
+        const flush = () => { if (seg.length) kids.push(level(seg, L + 1)); seg = []; };
+        for (const it of items) { if (isOp(it, set)) { flush(); kids.push(it); } else seg.push(it); }
+        flush();
+        if (kids.length === 1) return kids[0];
+        return mk({ t: 'row', kids, label: lab || (items.some((it) => it.tex === '=') ? 'Equation' : 'Relation') });
+      }
+      const bigOf = (n) => n.t === 'atom' && n.k === 'big' ? n.name : n.t === 'script' && n.base.t === 'atom' && n.base.k === 'big' ? n.base.name : null;
+      const BODY = { int:'Integrand', iint:'Integrand', iiint:'Integrand', oint:'Integrand', sum:'Summand', prod:'Factor', lim:'Inside the limit' };
+      const WHOLE = { int:'Integral', iint:'Integral', iiint:'Integral', oint:'Integral', sum:'Summation', prod:'Product of terms', lim:'Limit' };
+      function term(items) {
+        const bi = items.findIndex((it) => bigOf(it));
+        if (bi > -1 && bi < items.length - 1) {
+          const name = bigOf(items[bi]);
+          const rest = items.slice(bi + 1);
+          let body = rest.length === 1 ? rest[0] : term(rest);
+          if (rest.length > 1 && body.t === 'row' && body.label === 'Product') body.label = BODY[name] || 'Body';
+          const node = mk({ t: 'row', kids: [items[bi], body], label: WHOLE[name] || 'Operator' });
+          if (bi === 0) return node;
+          return mk({ t: 'row', kids: [...items.slice(0, bi), node], label: 'Product' });
+        }
+        return mk({ t: 'row', kids: items, label: 'Product' });
+      }
+
+      const root = parseRow(() => false);
+      return root;
+    }
+
+    function kids(n) {
+      if (!n) return [];
+      switch (n.t) {
+        case 'row': return n.kids;
+        case 'script': return [n.base, n.sub, n.sup].filter(Boolean);
+        case 'frac': return [n.num, n.den];
+        case 'sqrt': return [n.idx, n.body].filter(Boolean);
+        case 'fence': return [n.body];
+        case 'matrix': return n.rows;
+        case 'mrow': return n.cells;
+        case 'acc': return [n.body];
+        default: return [];
+      }
+    }
+    const isLeafOp = (n) => n.t === 'atom' && (n.k === 'op' || n.k === 'empty');
+
+    /* LaTeX emitter. mode: 'plain' | 'tag' (\class wrappers for MathJax) | 'html' (nested spans) */
+    function tex(n, m = 'plain') {
+      const E = m === 'html' ? esc : (s) => s;
+      const wrap = (s) => m === 'tag' ? '\\class{mx-' + n.id + '}{' + s + '}' : m === 'html' ? '<span class="nd" data-n="' + n.id + '">' + s + '</span>' : s;
+      switch (n.t) {
+        case 'atom':
+          if (n.k === 'empty') return m === 'html' ? '' : '{}';
+          if (n.k === 'op' || n.k === 'big') return E(n.tex);
+          if (n.k === 'text') return wrap(E(n.tex.startsWith('\\') ? n.tex : '\\text{' + n.tex + '}'));
+          return wrap(E(n.tex));
+        case 'row': { const s = n.kids.map((k) => tex(k, m)).join(' '); return m === 'plain' ? (n.braced ? '{' + s + '}' : s) : wrap(s); }
+        case 'script': {
+          let b = tex(n.base, m);
+          if (n.base.t === 'row' && m !== 'tag') b = '{' + b + '}';
+          let s = b;
+          if (n.sub) s += '_{' + tex(n.sub, m) + '}';
+          if (n.sup) s += '^{' + tex(n.sup, m) + '}';
+          return wrap(s);
+        }
+        case 'frac': return wrap(n.cmd + '{' + tex(n.num, m) + '}{' + tex(n.den, m) + '}');
+        case 'sqrt': return wrap('\\sqrt' + (n.idx ? '[' + tex(n.idx, m) + ']' : '') + '{' + tex(n.body, m) + '}');
+        case 'fence': return wrap(n.lr ? '\\left' + E(n.open) + ' ' + tex(n.body, m) + ' \\right' + E(n.close) : E(n.open) + ' ' + tex(n.body, m) + (n.close ? ' ' + E(n.close) : ''));
+        case 'matrix': {
+          const rows = n.rows.map((r) => {
+            const s = r.cells.map((c) => tex(c, m)).join(E(' & '));
+            return m === 'html' ? '<span class="nd" data-n="' + r.id + '">' + s + '</span>' : s;
+          }).join(' \\\\ ');
+          return wrap('\\begin{' + n.env + '}' + (n.colspec ? '{' + n.colspec + '}' : '') + ' ' + rows + ' \\end{' + n.env + '}');
+        }
+        case 'acc': return wrap(n.cmd + '{' + tex(n.body, m) + '}');
+      }
+      return '';
+    }
+
+    function simple(n) {
+      if (!n) return true;
+      if (n.t === 'atom') return n.k !== 'big';
+      if (n.t === 'acc') return simple(n.body);
+      if (n.t === 'script') return n.base.t === 'atom' && n.base.k !== 'big' && (!n.sup || n.sup.t === 'atom') && (!n.sub || n.sub.t === 'atom');
+      if (n.t === 'row' && n.label === 'Differential') return true;
+      if (n.t === 'row' && n.label === 'Sum' && n.kids.length === 2 && n.kids[0].tex === '-' && simple(n.kids[1])) return true;
+      if (n.t === 'row' && n.label === 'Product' && n.kids.length === 2 && n.kids.every((k) => k.t === 'atom' && (k.k === 'num' || k.k === 'var' || k.k === 'sym' || k.k === 'fn'))) return true;
+      return false;
+    }
+    const callee = (k) => k && (k.t === 'atom' && (k.k === 'fn' || FUNCVARS.has(k.tex)) || k.t === 'script' && k.base.t === 'atom' && (k.base.k === 'fn' || FUNCVARS.has(k.base.tex)) || k.t === 'acc' && callee(k.body));
+    const DL = { '(':['the quantity', 'close quantity'], '[':['the bracket', 'close bracket'], '\\{':['the set', 'close set'], '|':['the absolute value of', 'end absolute value'], '\\vert':['the absolute value of', 'end absolute value'], '\\lvert':['the absolute value of', 'end absolute value'],
+      '\\|':['the norm of', 'end norm'], '\\Vert':['the norm of', 'end norm'], '\\lVert':['the norm of', 'end norm'], '\\langle':['the vector', 'end vector'], '\\lfloor':['the floor of', 'end floor'], '\\lceil':['the ceiling of', 'end ceiling'], '.':['', ''] };
+
+    const CUE = /(close quantity|end root|end exponent|end sub|end norm|end absolute value|close bracket|close set|end vector|end floor|end ceiling)$/;
+    const plain = (h) => h.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+    /* Spoken emitter: nested spans, one per node */
+    function speak(n) {
+      const W = (node, s) => '<span class="nd" data-n="' + node.id + '">' + s + '</span>';
+      const join = (arr) => arr.filter((x) => x && x.replace(/<[^>]+>/g, '').trim()).join(' ');
+      switch (n.t) {
+        case 'atom':
+          if (n.k === 'op' || n.k === 'empty') return esc(n.sp);
+          if (n.k === 'big') return W(n, 'the ' + esc(n.sp) + ' of');
+          return W(n, esc(n.sp));
+        case 'row': {
+          const K = n.kids, out = [];
+          const isBold = (k) => k && k.t === 'acc' && ACC[k.name] === 'bold';
+          const numLike = (k) => k && (k.t === 'atom' && k.k === 'num' || k.t === 'fence' && k.open === '(' && simple(k.body));
+          const bigRow = (k) => k && k.t === 'row' && /^(Integral|Summation|Limit|Product of terms)$/.test(k.label);
+          K.forEach((k, i) => {
+            let prev = K[i - 1]; if (prev && prev.tex === "'") prev = K[i - 2];
+            const next = K[i + 1];
+            let piece;
+            if (k.t === 'atom' && k.k === 'op') {
+              if (k.tex === '-' && (i === 0 || K[i - 1].t === 'atom' && K[i - 1].k === 'op')) piece = 'negative';
+              else if (k.tex === '\\cdot' && isBold(K[i - 1]) && isBold(next)) piece = 'dot';
+              else if (SEP.has(k.tex) && k.tex !== ',' && k.tex !== ';') piece = ',';
+              else piece = esc(k.sp);
+            } else if (k.t === 'fence' && k.open === '(' && callee(prev)) piece = W(k, simple(k.body) ? 'of ' + speak(k.body) : 'of the quantity ' + speak(k.body) + ', close quantity');
+            else if (k.t === 'matrix' && prev && prev.t === 'atom' && prev.k === 'fn') piece = 'of ' + speak(k);
+            else piece = speak(k);
+            const kIsOp = k.t === 'atom' && k.k === 'op';
+            if (kIsOp && piece === '') return;
+            const isOpOf = (x) => x && x.t === 'frac' && /^(d|\\partial)$/.test(tex(x.num).trim());
+            if (!kIsOp && /^(Product|Integrand|Summand|Factor|Inside the limit)$/.test(n.label) && prev && i > 0 && isOpOf(prev) && !(K[i - 1].t === 'atom' && K[i - 1].k === 'op')) out.push('of');
+            else if (!kIsOp && /^(Product|Integrand|Summand|Factor|Inside the limit)$/.test(n.label) && prev && i > 0 && !(K[i - 1].t === 'atom' && K[i - 1].k === 'op')) {
+              const callFence = k.t === 'fence' && k.open === '(' && callee(prev);
+              const after = k.t === 'matrix' && prev.t === 'atom' && prev.k === 'fn';
+              if (!callFence && !after && !(k.t === 'row' && k.label === 'Differential') && (k.t === 'fence' || k.t === 'matrix' || k.t === 'script' && (k.base.t === 'fence' || k.base.t === 'matrix') || bigRow(k) || prev.t === 'frac' || prev.t === 'matrix' || prev.t === 'fence' || prev.t === 'script' && prev.base.t === 'matrix' || numLike(prev) && numLike(k))) out.push('times');
+            }
+            const pt = plain(piece);
+            const isDx = (x) => x && x.t === 'row' && x.label === 'Differential';
+            if (next && !(next.t === 'atom' && next.k === 'op' && SEP.has(next.tex))) {
+              const nextIsOp = next.t === 'atom' && next.k === 'op' && ADD.has(next.tex);
+              if (CUE.test(pt) || / all over /.test(pt) && !/^the /.test(pt.split(' all over ')[0].slice(-1)) ||
+                  nextIsOp && (k.t === 'script' && (/ to the /.test(pt) || k.base.t !== 'atom') && !CUE.test(pt) || k.t === 'sqrt' || bigRow(k)) ||
+                  isDx(next) && (k.t === 'frac' || k.t === 'fence' || k.t === 'sqrt' || k.t === 'script' && (/ to the /.test(pt) || k.base.t !== 'atom'))) piece += ',';
+            }
+            out.push(piece);
+          });
+          return W(n, join(out).replace(/ ,/g, ',').replace(/,,/g, ','));
+        }
+        case 'script': return W(n, scriptSp(n));
+        case 'frac': {
+          const N = speak(n.num), D = speak(n.den), tn = tex(n.num), td = tex(n.den);
+          if (/^(d|\\partial)\b|^d$|^\\partial/.test(tn) && /^(d|\\partial)/.test(td)) return W(n, N + ' ' + D);
+          if (tn === '1' && /^[234]$/.test(td)) return W(n, 'one ' + { 2:'half', 3:'third', 4:'quarter' }[td]);
+          if (/^(d|\\partial)/.test(tn) && /^(d|\\partial)/.test(td)) return W(n, N + ' ' + D);
+          const selfDelim = n.den.t === 'sqrt' || n.den.t === 'fence' || n.den.t === 'matrix' || n.den.t === 'row' && n.den.label === 'Product' && n.den.kids.every((k) => k.t === 'fence' || k.t === 'atom' && k.k === 'op');
+          const den = simple(n.den) || selfDelim ? D : 'the quantity ' + D + ', close quantity';
+          if (simple(n.num)) return W(n, N + ' over ' + den);
+          return W(n, N + ', all over ' + den);
+        }
+        case 'sqrt': {
+          const it = n.idx ? tex(n.idx) : '';
+          const pre = !it ? 'the square root of' : it === '3' ? 'the cube root of' : 'the ' + (ORD[it] || it + 'th') + ' root of';
+          return W(n, pre + ' ' + speak(n.body) + (simple(n.body) ? '' : ', end root'));
+        }
+        case 'fence': {
+          const d = DL[n.open] || ['open ' + n.open.replace(/^\\/, ''), 'close'];
+          if ((n.open === '(' || n.open === '[') && n.body.t === 'matrix') return W(n, speak(n.body));
+          if (n.open === '(' && simple(n.body) && !(n.body.t === 'row' && n.body.label === 'Product')) return W(n, speak(n.body));
+          if ((n.open === '\\|' || n.open === '\\lVert' || n.open === '\\Vert' || n.open === '|') && simple(n.body)) return W(n, d[0] + ' ' + speak(n.body));
+          return W(n, join([d[0], speak(n.body) + (d[1] ? ',' : ''), d[1]]));
+        }
+        case 'matrix': {
+          const r = n.rows.length, c = Math.max(...n.rows.map((x) => x.cells.length));
+          const rows = n.rows.map((rw) => W(rw, rw.cells.map(speak).join(', ')));
+          if (n.env === 'cases') return W(n, (n.rows.every((rw) => rw.cells.some((c) => /=/.test(tex(c)))) ? 'the system of ' + (r === 2 ? 'two' : r === 3 ? 'three' : r) + ' equations: ' : 'cases: ') + rows.join('; '));
+          const bar = n.colspec && n.colspec.indexOf('|') > -1 ? n.colspec.replace(/[^a-z|]/g, '').indexOf('|') : -1;
+          if (bar > -1) {
+            const rws = n.rows.map((rw, ri) => W(rw, 'row ' + (ri + 1) + ': ' + rw.cells.map((c, ci) => (ci === bar ? 'bar, ' : '') + speak(c)).join(', ')));
+            return W(n, 'the augmented matrix with a vertical bar before the last column: ' + rws.join('; '));
+          }
+          if (/^(aligned|align|gathered|split|array)\*?$/.test(n.env) && !/matrix/.test(n.env)) {
+            if (n.env !== 'array') return W(n, rows.join('; '));
+          }
+          if (c === 1 && !/^v/i.test(n.env)) return W(n, 'the column vector ' + rows.join(', '));
+          const m = 'the ' + r + ' by ' + c + ' matrix with rows ' + (r === 2 ? rows.join(' and ') : rows.join('; '));
+          return W(n, /^v/i.test(n.env) ? 'the determinant of ' + m : m);
+        }
+        case 'acc': {
+          const B = speak(n.body);
+          const f = { bold:(b) => 'bold ' + b, hat:(b) => b + ' hat', bar:(b) => b + ' bar', vector:(b) => 'vector ' + b, tilde:(b) => b + ' tilde', dot:(b) => b + ' dot', 'double dot':(b) => b + ' double dot', script:(b) => 'script ' + b, underline:(b) => b + ' underlined' }[ACC[n.name]];
+          return W(n, f ? f(B) : B);
+        }
+      }
+      return '';
+    }
+    function scriptSp(n) {
+      const b = n.base;
+      if (b.t === 'atom' && b.k === 'big') {
+        if (b.name === 'lim') {
+          const sb = n.sub;
+          if (sb && sb.t === 'row' && sb.kids.length === 3 && sb.kids[1].tex === '\\to') return 'the limit as ' + speak(sb.kids[0]) + ' approaches ' + speak(sb.kids[2]) + ' of';
+          return 'the limit as ' + (sb ? speak(sb) : '') + ' of';
+        }
+        if (n.sub && n.sup) return 'the ' + b.sp + ' from ' + speak(n.sub) + ' to ' + speak(n.sup) + ' of';
+        if (n.sub) return 'the ' + b.sp + ' over ' + speak(n.sub) + ' of';
+        return 'the ' + b.sp + ' of';
+      }
+      if (b.t === 'atom' && b.k === 'fn' && n.sub && !n.sup && /^(max|min|sup|inf)$/.test(b.name)) return 'the ' + b.sp + ' over ' + speak(n.sub) + ' of';
+      let s = speak(b);
+      if (b.t === 'frac' || b.t === 'row' && !simple(b)) s = 'the quantity ' + s + ', close quantity';
+      if (b.t === 'fence' && b.open === '(' && b.body.t === 'row' && b.body.label === 'Product' && n.sup && /^(T|\\top)$/.test(tex(n.sup).replace(/\s+/g, ''))) return 'the transpose of ' + speak(b.body);
+      if (n.sub) s += ' sub ' + speak(n.sub) + (simple(n.sub) ? '' : ', end sub');
+      if (n.sup && (CUE.test(plain(s)) || b.t === 'matrix')) s += ',';
+      if (n.sup) {
+        const t = tex(n.sup).replace(/\s+/g, '');
+        const named = { '2':'squared', '3':'cubed', 'T':'transpose', '\\top':'transpose', '-1':'inverse', '*':'star', '\\ast':'star', '\\star':'star', '\\prime':'prime', "'":'prime', '\\dagger':'dagger' };
+        const W = (node, x) => '<span class="nd" data-n="' + node.id + '">' + x + '</span>';
+        if (named[t]) s += ' ' + W(n.sup, named[t]);
+        else if (n.sup.t === 'atom' && n.sup.k === 'num') s += ' to the ' + W(n.sup, ORD[t] || t + 'th');
+        else if (n.sup.t === 'atom' || n.sup.t === 'acc') s += ' to the ' + speak(n.sup);
+        else s += ' to the ' + speak(n.sup) + ', end exponent';
+      }
+      return s;
+    }
+
+    function label(n) {
+      switch (n.t) {
+        case 'row': return n.label || 'Group';
+        case 'script': {
+          const b = n.base;
+          if (b.t === 'atom' && b.k === 'big') return { int:'Integral sign with bounds', sum:'Sum sign with bounds', prod:'Product sign with bounds', lim:'Limit with its approach' }[b.name] || 'Operator with bounds';
+          return n.sup && n.sub ? 'Subscript and exponent' : n.sup ? 'Exponent applied to its base' : 'Subscript';
+        }
+        case 'frac': return 'Fraction';
+        case 'sqrt': return 'Root';
+        case 'fence': return { '|':'Absolute value', '\\|':'Norm', '\\lVert':'Norm', '\\Vert':'Norm', '\\langle':'Vector', '[':'Brackets', '\\{':'Braces' }[n.open] || (n.open === '.' ? 'Group' : 'Parentheses');
+        case 'matrix': return /^v/i.test(n.env) ? 'Determinant' : n.env === 'cases' ? 'Cases' : 'Matrix';
+        case 'mrow': return 'Matrix row';
+        case 'acc': return { bold:'Bold (vector)', hat:'Hat (estimate)', bar:'Bar', vector:'Vector arrow', tilde:'Tilde', dot:'Dot (derivative)', script:'Script letter' }[ACC[n.name]] || 'Styled symbol';
+        case 'atom': return { var:'Variable', num:'Number', fn:'Function name', sym:'Symbol', text:'Text', big:'Operator' }[n.k] || 'Symbol';
+      }
+      return 'Part';
+    }
+
+    function build(latex) {
+      const root = parse(latex);
+      const byId = new Map(), parent = new Map();
+      (function walk(n, p) { byId.set(n.id, n); if (p) parent.set(n.id, p); kids(n).forEach((k) => walk(k, n)); })(root, null);
+      return {
+        root, byId,
+        parent: (n) => parent.get(n.id) || null,
+        nav: (n) => kids(n).filter((k) => !isLeafOp(k)),
+        tagged: tex(root, 'tag'), plain: tex(root, 'plain'), html: tex(root, 'html'),
+        spokenHtml: speak(root),
+        tex, speak, label,
+      };
+    }
+    const plainText = (html) => html.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ,/g, ',').trim();
+    return { build, plainText };
+  })();
+
+
+  /* ---------- Rendering ---------- */
+  function renderTex(el, tex, display = true) {
+    if (!mjReady()) { el.textContent = tex; return false; }
+    el.textContent = '';
+    try {
+      const node = MathJax.tex2svg(tex, { display });
+      el.appendChild(node);
+      return !node.querySelector('[data-mjx-error], merror, [data-mml-node="merror"]');
+    } catch (e) { el.textContent = tex; return false; }
+  }
+
+  function setLatex(latex, opts = {}) {
+    current.latex = latex;
+    try { L = latex.trim() ? Layers.build(latex) : null; } catch (e) { L = null; }
+    if (!opts.fromEditor) latexEl.value = latex;
+    if (sel != null && (!L || !L.byId.has(sel))) sel = null;
+    renderResults();
+  }
+
+  function renderResults() {
+    const tex = current.latex;
+    if (!tex.trim()) {
+      stage.innerHTML = '<span class="placeholder">Your equation will appear here.</span>';
+      latexView.textContent = ''; cleanView.textContent = ''; renderChain(); return;
+    }
+    let ok;
+    if (explore && L) {
+      ok = renderTex(stage, L.tagged);
+      if (!ok) ok = renderTex(stage, tex);
+    } else ok = renderTex(stage, tex);
+    if (!ok && mjReady()) setStatus('That LaTeX has an error. Edit it in the Text box to fix the render.', 'err');
+    latexView.innerHTML = L ? L.html : esc(tex);
+    cleanView.innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
+    if (inWs) renderWsViews();
+    highlight();
+  }
+
+  /* ---------- Explore: selection and highlighting ---------- */
+  function chainOf(id) {
+    const out = []; let n = L && L.byId.get(id);
+    while (n) { out.unshift(n); n = L.parent(n); }
+    return out;
+  }
+  const colorIdx = (pos) => ((Math.max(pos, 1) - 1) % 5) + 1;
+
+  function highlight() {
+    document.querySelectorAll('.view .nd.hl').forEach((e) => { e.classList.remove('hl', 'sel'); });
+    document.querySelectorAll('rect.mx-hl').forEach((r) => r.remove());
+    if (!live() || sel == null) { renderChain(); return; }
+    const chain = chainOf(sel);
+    const svgs = [stage, $('wsStage')].map((s) => s.querySelector('svg')).filter(Boolean);
+    chain.forEach((n, pos) => {
+      if (pos === 0 && chain.length > 1) return;
+      const ci = colorIdx(pos), isSel = n.id === sel;
+      document.querySelectorAll('.view [data-n="' + n.id + '"]').forEach((e) => {
+        e.classList.add('hl'); e.style.setProperty('--hc', 'var(--l' + ci + ')'); e.style.setProperty('--hs', 'var(--s' + ci + ')');
+        if (isSel) e.classList.add('sel');
+      });
+      svgs.forEach((svg) => svg.querySelectorAll('.mx-' + n.id).forEach((g) => addRect(g, ci, isSel)));
+    });
+    renderChain(chain);
+  }
+  function addRect(g, ci, isSel) {
+    let bb; try { bb = g.getBBox(); } catch (e) { return; }
+    if (!bb || (!bb.width && !bb.height)) return;
+    const pad = 45;
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('class', 'mx-hl');
+    r.setAttribute('x', bb.x - pad); r.setAttribute('y', bb.y - pad);
+    r.setAttribute('width', bb.width + pad * 2); r.setAttribute('height', bb.height + pad * 2);
+    r.setAttribute('rx', 70);
+    r.setAttribute('style', 'fill:var(--l' + ci + ');' + (isSel ? 'stroke:var(--s' + ci + ');stroke-width:45;' : 'stroke:none;'));
+    g.insertBefore(r, g.firstChild);
+  }
+
+  function renderChain(chain) {
+    renderWsNav(chain);
+    const ol = $('chain'); ol.textContent = '';
+    $('layers-hint').hidden = !!(chain && chain.length);
+    if (!chain || !chain.length) return;
+    chain.slice().reverse().forEach((n) => {
+      const pos = chain.indexOf(n);
+      const li = document.createElement('li');
+      const b = document.createElement('button'); b.type = 'button';
+      if (n.id === sel) b.classList.add('cur');
+      const sw = document.createElement('span'); sw.className = 'sw';
+      sw.style.background = pos === 0 && chain.length > 1 ? 'var(--line)' : 'var(--s' + colorIdx(pos) + ')';
+      const body = document.createElement('span');
+      const ttl = document.createElement('span'); ttl.className = 'ttl';
+      ttl.textContent = (pos === 0 ? 'Whole equation · ' : 'Layer ' + pos + ' · ') + L.label(n);
+      const code = document.createElement('code'); code.textContent = L.tex(n).replace(/\s+/g, ' ');
+      const say = document.createElement('span'); say.className = 'say'; say.textContent = '“' + Layers.plainText(L.speak(n)) + '”';
+      body.append(ttl, code, say);
+      b.append(sw, body);
+      b.onclick = () => select(n.id);
+      li.appendChild(b); ol.appendChild(li);
+    });
+  }
+
+  function select(id) {
+    if (id == null || id === sel) return;
+    sel = id; highlight();
+    const n = L.byId.get(id);
+    $('announce').textContent = L.label(n) + ': ' + Layers.plainText(L.speak(n));
+  }
+  function nodeFromEvent(e) {
+    let el = e.target;
+    while (el && el !== e.currentTarget) {
+      if (el.dataset && el.dataset.n != null) return +el.dataset.n;
+      const cls = el.getAttribute && el.getAttribute('class');
+      if (cls) { const m = cls.match(/(?:^|\s)mx-(\d+)(?:\s|$)/); if (m) return +m[1]; }
+      el = el.parentNode;
+    }
+    return null;
+  }
+  function target(key) {
+    const n = sel == null ? L.root : L.byId.get(sel);
+    if (sel == null) return n;
+    if (key === 'ArrowUp') return L.parent(n);
+    if (key === 'ArrowDown') return L.nav(n)[0] || null;
+    const p = L.parent(n); if (!p) return null;
+    const sib = L.nav(p); return sib[sib.indexOf(n) + (key === 'ArrowRight' ? 1 : -1)] || null;
+  }
+  function move(key) {
+    if (!live()) return;
+    if (key === 'Escape') { sel = null; highlight(); return; }
+    const t = target(key); if (t) select(t.id);
+  }
+  function navKey(e) {
+    if (!live()) return;
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(e.key)) return;
+    e.preventDefault(); move(e.key);
+  }
+  [stage, latexView, cleanView].forEach((v) => {
+    v.addEventListener('mouseover', (e) => { if (explore && L) select(nodeFromEvent(e)); });
+    v.addEventListener('click', (e) => { if (explore && L) select(nodeFromEvent(e)); });
+    v.addEventListener('keydown', navKey);
+    v.addEventListener('focus', () => { if (explore && L && sel == null) select(L.root.id); });
+  });
+  ['wsStage', 'wsLatex', 'wsClean'].forEach((id) => {
+    const v = $(id);
+    v.addEventListener('click', (e) => { if (inWs && L) select(nodeFromEvent(e)); });
+    v.addEventListener('keydown', navKey);
+    v.addEventListener('focus', () => { if (inWs && L && sel == null) select(L.root.id); });
+  });
+
+  function setExplore(on) {
+    explore = on; $('explore').checked = on;
+    resultsEl.classList.toggle('explore', on);
+    $('layers').hidden = !on;
+    latexEl.hidden = on; latexView.hidden = !on;
+    $('latex-hint').textContent = on ? 'Shown in tidied form while exploring. Turn off Explore layers to edit.' : 'Edit the LaTeX and the image updates.';
+    [stage, latexView, cleanView].forEach((v) => { if (on) v.setAttribute('tabindex', '0'); else v.removeAttribute('tabindex'); });
+    try { localStorage.setItem('speak-math-explore', on ? '1' : '0'); } catch (e) {}
+    renderResults();
+  }
+  $('explore').addEventListener('change', (e) => setExplore(e.target.checked));
+
+  /* ---------- Convert ---------- */
+  async function convert() {
+    const text = spoken.value.trim();
+    if (!text) { setStatus('Type or dictate an equation first.', 'err'); spoken.focus(); return; }
+    const btn = $('submit'); btn.disabled = true;
+    let latex = '', method = 'rules', note = '';
+    try {
+      if (looksLikeLatex(text)) { latex = text; method = 'latex'; }
+      else if ($('engine').value === 'claude' && sample) {
+        setStatus('Converting with Claude…');
+        try {
+          const r = await sample.json(
+            'You convert spoken mathematics into LaTeX. The input is a transcript from speech recognition and may contain recognition errors (e.g. "x to" for "x two", "some" for "sum", "intro" for "integral"); infer the intended math. Scope cues like "the quantity … close quantity", "end root", "end exponent" and "all over" mark where a group ends.\n' +
+            'Return JSON only: {"latex": string}. "latex" is the equation body only, no $ or \\[ delimiters, valid for MathJax with amsmath. Prefer \\frac, \\sqrt{}, \\left( \\right), \\int_{a}^{b}, \\sum_{}^{}, \\lim_{x \\to a}, bmatrix, \\,dx.\n\nTranscript: ' + JSON.stringify(text),
+            { modelTier: 'quick' }
+          );
+          if (r && typeof r.latex === 'string' && r.latex.trim()) { latex = r.latex.trim(); method = 'claude'; }
+        } catch (e) {
+          if (e && e.code === 'not_granted') { sample = null; markNoClaude(); }
+          note = 'Claude was unavailable, so the built-in rules were used.';
+        }
+      }
+      if (!latex) latex = ruleParse(text);
+      setStatus('');
+      setLatex(latex);
+      const clean = L ? Layers.plainText(L.spokenHtml) : '';
+      if (statusEl.className !== 'status err') setStatus(note || (method === 'claude' ? 'Converted with Claude and logged.' : method === 'latex' ? 'Rendered your LaTeX and logged it.' : 'Converted with the built-in rules and logged.'), note ? 'err' : 'ok');
+      await addLog({ input: text, latex, clean, method, source: current.source, ts: Date.now() });
+      current.source = 'typed';
+    } finally { btn.disabled = false; }
+  }
+  function markNoClaude() {
+    const s = $('engine'); s.value = 'rules'; s.options[0].disabled = true; s.options[0].textContent = 'Claude (not available here)';
+  }
+
+  /* ---------- Log ---------- */
+  const LS_KEY = 'speak-math-log';
+  function loadLocal() { try { localLog = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (e) { localLog = []; } }
+  function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(localLog.slice(0, 200))); } catch (e) {} }
+  async function addLog(entry) {
+    if (logCol) { try { await logCol.add(entry); return; } catch (e) { setStatus('Couldn\'t save to your log: ' + (e.message || e.code), 'err'); } }
+    entry.id = 'l' + entry.ts; localLog.unshift(entry); saveLocal(); renderLog(localLog);
+  }
+  async function removeLog(id) {
+    if (logCol) { try { await logCol.doc(id).delete(); } catch (e) { setStatus('Couldn\'t delete that entry.', 'err'); } return; }
+    localLog = localLog.filter((e) => e.id !== id); saveLocal(); renderLog(localLog);
+  }
+  function renderLog(list) {
+    entriesEl.textContent = '';
+    if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p>'; return; }
+    for (const e of list) {
+      const row = document.createElement('div'); row.className = 'entry';
+      const left = document.createElement('div'); left.style.cssText = 'min-width:0;display:grid;gap:4px';
+      const eq = document.createElement('div'); eq.className = 'eq'; renderTex(eq, e.latex, false);
+      const said = document.createElement('div'); said.className = 'said'; said.textContent = '“' + e.input + '”';
+      const code = document.createElement('code'); code.textContent = e.latex;
+      const meta = document.createElement('div'); meta.className = 'meta';
+      meta.textContent = new Date(e.ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+      const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = (e.source === 'voice' ? 'voice · ' : '') + (e.method || 'rules'); meta.appendChild(tag);
+      left.append(eq, said, code, meta);
+      const acts = document.createElement('div'); acts.className = 'acts';
+      const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Open';
+      open.onclick = () => { spoken.value = e.input; setLatex(e.latex); setStatus('Loaded from log.'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Delete'; del.setAttribute('aria-label', 'Delete entry: ' + e.input);
+      del.onclick = () => removeLog(e.id);
+      acts.append(open, del);
+      row.append(left, acts); entriesEl.appendChild(row);
+    }
+  }
+
+  /* ---------- Dictation ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, listening = false, base = '';
+  const micBtn = $('mic');
+  if (!SR) { micBtn.disabled = true; $('mic-text').textContent = 'Dictation not supported'; }
+  micBtn.onclick = () => {
+    if (!SR) return;
+    if (listening) { rec && rec.stop(); return; }
+    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
+    base = ''; spoken.value = '';
+    rec.onresult = (ev) => {
+      let fin = '', interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) fin += t + ' '; else interim += t;
+      }
+      base += fin; spoken.value = (base + interim).trim();
+    };
+    rec.onerror = (ev) => {
+      const msg = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
+        ? 'The microphone is blocked in this view. Open the page as a standalone file in Chrome, or type instead.'
+        : ev.error === 'no-speech' ? 'No speech heard. Try again closer to the mic.' : 'Dictation stopped: ' + ev.error;
+      setStatus(msg, 'err');
+    };
+    rec.onend = () => { listening = false; micBtn.setAttribute('aria-pressed', 'false'); $('mic-text').textContent = 'Start dictation'; if (spoken.value.trim()) setStatus('Dictation done. Check the text, then press Submit.'); };
+    try { rec.start(); listening = true; current.source = 'voice'; micBtn.setAttribute('aria-pressed', 'true'); $('mic-text').textContent = 'Stop dictation'; setStatus('Listening… say the equation, then press Stop.'); }
+    catch (e) { setStatus('Couldn\'t start dictation: ' + e.message, 'err'); }
+  };
+
+  /* ---------- Export and copy ---------- */
+  function plainSvg() {
+    if (!mjReady() || !current.latex.trim()) return null;
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:' + getComputedStyle(stage.querySelector('mjx-container') || stage).fontSize;
+    document.body.appendChild(holder);
+    const node = MathJax.tex2svg(current.latex, { display: true });
+    holder.appendChild(node);
+    const svg = node.querySelector('svg'); const box = svg.getBoundingClientRect();
+    const clone = svg.cloneNode(true);
+    holder.remove();
+    const color = getComputedStyle(stage).color;
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.innerHTML = clone.innerHTML.replace(/currentColor/g, color);
+    clone.setAttribute('width', box.width); clone.setAttribute('height', box.height);
+    return { clone, box };
+  }
+  async function saveFile(filename, blob) {
+    if (!downloads) {
+      if (window.claude) { setStatus('Saving files isn\'t available in this view. Copy the LaTeX instead.', 'err'); return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000); setStatus('Saved ' + filename + '.', 'ok'); return;
+    }
+    try { await downloads.save({ filename, data: blob }); setStatus('Saved ' + filename + '.', 'ok'); }
+    catch (e) { if (e && e.code !== 'declined' && e.code !== 'cancelled') setStatus('Couldn\'t save: ' + (e.message || e.code), 'err'); }
+  }
+  $('svg').onclick = () => {
+    const r = plainSvg(); if (!r) return setStatus('Submit an equation first.', 'err');
+    saveFile('equation.svg', new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' }));
+  };
+  $('png').onclick = () => {
+    const r = plainSvg(); if (!r) return setStatus('Submit an equation first.', 'err');
+    const scale = 4, pad = 24, { box } = r;
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = (box.width + pad * 2) * scale; c.height = (box.height + pad * 2) * scale;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = getComputedStyle(stage).backgroundColor || '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, pad * scale, pad * scale, box.width * scale, box.height * scale);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => b && saveFile('equation.png', b), 'image/png');
+    };
+    img.onerror = () => setStatus('Couldn\'t draw the PNG.', 'err');
+    img.src = url;
+  };
+  async function copyText(text, label, fallbackEl) {
+    try { await navigator.clipboard.writeText(text); setStatus(label + ' copied.', 'ok'); }
+    catch (e) {
+      if (fallbackEl && fallbackEl.select) { fallbackEl.hidden = false; fallbackEl.focus(); fallbackEl.select(); }
+      setStatus('Press Ctrl+C or ⌘C to copy.');
+    }
+  }
+  $('copy').onclick = () => copyText(current.latex, 'LaTeX', explore ? null : latexEl);
+  $('copyClean').onclick = () => copyText(L ? Layers.plainText(L.spokenHtml) : '', 'Clean text');
+  $('speak').onclick = () => {
+    if (!('speechSynthesis' in window)) return setStatus('Read aloud isn\'t supported in this browser.', 'err');
+    const text = L ? Layers.plainText(L.spokenHtml) : ''; if (!text) return;
+    speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  };
+
+  /* ---------- Navigate & edit workspace ---------- */
+  let chat = [], chatFor = null, wsRec = null, wsListening = false;
+  const wsInput = $('wsInput'), msgsEl = $('msgs');
+  const swColor = (pos, len) => (pos === 0 && len > 1 ? 'var(--line)' : 'var(--s' + colorIdx(pos) + ')');
+  const layerName = (n, pos) => (pos === 0 ? 'Whole equation' : L.label(n));
+  function scopeInfo() {
+    if (!L) return { name: 'Whole equation', color: 'var(--line)', tex: current.latex, pos: 0 };
+    const chain = sel == null ? [L.root] : chainOf(sel);
+    const n = chain[chain.length - 1], pos = chain.length - 1;
+    return { name: layerName(n, pos), color: swColor(pos, chain.length), tex: L.tex(n).replace(/\s+/g, ' '), said: Layers.plainText(L.speak(n)), pos, id: n.id };
+  }
+
+  function renderWsViews() {
+    const tex = current.latex, ws = $('wsStage');
+    renderTex($('wsMini'), tex, false);
+    if (!tex.trim()) { ws.innerHTML = '<span class="placeholder">No equation yet.</span>'; $('wsLatex').textContent = ''; $('wsClean').textContent = ''; return; }
+    if (!(L && renderTex(ws, L.tagged))) renderTex(ws, tex);
+    $('wsLatex').innerHTML = L ? L.html : esc(tex);
+    $('wsClean').innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
+  }
+
+  function renderWsNav(chain) {
+    if (!inWs) return;
+    const ol = $('wsPath'), box = $('wsSel'); ol.textContent = ''; box.textContent = '';
+    if (!L) { box.textContent = 'Couldn\'t read this LaTeX into layers. Edit the LaTeX on the results page first.'; return; }
+    const c = chain && chain.length ? chain : [L.root];
+    c.forEach((n, pos) => {
+      const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
+      const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = swColor(pos, c.length);
+      b.append(sw, document.createTextNode(layerName(n, pos)));
+      if (pos === c.length - 1) b.setAttribute('aria-current', 'true');
+      b.onclick = () => select(n.id);
+      li.appendChild(b); ol.appendChild(li);
+    });
+    const n = c[c.length - 1], pos = c.length - 1;
+    const ttl = document.createElement('div'); ttl.className = 'ttl';
+    const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = swColor(pos, c.length);
+    ttl.append(sw, document.createTextNode((pos === 0 ? '' : 'Layer ' + pos + ' · ') + layerName(n, pos)));
+    const code = document.createElement('code'); code.textContent = L.tex(n).replace(/\s+/g, ' ');
+    const say = document.createElement('span'); say.textContent = '“' + Layers.plainText(L.speak(n)) + '”';
+    box.append(ttl, code, say);
+    const kidsN = L.nav(n);
+    if (kidsN.length) {
+      const inside = document.createElement('div'); inside.className = 'inside';
+      const lab = document.createElement('span'); lab.className = 'label'; lab.textContent = 'Inside';
+      inside.appendChild(lab);
+      kidsN.forEach((k) => {
+        const b = document.createElement('button'); b.type = 'button';
+        const s2 = document.createElement('span'); s2.className = 'sw'; s2.style.background = 'var(--s' + colorIdx(pos + 1) + ')';
+        b.append(s2, document.createTextNode(L.label(k)));
+        b.title = L.tex(k); b.onclick = () => select(k.id);
+        inside.appendChild(b);
+      });
+      box.appendChild(inside);
+    }
+    document.querySelectorAll('.navpad [data-mv]').forEach((b) => { b.disabled = !target(b.dataset.mv) || (sel != null && target(b.dataset.mv).id === sel); });
+    const sc = scopeInfo();
+    $('wsScopeSw').style.background = sc.color;
+    $('wsScopeText').textContent = sc.name + (sc.pos ? '  ×' : '');
+    $('wsScope').setAttribute('aria-label', sc.pos ? 'Editing ' + sc.name + '. Press to edit the whole equation instead.' : 'Editing the whole equation');
+  }
+
+  function seedChat() {
+    chat = [
+      { role: 'sys', latex: current.latex, said: L ? Layers.plainText(L.spokenHtml) : '' },
+      { role: 'tip' },
+    ];
+    chatFor = current.latex;
+  }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function chip(scope) {
+    const c = el('span', 'scope-chip'); const s = el('span', 'sw'); s.style.background = scope.color; c.append(s, document.createTextNode(scope.name)); return c;
+  }
+  function renderChat() {
+    msgsEl.textContent = '';
+    for (const m of chat) {
+      const wrap = el('div', 'msg ' + (m.role === 'user' ? 'user' : m.role === 'sys' ? 'sys' : 'bot'));
+      const who = el('div', 'who'); const bub = el('div', 'bub');
+      if (m.role === 'sys') {
+        who.textContent = 'Starting equation';
+        const eq = el('div', 'eqv'); renderTex(eq, m.latex, false);
+        bub.append(eq, el('code', null, m.latex));
+        if (m.said) bub.append(el('span', 'said', '“' + m.said + '”'));
+      } else if (m.role === 'tip') {
+        who.textContent = 'Claude';
+        bub.append(el('span', null, 'Pick a layer on the right, then say or type what to change. Try one of these:'));
+        const chips = el('div', 'chips');
+        ['make the exponent 3', 'replace x with t', 'wrap this in parentheses', 'delete this layer'].forEach((t) => {
+          const b = el('button', null, t); b.type = 'button'; b.onclick = () => { wsInput.value = t; wsInput.focus(); }; chips.appendChild(b);
+        });
+        bub.appendChild(chips);
+      } else if (m.role === 'user') {
+        who.append(el('span', null, 'You' + (m.voice ? ' · voice' : '')), chip(m.scope));
+        bub.append(el('span', null, m.text));
+      } else {
+        who.textContent = 'Claude';
+        bub.append(el('span', null, 'Here is the layer I would change. Editing isn\'t connected yet, so the equation stays as it is.'));
+        const plan = el('div', 'plan');
+        const head = el('div', 'who'); head.append(el('span', null, 'Target'), chip(m.scope));
+        const eq = el('div', 'eqv'); renderTex(eq, m.scope.tex, false);
+        plan.append(head, eq, el('code', null, m.scope.tex), el('span', 'pending', 'Before → after preview · coming next'));
+        bub.appendChild(plan);
+      }
+      wrap.append(who, bub); msgsEl.appendChild(wrap);
+    }
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function sendEdit(voice) {
+    const text = wsInput.value.trim(); if (!text) { wsInput.focus(); return; }
+    const scope = scopeInfo();
+    chat.push({ role: 'user', text, scope, voice: !!voice, ts: Date.now() });
+    chat.push({ role: 'bot', scope, ts: Date.now() });
+    wsInput.value = ''; renderChat();
+  }
+  let lastVoice = false;
+  $('wsForm').addEventListener('submit', (e) => { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; });
+  wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; } });
+  wsInput.addEventListener('input', () => { if (!wsListening) lastVoice = false; });
+  $('wsClear').onclick = () => { seedChat(); renderChat(); };
+  $('wsScope').onclick = () => { if (L) select(L.root.id); };
+  $('wsEditThis').onclick = () => { wsInput.focus(); };
+  document.querySelectorAll('.navpad [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
+
+  const wsMic = $('wsMic');
+  if (!SR) { wsMic.disabled = true; $('wsMicText').textContent = 'Dictation not supported'; }
+  wsMic.onclick = () => {
+    if (!SR) return;
+    if (wsListening) { wsRec && wsRec.stop(); return; }
+    wsRec = new SR(); wsRec.lang = 'en-US'; wsRec.interimResults = true; wsRec.continuous = true;
+    let fin = ''; wsInput.value = '';
+    wsRec.onresult = (ev) => {
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) fin += t + ' '; else interim += t; }
+      wsInput.value = (fin + interim).trim();
+    };
+    wsRec.onerror = (ev) => { wsInput.placeholder = ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'The microphone is blocked here. Type your change instead.' : 'Dictation stopped. Type your change instead.'; };
+    wsRec.onend = () => { wsListening = false; wsMic.setAttribute('aria-pressed', 'false'); $('wsMicText').textContent = 'Dictate'; };
+    try { wsRec.start(); wsListening = true; lastVoice = true; wsMic.setAttribute('aria-pressed', 'true'); $('wsMicText').textContent = 'Stop'; } catch (e) {}
+  };
+
+  function openWs() {
+    if (!current.latex.trim()) { setStatus('Submit an equation first.', 'err'); return; }
+    inWs = true; $('ws').hidden = false; document.body.classList.add('ws-open');
+    if (chatFor !== current.latex) seedChat();
+    if (L && sel == null) sel = L.root.id;
+    renderResults(); renderChat();
+    $('wsBack').focus();
+  }
+  function closeWs() {
+    inWs = false; $('ws').hidden = true; document.body.classList.remove('ws-open');
+    if (wsListening && wsRec) wsRec.stop();
+    renderResults(); $('goEdit').focus();
+  }
+  $('goEdit').onclick = openWs;
+  $('wsBack').onclick = closeWs;
+
+  /* ---------- Wiring ---------- */
+  $('submit').onclick = convert;
+  spoken.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) convert(); });
+  spoken.addEventListener('input', () => { if (!listening) current.source = 'typed'; });
+  document.querySelectorAll('[data-ex]').forEach((b) => b.onclick = () => { spoken.value = b.dataset.ex; current.source = 'typed'; spoken.focus(); });
+  let t; latexEl.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { setStatus(''); setLatex(latexEl.value, { fromEditor: true }); }, 250); });
+
+  function boot() {
+    setLatex(ruleParse(spoken.value));
+    if (!logCol) renderLog(localLog);
+  }
+  loadLocal();
+  let startExplore = false; try { startExplore = localStorage.getItem('speak-math-explore') !== '0'; } catch (e) { startExplore = true; }
+  window.__mjReady = () => { boot(); setExplore(startExplore); };
+  if (mjReady()) window.__mjReady();
+  setTimeout(() => { if (!mjReady()) { setLatex(ruleParse(spoken.value)); stage.textContent = 'The math renderer couldn\'t load. The LaTeX and clean text still work.'; renderLog(localLog); } }, 8000);
+
+  if (window.claude && claude.use) {
+    claude.use('sample').then((s) => { sample = s; if (!s) markNoClaude(); });
+    claude.use('downloads').then((d) => { downloads = d; });
+    Promise.all([claude.use('db'), claude.use('user')]).then(async ([d, u]) => {
+      if (!d || !u) return;
+      try {
+        const id = await u.id(); if (!id) return;
+        logCol = d.collection('data/users/' + id);
+        $('log-where').textContent = 'Saved to your account';
+        logCol.orderBy('ts', 'desc').limit(100).onSnapshot(
+          (snap) => renderLog(snap.docs.map((x) => Object.assign({ id: x.id }, x.data()))),
+          () => { logCol = null; $('log-where').textContent = 'Saved in this browser'; renderLog(localLog); }
+        );
+      } catch (e) { logCol = null; }
+    });
+  } else {
+    markNoClaude();
+  }
+})();
+</script>
+
+</body></html>

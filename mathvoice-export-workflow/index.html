@@ -1,0 +1,1308 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>MathVoice Export Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=STIX+Two+Text:wght@400;500&display=swap">
+<style>
+/* Layout: fixed left workspace nav + top course bar; central workspace swaps between three connected pages; floating voice mic + feedback toast persist across all. Grayscale wireframe. */
+:root{
+  --bg:#efefec; --surface:#ffffff; --surface-2:#f6f6f3; --sunk:#e6e6e2; --paper:#ffffff;
+  --ink:#151515; --ink-2:#55554f; --ink-3:#8b8b85;
+  --line:#d2d2cd; --line-strong:#151515;
+  --inv-bg:#151515; --inv-fg:#ffffff;
+  --font-ui:"Public Sans","Helvetica Neue",Arial,sans-serif;
+  --font-math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+  --shadow:3px 3px 0 var(--line-strong);
+  --side-w:232px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121212; --surface:#1b1b1a; --surface-2:#222221; --sunk:#0e0e0e; --paper:#232322;
+    --ink:#efefec; --ink-2:#a9a9a3; --ink-3:#77776f;
+    --line:#3a3a37; --line-strong:#efefec; --inv-bg:#efefec; --inv-fg:#151515; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1b1b1a; --surface-2:#222221; --sunk:#0e0e0e; --paper:#232322;
+  --ink:#efefec; --ink-2:#a9a9a3; --ink-3:#77776f;
+  --line:#3a3a37; --line-strong:#efefec; --inv-bg:#efefec; --inv-fg:#151515; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--font-ui);}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3{text-wrap:balance}
+ol,ul{margin:0;padding:0;list-style:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ic{flex:none;display:block}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.math{font-family:var(--font-math);font-variant-numeric:lining-nums}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.hint{font-size:12px;color:var(--ink-2)}
+
+/* shell */
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{height:64px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid var(--line)}
+.logo{width:30px;height:30px;background:var(--inv-bg);color:var(--inv-fg);display:grid;place-items:center;font-size:10px;font-weight:800;letter-spacing:.02em}
+.brand b{font-size:17px;letter-spacing:-.01em}
+.side-sec{padding:22px 10px 0}
+.side-sec .eyebrow{padding:0 10px 10px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;height:42px;padding:0 12px;border:1.5px solid transparent;background:none;text-align:left;font-weight:600;cursor:pointer}
+.nav button:hover{background:var(--surface-2)}
+.nav button[aria-current="page"]{border-color:var(--ink);box-shadow:var(--shadow);background:var(--surface)}
+.badge{margin-left:auto;min-width:22px;height:22px;border-radius:11px;background:var(--sunk);display:grid;place-items:center;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding:16px 18px;display:flex;gap:10px}
+.side-foot b{display:block;font-size:12.5px}
+.side-foot span{font-size:11.5px;color:var(--ink-2)}
+.main{min-width:0;display:flex;flex-direction:column}
+.top{height:64px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px;position:sticky;top:0;z-index:5}
+.top .course{font-weight:600;font-size:13.5px}
+.top-r{display:flex;align-items:center;gap:18px}
+.link-btn{background:none;border:0;font-weight:700;cursor:pointer;padding:6px 2px;display:inline-flex;align-items:center;gap:5px}
+.avatar{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-size:11.5px;font-weight:700}
+.view{padding-block:26px 120px;padding-inline:32px;width:100%;max-width:1240px;margin:0 auto;min-width:0}
+
+/* buttons */
+.btn{height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--ink);background:var(--surface);font-weight:650;font-size:13px;border-radius:2px;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--surface-2)}
+.btn-primary{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.btn-primary:hover:not(:disabled){background:var(--inv-bg);opacity:.88}
+.btn-ghost{border-color:transparent;background:transparent}
+.btn-sm{height:34px;padding:0 11px;font-size:12.5px}
+.btn-wide{width:100%;height:46px}
+.btn:disabled,.ib:disabled{opacity:.35;cursor:not-allowed;border-style:dashed}
+.ib{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);cursor:pointer;border-radius:2px}
+.ib:hover:not(:disabled){border-color:var(--ink)}
+
+/* page heads */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.page-head h1{font-size:28px;font-weight:500;letter-spacing:-.02em;margin:6px 0 4px}
+.page-head .sub{color:var(--ink-2)}
+h1:focus{outline:none}
+h1:focus-visible{outline:3px solid var(--ink)}
+
+/* library */
+.list-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+.list-bar p{font-size:12.5px;color:var(--ink-2)}
+.list-bar p strong{color:var(--ink)}
+.eq-list{display:flex;flex-direction:column;gap:10px}
+.eq-row{display:grid;grid-template-columns:76px minmax(0,1fr) auto;background:var(--surface);border:1px solid var(--line);min-height:84px}
+.eq-row.is-sel{border-color:var(--ink-3)}
+.sel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-right:1px solid var(--line);cursor:pointer;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.sel input{width:20px;height:20px;accent-color:var(--ink);cursor:pointer;margin:0}
+.eq-main{display:flex;align-items:center;gap:14px;padding:14px 18px;min-width:0}
+.num{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;font-variant-numeric:tabular-nums}
+.eq-main .math{font-size:22px;line-height:1.25;overflow-wrap:anywhere}
+.eq-main .time{font-size:11.5px;color:var(--ink-2)}
+.row-actions{display:flex;align-items:center;gap:8px;padding:0 16px}
+.dock{position:sticky;bottom:18px;margin-top:20px;margin-left:auto;width:fit-content;max-width:100%;display:flex;align-items:center;gap:22px;padding:12px 12px 12px 18px;background:var(--surface);border:1.5px solid var(--ink);box-shadow:var(--shadow);z-index:3}
+.dock strong{font-variant-numeric:tabular-nums}
+
+/* organize */
+.org-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:28px;align-items:center}
+.back{display:inline-flex;align-items:center;gap:8px;font-weight:700;background:none;border:0;cursor:pointer;padding:6px 0}
+.stepper{display:flex;align-items:flex-start;gap:0}
+.step{display:flex;flex-direction:column;align-items:center;gap:5px;width:64px;font-size:10.5px;color:var(--ink-2);position:relative}
+.step i{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:var(--surface);position:relative;z-index:1}
+.step.cur i{background:var(--inv-bg);color:var(--inv-fg)}
+.step.cur{color:var(--ink);font-weight:700}
+.step:not(:last-child)::after{content:"";position:absolute;top:14px;left:50%;width:100%;height:1.5px;background:var(--ink-3)}
+.org-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:22px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel-head h2{font-size:15px;font-weight:600}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.drawer{background:var(--surface-2);border-bottom:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.drawer h3{font-size:13.5px;font-weight:700}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
+.seg button{height:38px;border:0;border-right:1px solid var(--line);background:var(--surface);font-weight:600;font-size:12.5px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--inv-bg);color:var(--inv-fg)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fl{font-size:12px;font-weight:700}
+.input,select.input,textarea.input{width:100%;min-height:40px;padding:8px 10px;border:1px solid var(--line);background:var(--surface);border-radius:2px}
+.input:hover{border-color:var(--ink-3)}
+textarea.input{min-height:76px;resize:vertical}
+textarea.math{font-size:19px}
+.row-end{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.mv-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px}
+.blocks{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--surface-2)}
+.block{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-left-width:4px;border-left-color:var(--line);padding:10px 10px 10px 8px;min-height:62px}
+.block.t-heading{border-left-color:var(--ink)}
+.block.t-text{border-left-color:var(--ink-3)}
+.block.t-eq{border-left-color:var(--line)}
+.block .num{width:28px;height:28px;margin:0 auto}
+.b-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.b-text{overflow-wrap:anywhere}
+.t-heading .b-text{font-weight:700;font-size:15px}
+.t-text .b-text{font-size:13.5px}
+.t-eq .b-text{font-family:var(--font-math);font-size:20px;line-height:1.25}
+.b-actions{display:flex;gap:6px}
+.block.is-editing{border:2px solid var(--line-strong);box-shadow:var(--shadow);align-items:start;padding:12px}
+.edit-status{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--line);font-size:12px;font-weight:700;margin:6px 0 4px}
+.edit-status.on{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.empty{padding:28px 16px;text-align:center;color:var(--ink-2);border:1px dashed var(--line);background:var(--surface)}
+
+.settings{padding:18px;display:flex;flex-direction:column;gap:16px;position:sticky;top:84px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+legend{padding:0;margin-bottom:8px;font-size:12px;font-weight:700}
+.choices{display:grid;gap:8px}
+.choices.c2{grid-template-columns:1fr 1fr}
+.choices.c3{grid-template-columns:repeat(3,1fr)}
+.choice{position:relative;text-align:left;padding:10px 12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-height:54px;border-radius:2px}
+.choice b{display:block;font-size:12.5px}
+.choice span{font-size:10.5px;color:var(--ink-2)}
+.choice[aria-pressed="true"]{border:2px solid var(--line-strong);background:var(--surface-2);box-shadow:var(--shadow);padding:9px 11px}
+.choice .tick{position:absolute;top:7px;right:8px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
+.toggle-row b{font-size:12.5px;display:block}
+.switch{width:46px;height:26px;border-radius:13px;border:1.5px solid var(--ink);background:var(--surface);position:relative;cursor:pointer;flex:none;padding:0}
+.switch::after{content:"";position:absolute;top:2.5px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch[aria-checked="true"]{background:var(--inv-bg)}
+.switch[aria-checked="true"]::after{transform:translateX(19px);background:var(--inv-fg)}
+details.adv{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details.adv summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-size:12.5px;font-weight:700;cursor:pointer}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::after{content:"+";font-size:16px}
+details.adv[open] summary::after{content:"−"}
+.adv-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:14px;align-items:end}
+.check{display:flex;align-items:center;gap:8px;font-size:12.5px;min-height:40px}
+.check input{width:18px;height:18px;accent-color:var(--ink)}
+.preview-box{border:1px solid var(--line);background:var(--sunk)}
+.pb-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.pb-head .link-btn{font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.pb-body{padding:16px;max-height:340px;overflow:auto}
+
+/* paper */
+.paper{background:var(--paper);border:1px solid var(--line);box-shadow:0 1px 0 var(--line);color:var(--ink)}
+.paper.mini{padding:18px 18px 22px;font-size:11px}
+.paper.mini .p-title{font-size:16px;text-align:center}
+.paper.mini .p-rule{width:40px;margin:8px auto 12px}
+.paper.mini .p-h{font-size:12.5px;margin:8px 0 3px}
+.paper.mini .p-t{font-size:10.5px;margin-bottom:5px}
+.paper.mini .p-eq{font-size:12.5px;margin:3px 0}
+.paper.full{padding:44px 48px 28px;min-height:640px;display:flex;flex-direction:column}
+.p-course{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
+.p-title{font-family:var(--font-math);font-weight:500;font-size:26px;line-height:1.15}
+.p-meta{font-size:11.5px;color:var(--ink-2);margin-top:6px}
+.p-rule{border:0;border-top:1.5px solid var(--ink);margin:20px 0 22px}
+.p-h{font-size:17px;font-weight:500;padding-bottom:6px;border-bottom:1px solid var(--line);margin:14px 0 12px}
+.p-t{font-size:13px;margin-bottom:12px;max-width:62ch}
+.p-eq{display:flex;align-items:baseline;gap:12px;font-family:var(--font-math);font-size:20px;margin:10px 0}
+.p-n{font-family:var(--font-ui);font-size:11px;font-weight:700;min-width:16px}
+.p-foot{margin-top:auto;padding-top:24px;text-align:center;font-size:11px;color:var(--ink-2)}
+.p-empty{color:var(--ink-2);font-style:italic}
+.imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.imgs.mini{grid-template-columns:1fr;gap:6px}
+.img-prev{margin:0;border:1px solid var(--line);background:var(--paper)}
+.img-box{display:grid;place-items:center;min-height:96px;padding:14px;font-family:var(--font-math);font-size:19px;background:repeating-conic-gradient(var(--surface-2) 0 25%,var(--paper) 0 50%) 0 0/14px 14px;text-align:center;overflow-wrap:anywhere}
+.imgs.mini .img-box{min-height:0;padding:6px 10px;font-size:12.5px;justify-items:start}
+.img-prev figcaption{font-size:10.5px;padding:6px 8px;border-top:1px solid var(--line);color:var(--ink-2)}
+
+/* preview page */
+.toolbar{display:flex;align-items:center;gap:18px;padding:14px 18px;background:var(--surface);border:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+.toolbar .tb-title{padding-left:18px;border-left:1px solid var(--line);min-width:0;flex:1}
+.toolbar h1{font-size:18px;font-weight:500;margin-top:2px;overflow-wrap:anywhere}
+.pv-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start}
+.sheet{background:var(--surface);border:1px solid var(--line);padding:22px}
+.summary{background:var(--surface-2);border:1px solid var(--line);padding:14px 16px;margin-bottom:22px}
+.summary .row-between{margin-bottom:10px}
+.summary dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
+.summary dl div{border-top:1px solid var(--line);padding-top:8px;min-width:0}
+.summary dt{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.summary dd{margin:3px 0 0;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.aside{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);position:sticky;top:84px}
+.aside section{padding:18px;display:flex;flex-direction:column;gap:10px}
+.aside section+section{border-top:1px solid var(--line)}
+.aside h2{font-size:18px;font-weight:500}
+.status{padding:10px 12px;background:var(--surface-2);border:1px solid var(--line);min-height:56px}
+.status .label{display:flex;align-items:center;gap:6px}
+.status .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink)}
+.status.reading .dot{background:var(--ink);animation:pulse 1s infinite}
+.status.paused .dot{background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)}
+.status p:last-child{font-weight:700;font-size:12.5px;margin-top:3px;overflow-wrap:anywhere}
+@keyframes pulse{50%{opacity:.25}}
+.sel-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.ctrl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ctrl-row .btn{padding:0 6px;font-size:12px}
+.fmt-list{display:flex;flex-direction:column;gap:8px}
+.fmt{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:8px;text-align:left;padding:10px 12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;position:relative;border-radius:2px}
+.fmt b{font-size:12.5px;display:block}
+.fmt small{font-size:10.5px;color:var(--ink-2)}
+.fmt .desc{font-size:11px;color:var(--ink-2)}
+.fmt[aria-pressed="true"]{border:2px solid var(--line-strong);padding:9px 11px}
+.fmt .flag{position:absolute;top:-9px;right:8px;background:var(--inv-bg);color:var(--inv-fg);font-size:8.5px;font-weight:800;letter-spacing:.1em;padding:2px 6px}
+.file{background:var(--surface-2);border:1px solid var(--line);padding:10px 12px}
+.file b{display:block;font-size:12.5px;overflow-wrap:anywhere}
+.file span{font-size:11px;color:var(--ink-2)}
+
+/* toast, fab, voice panel */
+.toast{position:fixed;left:calc(var(--side-w) + 20px);bottom:20px;z-index:20;display:flex;align-items:center;gap:12px;max-width:min(440px,calc(100vw - 140px));padding:10px 16px 10px 12px;background:var(--surface);border:1.5px solid var(--ink);box-shadow:var(--shadow)}
+.toast .tic{width:26px;height:26px;border-radius:50%;background:var(--inv-bg);color:var(--inv-fg);display:grid;place-items:center;flex:none}
+.toast.error{border-style:dashed;border-width:2px}
+.toast.error .tic{background:var(--surface);color:var(--ink);border:2px solid var(--ink)}
+.toast b{display:block;font-size:12.5px;overflow-wrap:anywhere}
+.fab{position:fixed;right:20px;bottom:20px;z-index:21;width:78px;height:78px;border-radius:50%;background:var(--inv-bg);color:var(--inv-fg);border:4px solid var(--surface);box-shadow:0 0 0 2px var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9.5px;font-weight:800;letter-spacing:.1em;cursor:pointer}
+.fab[aria-expanded="true"]{outline:3px dashed var(--ink);outline-offset:4px}
+.vpanel{position:fixed;right:20px;bottom:112px;z-index:21;width:min(330px,calc(100vw - 32px));background:var(--surface);border:1.5px solid var(--ink);box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:8px}
+.vpanel h2{font-size:14px;font-weight:700}
+.vcmd{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:600}
+.vcmd:hover{border-color:var(--ink)}
+.vcmd.bad{border-style:dashed}
+
+/* workspace */
+.ws{margin-bottom:28px;border:1px solid var(--line);background:var(--surface)}
+.ws-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.ws-chat{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.ws-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ws-h h2{font-size:15px;font-weight:600}
+.log{height:400px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface-2)}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:90%;align-items:flex-start}
+.msg .who{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.msg.sys .bub{background:var(--surface);border:1px solid var(--line);padding:10px 12px;font-size:13px}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.user .bub{background:var(--inv-bg);color:var(--inv-fg);padding:9px 12px;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:14px}
+.chip{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid currentColor;padding:2px 6px;animation:wIn .18s ease-out}
+.chip.bad{border-style:dashed;text-decoration:line-through}
+.unk{opacity:.55;text-decoration:underline dotted}
+.w{animation:wIn .18s ease-out}
+@keyframes wIn{from{opacity:0;transform:translateY(3px)}}
+.bub .math{font-family:var(--font-math);font-size:18px}
+.opts{margin:8px 0 2px;display:flex;flex-direction:column;gap:4px}
+.opts li{display:flex;gap:8px;align-items:baseline}
+.opts b{min-width:18px}
+.say{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px 16px 10px;border-top:1px solid var(--line)}
+.demo{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:0 16px 14px}
+.ws-out{display:flex;flex-direction:column;min-width:0}
+.ws-out section{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.ws-out section:last-child{border-bottom:0;flex:1}
+.ws-out h3{font-size:10.5px;margin:0}
+.eq-render{min-height:160px;display:grid;place-items:center;font-size:28px;overflow-x:auto;padding:8px;background:var(--paper);border:1px solid var(--line)}
+.eq-render mjx-container{margin:0!important}
+.eq-render .fallback{font-family:var(--font-math);font-size:30px}
+.eq-empty{color:var(--ink-3);font-size:14px}
+#ws-latex{margin:0;padding:10px 12px;background:var(--sunk);border:1px solid var(--line);font:13px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px}
+#ws-speech{font-size:14px;padding:10px 12px;border:1px solid var(--line);background:var(--surface-2);min-height:42px}
+.ws-bar{border-top:1.5px solid var(--line-strong);background:var(--surface-2);padding:12px 16px 14px;display:flex;flex-wrap:wrap;gap:12px 22px}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp-b{display:flex;flex-wrap:wrap;gap:6px}
+.cmdb{font-weight:600}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 9px;border:1.5px solid var(--ink)}
+.mode .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
+.m-listening{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.m-listening .dot{background:currentColor;animation:pulse 1s infinite}
+.m-paused,.m-manual,.m-refine-ai{border-style:dashed}
+.nav-focus{outline:3px solid var(--ink)!important;outline-offset:3px;box-shadow:0 0 0 6px var(--surface)}
+[hidden]{display:none!important}
+/* layer highlights (after speak-math.html) */
+:root{--l1:#e6e6e0;--l2:#d4d4cc;--l3:#c0c0b7;--l4:#acaca2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--l1:#2b2b29;--l2:#383835;--l3:#46463f;--l4:#55554c}}
+:root[data-theme="dark"]{--l1:#2b2b29;--l2:#383835;--l3:#46463f;--l4:#55554c}
+.hl-n{cursor:pointer;border-radius:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.hl-n.anc{background:var(--hc)}
+.hl-n.on{background:var(--hc);outline:2px solid var(--ink);outline-offset:1px}
+#ws-eq svg{cursor:pointer}
+.eqhint-row{display:inline-flex;align-items:center;gap:10px;min-width:0}
+#ws-eqhint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-h{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;gap:12px}
+.saved-h h2{font-size:18px;font-weight:500}
+@media (max-width:960px){.ws-grid{grid-template-columns:minmax(0,1fr)}.ws-chat{border-right:0;border-bottom:1px solid var(--line)}.log{height:320px}.demo{grid-template-columns:minmax(0,1fr) auto}.demo .fl{grid-column:1/-1}}
+
+@media (max-width:1080px){
+  .org-grid,.pv-grid{grid-template-columns:minmax(0,1fr)}
+  .settings,.aside{position:static}
+}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .side-sec{padding:8px 12px 10px}
+  .side-sec .eyebrow,.side-foot{display:none}
+  .nav{flex-direction:row;overflow-x:auto}
+  .nav button{width:auto;flex:none}
+  .top{position:static;padding:0 16px}
+  .view{padding-inline:16px}
+  .toast{left:16px;max-width:calc(100vw - 120px)}
+  .org-head{grid-template-columns:1fr}
+  .eq-row{grid-template-columns:64px minmax(0,1fr)}
+  .row-actions{grid-column:1/-1;border-top:1px solid var(--line);padding:10px 12px;justify-content:flex-end}
+  .mv-grid{grid-template-columns:1fr}
+  .summary dl{grid-template-columns:1fr 1fr}
+  .paper.full{padding:28px 20px 20px}
+}
+@media (max-width:520px){
+  .block{grid-template-columns:36px minmax(0,1fr)}
+  .b-actions{grid-column:1/-1;justify-content:flex-end}
+  .choices.c3{grid-template-columns:1fr}
+  .adv-body{grid-template-columns:1fr}
+  .dock{width:100%;justify-content:space-between}
+  .fab{width:64px;height:64px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* MathSpeak Help */
+.help-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 28px;flex-wrap:wrap;margin-bottom:14px}
+.help-head h1{font-size:22px;font-weight:500;margin:4px 0 2px}
+.mock-sw{display:flex;flex-direction:column;gap:6px;max-width:620px;min-width:0}
+.seg-3{grid-template-columns:repeat(3,auto)}
+.seg-3 button{padding:0 12px;white-space:nowrap}
+.seg-2{grid-template-columns:1fr 1fr;margin-bottom:12px}
+.hb{display:grid;gap:0;border:1px solid var(--line);background:var(--surface);height:calc(100vh - 64px - 150px);height:calc(100dvh - 64px - 150px);min-height:460px}
+.hb-a{grid-template-columns:220px minmax(0,1fr) minmax(0,1.2fr)}
+.hb-b{grid-template-columns:300px minmax(0,1fr) minmax(0,1.2fr)}
+.hb-c{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.hb-c1{grid-template-columns:minmax(0,1fr)}
+.col{overflow-y:auto;padding:14px 16px;border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;gap:10px}
+.col:last-child{border-right:0}
+.col-detail{background:var(--surface-2)}
+.col-h{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.col-title{font-size:18px;font-weight:500}
+.tree{display:flex;flex-direction:column;gap:4px}
+.tree-d{display:flex;align-items:center;gap:8px;width:100%;height:38px;padding:0 8px;border:1px solid transparent;background:none;font-weight:700;cursor:pointer;text-align:left}
+.tree-d:hover{background:var(--surface-2)}
+.tree-t{display:flex;flex-direction:column;gap:2px;margin:2px 0 8px 14px;padding-left:10px;border-left:1px solid var(--line)}
+.tree-t button{display:flex;justify-content:space-between;width:100%;padding:7px 8px;border:1.5px solid transparent;background:none;cursor:pointer;text-align:left;font-size:13px}
+.tree-t button:hover{background:var(--surface-2)}
+.tree-t button[aria-current="true"]{border-color:var(--ink);box-shadow:var(--shadow);background:var(--surface);font-weight:700}
+.cnt{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.ent-list{display:flex;flex-direction:column;gap:6px}
+.ent-row{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-width:0;overflow:hidden}
+.ent-row:hover{border-color:var(--ink-3)}
+.ent-row[aria-current="true"]{border:2px solid var(--line-strong);padding:9px 11px;box-shadow:var(--shadow)}
+.ent-t{font-weight:600;font-size:13px}
+.ent-m{font-size:14px;max-width:100%;overflow:hidden;color:var(--ink-2)}
+.tex-fb{font:12px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ink-2);overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);vertical-align:middle}
+.tag-strong{border-color:var(--ink);color:var(--ink);font-size:11.5px;padding:4px 8px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.entry{display:flex;flex-direction:column;gap:12px}
+.entry h2{font-size:20px;font-weight:500}
+.crumb{font-size:11.5px;color:var(--ink-2)}
+.ent-eq{display:grid;place-items:center;min-height:110px;padding:14px;background:var(--paper);border:1px solid var(--line);font-size:20px;overflow-x:auto}
+.ent-eq mjx-container{margin:0!important}
+.entry section{display:flex;flex-direction:column;gap:6px}
+.ms{padding:10px 12px;border:1px solid var(--line);background:var(--surface);font-size:14px;line-height:1.5}
+.tx{margin:0;padding:10px 12px;background:var(--sunk);border:1px solid var(--line);font:12.5px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.say-phrase{font-weight:600}
+.rule{border-top:1px solid var(--line);padding-top:10px}
+.rule p,.rule-card{font-size:13px;color:var(--ink-2);max-width:62ch}
+.rule-card{padding:10px 12px;border-left:4px solid var(--ink);background:var(--surface-2)}
+.ent-empty{color:var(--ink-2);padding:20px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;height:100%;text-align:left;padding:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.tile:hover{border-color:var(--ink-3)}
+.tile[aria-current="true"]{border:2px solid var(--line-strong);padding:9px;box-shadow:var(--shadow);background:var(--surface-2)}
+.tile-g{display:grid;place-items:start;min-height:34px;font-size:15px}
+.tile-n{font-weight:700;font-size:12.5px;line-height:1.25}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipb{padding:5px 10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;font-weight:600;border-radius:14px}
+.chipb[aria-pressed="true"]{background:var(--inv-bg);color:var(--inv-fg);border-color:var(--inv-bg)}
+.chipb:hover{border-color:var(--ink)}
+.say-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.prac-pick{display:flex;flex-direction:column;gap:12px;max-width:720px}
+.pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pick .tile{min-height:90px;justify-content:flex-end}
+.pick .tile-n{font-size:16px}
+.prac{display:flex;flex-direction:column;gap:12px;max-width:820px;width:100%;margin:0 auto}
+.prac-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.prac-card{display:flex;flex-direction:column;gap:12px;padding:18px;border:1.5px solid var(--ink);box-shadow:var(--shadow);background:var(--surface)}
+.prac-card .ent-eq{min-height:140px;font-size:26px}
+.p-result{font-weight:700;font-size:13px;padding:8px 10px;border:1px dashed var(--ink)}
+@media (max-width:1080px){.hb{height:auto;min-height:0}.hb-a,.hb-b,.hb-c{grid-template-columns:minmax(0,1fr)}.col{border-right:0;border-bottom:1px solid var(--line);max-height:none}.pick{grid-template-columns:1fr}.seg-3{grid-template-columns:1fr}}
+
+/* fit-to-screen workspace */
+/* voice feedback toast + voice widget hidden for now */
+.toast,.fab,.vpanel{display:none!important}
+body.side-off{--side-w:0px}
+body.side-off .side{display:none}
+.top-l{display:flex;align-items:center;gap:14px;min-width:0}
+.view.ws-page{padding-block:12px 120px}
+.ws-page .ws{margin-bottom:24px}
+.ws-page .ws-grid{height:calc(100vh - 64px - 12px - 24px);height:calc(100dvh - 64px - 12px - 24px);min-height:430px}
+.ws-page .ws-chat{min-height:0}
+.ws-page .log{height:auto;flex:1;min-height:0}
+.ws-page .ws-out{min-height:0}
+.ws-page .ws-out section{padding:12px 16px;gap:6px}
+.ws-page .ws-out section:first-child{flex:1;min-height:0}
+.ws-page .ws-out section:last-child{flex:none}
+.ws-page .eq-render{flex:1;min-height:90px}
+.ws-page #ws-latex,.ws-page #ws-speech{max-height:6.6em;overflow-y:auto}
+.ws-page .ws-out .hint{display:none}
+.ws-page .ws-out #ws-eqhint{display:block}
+.demo-sel{min-height:34px;width:auto;max-width:260px;padding:4px 8px;font-size:12.5px}
+.grp-export .grp-b{align-items:center;gap:10px}
+@media (max-width:960px){.ws-page .ws-grid{height:auto;min-height:0}.ws-page .log{height:34vh;flex:none}.ws-page .eq-render{min-height:110px}}
+</style>
+
+<div class="app">
+  <aside class="side" id="sidebar" aria-label="Workspace">
+    <div class="brand"><span class="logo" aria-hidden="true">MV</span><b>MathVoice</b></div>
+    <div class="side-sec">
+      <p class="eyebrow">Workspace</p>
+      <nav class="nav" id="nav" aria-label="Workspace sections"></nav>
+    </div>
+    <div class="side-foot">
+      <span id="foot-mic"></span>
+      <div><b>Voice controls are on</b><span>Say “What can I say?” at any time.</span></div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <div class="top-l"><button class="ib" data-act="side" data-k="side" aria-controls="sidebar" aria-expanded="true" aria-label="Hide workspace menu" id="side-btn"></button><div><p class="eyebrow">Current course</p><p class="course">College Algebra · MATH 110</p></div></div>
+      <div class="top-r"><button class="link-btn" data-act="help" data-k="help">Help</button><span class="avatar" aria-label="Jordan Smith">JS</span></div>
+    </header>
+    <main class="view" id="view"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="tic" id="toast-ic"></span>
+  <div><p class="label" id="toast-label">Voice feedback</p><b id="toast-msg">Math Workspace opened</b></div>
+</div>
+<div class="vpanel" id="vpanel" hidden role="dialog" aria-labelledby="vp-h"></div>
+<button class="fab" id="fab" data-act="voice-toggle" data-k="fab" aria-expanded="false" aria-controls="vpanel" aria-label="Voice commands"></button>
+
+<script>
+window.MathJax={svg:{fontCache:'local'},options:{enableMenu:false,renderActions:{assistiveMml:[]}},startup:{typeset:false,ready(){MathJax.startup.defaultReady();MathJax.startup.promise.then(()=>{window.__mj=true;document.dispatchEvent(new Event('mj-ready'));});}}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js" async></script>
+<script>
+(function(){
+const I={
+ grid:'<rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/>',
+ book:'<path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/>',
+ folder:'<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.2h8.5A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/>',
+ mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+ speaker:'<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/>',
+ pencil:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+ up:'<path d="M12 19V5M6.5 10.5L12 5l5.5 5.5"/>',down:'<path d="M12 5v14M6.5 13.5L12 19l5.5-5.5"/>',
+ x:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',plus:'<path d="M12 5v14M5 12h14"/>',
+ dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',left:'<path d="M19 12H5M11 6l-6 6 6 6"/>',right:'<path d="M9.5 6l6 6-6 6"/>',
+ share:'<circle cx="17.5" cy="5.5" r="2.3"/><circle cx="6.5" cy="12" r="2.3"/><circle cx="17.5" cy="18.5" r="2.3"/><path d="M8.6 10.8l6.8-4M8.6 13.2l6.8 4"/>',
+ dl:'<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/>',
+ pause:'<path d="M9 6v12M15 6v12"/>',play:'<path d="M8 5.5l11 6.5-11 6.5z"/>',stop:'<rect x="6.5" y="6.5" width="11" height="11"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',menuClose:'<rect x="3.5" y="4.5" width="17" height="15"/><path d="M9 4.5v15M15.5 10l-2 2 2 2"/>',
+ alert:'<path d="M12 4.5L21 19.5H3z"/><path d="M12 10v4.5M12 17v.3"/>'
+};
+const ic=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const SPEECH=['x squared plus 5 x plus 6 equals 0','integral from 0 to 1 of 3 x squared d x equals 1','a squared plus b squared equals c squared','f of x equals x plus 2 over x minus 1','y equals 3 x minus 7','square root of 49 equals 7','2 times x minus 4 equals 12','the limit as x approaches 0 of sine x over x equals 1'];
+const EQ_TEXT=['x² + 5x + 6 = 0','∫₀¹ 3x² dx = 1','a² + b² = c²','f(x) = (x + 2) / (x − 1)','y = 3x − 7','√(49) = 7','2(x − 4) = 12','limₓ→₀ sin(x) / x = 1'];
+const TIMES=['Today, 9:42 AM','Today, 9:45 AM','Today, 9:51 AM','Yesterday, 3:18 PM','Yesterday, 3:24 PM','Yesterday, 3:31 PM','Oct 29, 11:05 AM','Oct 29, 11:12 AM'];
+const VOICE_FIX={1:['x² + 5x + 6 = (x + 2)(x + 3)','x squared plus 5 x plus 6 equals x plus 2 times x plus 3'],2:['∫₀¹ 3x² dx = [x³]₀¹ = 1','integral from 0 to 1 of 3 x squared d x equals x cubed evaluated from 0 to 1 equals 1'],3:['c = √(a² + b²)','c equals square root of a squared plus b squared'],4:['f(x) = (x + 2) / (x − 1), x ≠ 1','f of x equals x plus 2 over x minus 1, x does not equal 1'],5:['y = 3x + 7','y equals 3 x plus 7'],6:['√49 = 7','square root of 49 equals 7'],7:['2(x − 4) = 12, so x = 10','2 times x minus 4 equals 12, so x equals 10'],8:['limₓ→₀ (sin x) / x = 1','the limit as x approaches 0 of sine x over x equals 1']};
+const FMT={pdf:{label:'PDF',ext:'.pdf',desc:'Best for printing and sharing'},docx:{label:'Word',ext:'.docx',desc:'Best for continued editing'},png:{label:'PNG',ext:'.png',desc:'One image per equation'},zip:{label:'ZIP of PNGs',ext:'.zip',desc:'All equation images in one archive'}};
+const CATS={doc:{label:'Document',sub:'Equations + written content',fmts:['pdf','docx']},img:{label:'Equation Images',sub:'Equations only',fmts:['png','zip']}};
+const PAGES=['workspace','organize','export-preview','mathspeak'];
+
+const S={page:'workspace',eqs:EQ_TEXT.map((t,i)=>({id:i+1,text:t,speech:SPEECH[i],time:TIMES[i]})),blocks:[],seq:0,n:{heading:0,text:0},
+ editing:null,addOpen:false,addTab:'eq',addEq:'',addText:'',addHead:'',moveOpen:false,mv:{block:'',mode:'position',target:'1'},
+ title:'Algebra Practice',cat:'doc',fmt:'pdf',numbering:true,adv:false,pageSize:'Letter',header:true,
+ reading:{state:'idle',mode:null,items:[],idx:0,timer:null},readSel:'',voiceOpen:false,focusHead:false,focusK:null};
+function mk(type,extra){S.seq++;const b=Object.assign({key:'b'+S.seq,type,created:S.seq},extra);if(type!=='eq'){S.n[type]++;b.n=S.n[type];}return b;}
+S.blocks=[mk('heading',{text:'Problem 1: Factoring'}),mk('text',{text:'First, I factor the quadratic equation.'}),mk('eq',{eqId:1}),mk('text',{text:'The equations below show the next steps in my solution.'}),mk('eq',{eqId:2}),mk('eq',{eqId:3}),mk('eq',{eqId:4})];
+
+const eqById=id=>S.eqs.find(e=>e.id===+id);
+const blk=k=>S.blocks.find(b=>b.key===k);
+const posOf=k=>S.blocks.findIndex(b=>b.key===k);
+const inDoc=id=>S.blocks.find(b=>b.type==='eq'&&b.eqId===+id);
+const labelOf=b=>b.type==='eq'?`Equation ${b.eqId}`:b.type==='text'?`Text Block ${b.n}`:`Heading ${b.n}`;
+const eqCount=()=>S.blocks.filter(b=>b.type==='eq').length;
+const textCount=()=>S.blocks.filter(b=>b.type==='text').length;
+const slug=()=>(S.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'document');
+const fileName=()=>S.fmt==='png'?`${slug()}-equation-1…${eqCount()}.png`:S.fmt==='zip'?`${slug()}-equations.zip`:slug()+FMT[S.fmt].ext;
+const countLabel=()=>S.cat==='doc'?`${S.blocks.length} content blocks`:`${eqCount()} equation image${eqCount()===1?'':'s'}`;
+const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+function speak(t){return t.replace(/limₓ→₀/g,' the limit as x approaches 0 of ').replace(/∫₀¹/g,' integral from 0 to 1 of ').replace(/√/g,' square root of ').replace(/²/g,' squared').replace(/³/g,' cubed').replace(/[₀¹]/g,'').replace(/≠/g,' does not equal ').replace(/=/g,' equals ').replace(/\+/g,' plus ').replace(/[−]|(?<=\s)-(?=\s)/g,' minus ').replace(/\//g,' over ').replace(/[()[\]]/g,' ').replace(/(\d)([a-z])/g,'$1 $2').replace(/\s+/g,' ').trim();}
+
+function items(){return S.blocks.map(b=>{const ed=S.editing&&S.editing.key===b.key;let text,speech;
+ if(b.type==='eq'){const e=eqById(b.eqId);text=ed?S.editing.draft:e.text;speech=ed?(S.editing.speech||speak(text)):e.speech;}else{text=ed?S.editing.draft:b.text;speech=text;}
+ return {b,text,speech,label:labelOf(b)};});}
+
+/* ---------- feedback ---------- */
+function say(msg,kind){const t=document.getElementById('toast');t.classList.toggle('error',kind==='error');
+ document.getElementById('toast-ic').innerHTML=ic(kind==='error'?'alert':'check',14);
+ document.getElementById('toast-label').textContent=kind==='error'?'Voice feedback · Error':'Voice feedback';
+ document.getElementById('toast-msg').textContent=msg;}
+
+/* ---------- paper ---------- */
+function paper(full){
+ const its=items();const pageCount=Math.max(1,Math.ceil(its.length/14));
+ if(S.cat==='img'){const eqs=its.filter(i=>i.b.type==='eq');
+  const head=full?'':`<h3 class="p-title">${esc(S.title)}</h3><hr class="p-rule">`;
+  if(!eqs.length)return `<div class="paper ${full?'full':'mini'}">${head}<p class="p-empty">No equations in this export yet.</p></div>`;
+  const figs=eqs.map((i,k)=>`<figure class="img-prev"><div class="img-box" role="img" aria-label="${esc(i.label)}: ${esc(i.speech)}">${esc(i.text)}</div>${full?`<figcaption>${esc(i.label)} · simulated image ${k+1} of ${eqs.length}</figcaption>`:''}</figure>`).join('');
+  return full?`<div class="imgs">${figs}</div>`:`<div class="paper mini">${head}<div class="imgs mini">${figs}</div></div>`;}
+ let k=0;const body=its.map(i=>{
+  if(i.b.type==='heading')return `<h4 class="p-h">${esc(i.text)}</h4>`;
+  if(i.b.type==='text')return `<p class="p-t">${esc(i.text)}</p>`;
+  k++;return `<div class="p-eq">${S.numbering?`<span class="p-n">${k}.</span>`:''}<span>${esc(i.text)}</span></div>`;}).join('')||'<p class="p-empty">No content yet. Add an equation, text block, or heading.</p>';
+ if(!full)return `<div class="paper mini"><h3 class="p-title">${esc(S.title)}</h3><hr class="p-rule">${body}</div>`;
+ return `<div class="paper full">${S.header?`<p class="p-course">MATH 110 · College Algebra</p>`:''}<h3 class="p-title">${esc(S.title)}</h3>${S.header?`<p class="p-meta">Jordan Smith · ${today}</p>`:''}<hr class="p-rule">${body}<p class="p-foot">Page 1 of ${pageCount} · ${S.pageSize}</p></div>`;}
+
+/* ---------- views ---------- */
+/* ===== Math Workspace: dictation (Feature 1) + editing (Feature 3) ===== */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const clone=x=>JSON.parse(JSON.stringify(x));
+const NUMW={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+const GREEK={pi:'\\pi',theta:'\\theta',alpha:'\\alpha',beta:'\\beta',lambda:'\\lambda',sigma:'\\sigma',infinity:'\\infty',mu:'\\mu',rho:'\\rho',epsilon:'\\epsilon',delta:'\\delta',omega:'\\omega'};
+const PH=[
+ ['start listening','cmd','start'],['refine with ai','cmd','ai'],['refine with a i','cmd','ai'],['refine manually','cmd','manual'],['select that','cmd','selthat'],['delete that','cmd','del'],
+ ['open parenthesis','m','open'],['close parenthesis','m','close'],['open paren','m','open'],['close paren','m','close'],['left paren','m','open'],['right paren','m','close'],['end quantity','m','close'],['quantity','m','open'],
+ ['start fraction','m','frac'],['start root','m','sqrtq'],['square root of','m','sqrt'],['square root','m','sqrt'],['root of','m','sqrt'],['end root','m','endroot'],['end fraction','m','endfrac'],['fraction','m','frac'],['over','m','over'],['divided by','m','op','\\div'],
+ ['to the power of','m','pow'],['to the','m','pow'],['squared','m','sq','2'],['cubed','m','sq','3'],
+ ['plus or minus','m','op','\\pm'],['plus','m','op','+'],['minus','m','op','-'],['times','m','op','\\cdot'],['is equal to','m','op','='],['equal to','m','op','='],['equals','m','op','='],['equal','m','op','='],['is greater than','m','op','>'],['greater than','m','op','>'],['is less than','m','op','<'],['less than','m','op','<'],
+ ['natural log','m','fn','\\ln'],['sine','m','fn','\\sin'],['sin','m','fn','\\sin'],['cosine','m','fn','\\cos'],['cos','m','fn','\\cos'],['tangent','m','fn','\\tan'],['tan','m','fn','\\tan'],['log','m','fn','\\log'],['integral','m','fn','\\int'],
+ ['point','m','point'],['of','m','of'],
+ ['pause','cmd','pause'],['select','cmd','select'],['delete','cmd','del'],['left','cmd','left'],['right','cmd','right'],['in','cmd','in'],['out','cmd','out'],['done','cmd','done'],['next','cmd','next'],['back','cmd','back'],['clear','cmd','clear']
+].map(p=>({w:p[0],n:p[0].split(' ').length,kind:p[1],a:p[2],v:p[3]})).sort((x,y)=>y.n-x.n);
+const MODES={idle:'Ready',listening:'Listening',paused:'Paused · editing',confirm:'Waiting for confirmation','refine-ai':'Choosing an AI fix',manual:'Refining manually'};
+const OK={start:['idle','confirm','paused'],pause:['listening'],selthat:['paused','manual'],left:['paused','manual'],right:['paused','manual'],in:['paused','manual'],out:['paused','manual'],del:['paused','manual'],done:['listening','paused','manual'],ai:['confirm'],manual:['confirm','refine-ai'],clear:['listening','paused'],next:'*',back:'*',select:'*'};
+const DEMOS=[
+ ['Dictate and navigate (Feature 1)',['Start listening.','x squared plus 5 x equals 6','Done.','Next.','Next.']],
+ ['Fix mid-dictation (Feature 3, method 1)',['Start listening.','2 a minus open paren b','Pause.','Select that.','Delete.','c plus 34 close paren equals b','Done.']],
+ ['Refine with AI (Feature 3, method 2)',['Start listening.','2 a minus open paren b plus 34 close paren equals c','Done.','Refine with AI.','3']],
+ ['Refine manually (Feature 3, method 3)',['Start listening.','2 a minus open paren b plus 34 close paren equals c','Done.','Refine with AI.','4','In.','Right.','In.','In.','Delete.','c','Out.','Out.','Right.','Delete.','b','Done.']],
+ ['Fractions and roots',['Start listening.','open paren x plus 2 close paren over open paren x minus 1 close paren','Done.','Start listening.','square root of 49 equals 7','Done.']]
+];
+const W=S.ws={mode:'idle',root:{items:[]},seq:null,idx:0,sel:null,stack:[],chat:[],target:null,preTarget:null,opts:[],navK:null,demo:false,demoSel:0,q:Promise.resolve()};
+W.seq=W.root;
+
+/* --- speech → tokens --- */
+function normalize(text){let s=' '+String(text).toLowerCase()+' ';
+ s=s.replace(/\(/g,' open paren ').replace(/\)/g,' close paren ').replace(/\+/g,' plus ').replace(/=/g,' equals ').replace(/\*/g,' times ').replace(/\//g,' over ').replace(/\^/g,' to the power of ').replace(/[−–]/g,' minus ').replace(/(\s|\d|[a-z])-(?=\s|\d|[a-z])/g,'$1 minus ');
+ s=s.replace(/(\d)([a-z])/g,'$1 $2').replace(/[.,!?;:"“”]+(?=\s)/g,' ');
+ return s.split(/\s+/).filter(Boolean);}
+function matchAt(w,i){
+ for(const p of PH){if(w.slice(i,i+p.n).join(' ')===p.w)return {len:p.n,kind:p.kind,a:p.a,v:p.v,text:p.w};}
+ const t=w[i];
+ if(/^\d+(\.\d+)?$/.test(t))return {len:1,kind:'m',a:'num',v:t,text:t};
+ if(t in NUMW)return {len:1,kind:'m',a:'num',v:String(NUMW[t]),word:true,text:t};
+ if(t in GREEK)return {len:1,kind:'m',a:'var',v:GREEK[t],text:t};
+ if(t==='capital'&&/^[a-z]$/.test(w[i+1]||''))return {len:2,kind:'m',a:'var',v:w[i+1].toUpperCase(),text:'capital '+w[i+1]};
+ if(/^[a-z]$/.test(t))return {len:1,kind:'m',a:'var',v:t,text:t};
+ return {len:1,kind:'x',text:t};}
+
+/* --- expression editor --- */
+function resetExpr(){W.root={items:[]};W.seq=W.root;W.idx=0;W.sel=null;W.stack=[];}
+function toEnd(){W.seq=W.root;W.stack=[];W.idx=W.root.items.length;W.sel=null;}
+function popCtx(){const e=W.stack.pop();W.seq=e.seq;W.idx=e.seq.items.indexOf(e.node)+1;W.sel=null;return e;}
+function enter(node,field,auto){W.stack.push({seq:W.seq,node,field,auto});W.seq=node[field];W.idx=W.seq.items.length;W.sel=null;}
+function collapseSel(){if(W.sel!=null){W.idx=selEnd()+1;W.sel=null;W.selEnd=null;}}
+function prevItem(){return W.idx>0?W.seq.items[W.idx-1]:null;}
+const top_=()=>W.stack[W.stack.length-1];
+function autoClose1(){while(W.stack.length&&top_().auto==='one'&&W.seq.items.length)popCtx();}
+function insertNode(n){collapseSel();
+ if(n.t==='op')while(W.stack.length&&top_().auto==='op'&&W.seq.items.length)popCtx();
+ W.seq.items.splice(W.idx,0,n);W.idx++;
+ if(n.t==='num'||n.t==='var')autoClose1();}
+function closeNearest(t,label){let k=-1;for(let j=W.stack.length-1;j>=0;j--)if(W.stack[j].node.t===t&&W.stack[j].field!=='sup'){k=j;break;}
+ if(k<0){say(`There is no open ${label} to close.`,'error');return false;}
+ let e;while(W.stack.length>k)e=popCtx();
+ const tp=top_();if(t==='paren'&&tp&&tp.node.t==='frac'&&W.seq.items.length===1&&W.seq.items[0]===e.node&&!e.node.sup){W.seq.items=e.node.body.items;W.idx=W.seq.items.length;}
+ autoClose1();return true;}
+function mathOp(m){
+ switch(m.a){
+ case 'num':{collapseSel();const p=prevItem();
+  if(p&&p.t==='num'&&!p.sup){if(p.word&&m.word&&+p.v%10===0&&+p.v>=20&&+m.v<10){p.v=String(+p.v+ +m.v);p.word=false;}else{p.v+=m.v;p.word=false;}return;}
+  insertNode({t:'num',v:m.v,word:!!m.word});return;}
+ case 'point':{collapseSel();const p=prevItem();if(p&&p.t==='num'&&!p.v.includes('.'))p.v+='.';else insertNode({t:'num',v:'0.'});return;}
+ case 'var':insertNode({t:'var',v:m.v});return;
+ case 'op':insertNode({t:'op',v:m.v});return;
+ case 'fn':insertNode({t:'fn',v:m.v});return;
+ case 'open':{const n={t:'paren',body:{items:[]}};insertNode(n);enter(n,'body',null);return;}
+ case 'close':closeNearest('paren','parenthesis');return;
+ case 'sqrt':{const n={t:'sqrt',body:{items:[]}};insertNode(n);enter(n,'body','op');return;}
+ case 'sqrtq':{const n={t:'sqrt',body:{items:[]}};insertNode(n);enter(n,'body',null);return;}
+ case 'endroot':closeNearest('sqrt','square root');return;
+ case 'frac':{const n={t:'frac',num:{items:[]},den:{items:[]}};insertNode(n);enter(n,'num',null);return;}
+ case 'endfrac':closeNearest('frac','fraction');return;
+ case 'over':{const tp=top_();if(tp&&tp.node.t==='frac'&&tp.field==='num'){popCtx();enter(tp.node,'den','op');return;}
+  collapseSel();const p=prevItem();if(!p){say('Say what goes on top before “over”.','error');return;}
+  W.seq.items.splice(W.idx-1,1);W.idx--;const f={t:'frac',num:p.t==='paren'&&!p.sup?p.body:{items:[p]},den:{items:[]}};
+  W.seq.items.splice(W.idx,0,f);W.idx++;enter(f,'den','op');return;}
+ case 'pow':{collapseSel();const p=prevItem();if(!p){say('Say a base before “to the power of”.','error');return;}p.sup={items:[]};enter(p,'sup','one');return;}
+ case 'sq':{collapseSel();const p=prevItem();if(!p){say(`Say what is ${m.text} first.`,'error');return;}p.sup={items:[{t:'num',v:m.v}]};return;}
+ case 'of':{const p=(collapseSel(),prevItem());if(p&&p.t==='fn')return;const n={t:'paren',body:{items:[]}};insertNode(n);enter(n,'body','one');return;}
+ }}
+
+/* --- LaTeX (generated first), text, MathSpeak (from LaTeX) --- */
+function toLatex(root,marked,tag){
+ const edit=marked&&(W.mode==='paused'||W.mode==='manual');
+ const sp=s=>/\\[a-zA-Z]+$/.test(s)?s+' ':s;
+ function N(n){let s;
+  if(n.t==='op')return n.v===','?', ':` ${n.v} `;
+  if(n.t==='fn')s=n.v;
+  else if(n.t==='paren')s=`(${L(n.body)})`;
+  else if(n.t==='frac')s=`\\frac{${L(n.num)||(edit?'\\square':'')}}{${L(n.den)||(edit?'\\square':'')}}`;
+  else if(n.t==='sqrt')s=`\\sqrt{${L(n.body)||(edit?'\\square':'')}}`;
+  else s=n.v;
+  if(n.sup)s=`${sp(s)}^{${L(n.sup)||(edit?'\\square':'')}}`;
+  return sp(s);}
+ function NT(n){const s=N(n);return s;}
+ function L(seq){const parts=seq.items.map((n,i)=>marked&&seq===W.seq&&W.sel===i?sp(`\\boxed{${N(n).trim()}}`):NT(n));
+  if(edit&&seq===W.seq&&W.sel==null)parts.splice(W.idx,0,'\\square ');
+  return parts.join('').replace(/\s+/g,' ').replace(/\(\s/g,'(').replace(/\s\)/g,')').trim();}
+ return L(root);}
+const SUPC={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','n':'ⁿ','x':'ˣ','+':'⁺','-':'⁻'};
+const TX={'\\cdot':'·','\\div':'÷','\\pm':'±','-':'−','\\sin':'sin ','\\cos':'cos ','\\tan':'tan ','\\log':'log ','\\ln':'ln ','\\int':'∫','\\pi':'π','\\theta':'θ','\\alpha':'α','\\beta':'β','\\lambda':'λ','\\sigma':'σ','\\infty':'∞'};
+function toText(root){function T(seq){return seq.items.map(n=>{let s;
+  if(n.t==='op')s=n.v===','?', ':` ${TX[n.v]||n.v} `;
+  else if(n.t==='paren')s=`(${T(n.body)})`;
+  else if(n.t==='frac'){const w=x=>/\s/.test(x)?`(${x})`:x;s=`${w(T(n.num))} / ${w(T(n.den))}`;}
+  else if(n.t==='sqrt')s=`√(${T(n.body)})`;
+  else s=TX[n.v]||n.v;
+  if(n.sup){const u=T(n.sup);s+=u&&[...u].every(c=>SUPC[c])?[...u].map(c=>SUPC[c]).join(''):`^(${u})`;}
+  return s;}).join('').replace(/\s+/g,' ').trim();}
+ return T(root);}
+function latexToSpeech(lx){
+ const tk=String(lx).match(/\\[a-zA-Z]+|\\.|\d+(?:\.\d*)?|[a-zA-Z]|\S/g)||[];let i=0;
+ const WD={'\\cdot':'times','\\div':'divided by','\\pm':'plus-or-minus','\\sin':'sine','\\cos':'cosine','\\tan':'tangent','\\log':'log','\\ln':'natural log','\\int':'integral','\\pi':'pi','\\theta':'theta','\\alpha':'alpha','\\beta':'beta','\\lambda':'lambda','\\sigma':'sigma','\\infty':'infinity','\\square':'blank','=':'equals','+':'plus','-':'minus','<':'less-than','>':'greater-than',',':'comma','(':'left-parenthesis',')':'right-parenthesis','[':'left-bracket',']':'right-bracket'};
+ function group(){if(tk[i]==='{'){i++;const s=seq('}');i++;return s;}return seq(null,true);}
+ function seq(stop,one){const out=[];while(i<tk.length&&tk[i]!==stop){const t=tk[i++];let w;
+   if(t==='\\frac'){const a=group(),b=group();w=`StartFraction ${a} Over ${b} EndFraction`;}
+   else if(t==='\\sqrt')w=`StartRoot ${group()} EndRoot`;
+   else if(t==='\\MVB'){w='\u0001'+group().replace(/\s+/g,'')+'\u0002';}
+   else if(t==='\\MVE'){group();w='\u0003';}
+   else if(t==='^'){const g0=group(),g=g0.replace(/\u0001\d+\u0002|\u0003/g,'').trim();w=g==='2'?'squared':g==='3'?'cubed':`Superscript ${g0} Baseline`;}
+   else if(t==='_')w=`Subscript ${group()} Baseline`;
+   else if(t==='\\boxed')w=group();
+   else if(['\\left','\\right','\\,','\\ ','\;'].includes(t))w='';
+   else if(t==='{'){w=seq('}');i++;}
+   else if(WD[t])w=WD[t];
+   else if(/^[A-Z]$/.test(t))w='upper '+t;
+   else if(t[0]==='\\')w=t.slice(1);
+   else w=t;
+   if(w)out.push(w);if(one)break;}
+  return out.join(' ');}
+ return seq(null).replace(/\s+/g,' ').trim();}
+const nodeSpeech=n=>latexToSpeech(toLatex({items:[n]},false))||'an empty part';
+
+/* --- AI refinement candidates --- */
+function walkVars(seq,depth,out){seq.items.forEach(n=>{if(n.t==='var')out.push({v:n.v,depth});['body','num','den','sup'].forEach(f=>n[f]&&walkVars(n[f],depth+(f==='body'&&n.t==='paren'?1:0),out));});return out;}
+function swapVars(seq,a,b){seq.items.forEach(n=>{if(n.t==='var'){if(n.v===a)n.v=b;else if(n.v===b)n.v=a;}['body','num','den','sup'].forEach(f=>n[f]&&swapVars(n[f],a,b));});}
+function genCands(root){const out=[],seen=new Set([toLatex(root,false)]);
+ const add=r=>{const k=toLatex(r,false);if(r.items.length&&!seen.has(k)){seen.add(k);out.push(r);}};
+ {const r=clone(root),o=r.items.find(n=>n.t==='op'&&(n.v==='-'||n.v==='+'));if(o){o.v=o.v==='-'?'+':'-';add(r);}}
+ {const r=clone(root),k=r.items.findIndex(n=>n.t==='paren'&&!n.sup);if(k>=0){r.items.splice(k,1,...r.items[k].body.items);add(r);}}
+ {const vs=walkVars(root,0,[]);if(vs.length>=2){const last=vs[vs.length-1].v,inner=vs.find(x=>x.depth>0&&x.v!==last),alt=inner?inner.v:[...vs].reverse().find(x=>x.v!==last);
+  const other=typeof alt==='string'?alt:alt&&alt.v;if(other){const r=clone(root);swapVars(r,last,other);add(r);}}}
+ {const r=clone(root),k=r.items.findIndex(n=>n.t==='op'&&n.v==='=');if(k>0){r.items=[...r.items.slice(k+1),r.items[k],...r.items.slice(0,k)];add(r);}}
+ {const r=clone(root);const n=r.items.find(x=>x.t==='num');if(n){n.v=String(+n.v+1);add(r);}}
+ return out.slice(0,3);}
+
+/* --- conversation + commands --- */
+const mathSpan=t=>`<span class="math">${esc(t)}</span>`;
+function sysMsg(html){W.chat.push({who:'sys',html});}
+function commit(){const latex=toLatex(W.root,false),text=toText(W.root),speech=latexToSpeech(latex);
+ let e=W.target&&eqById(W.target);if(e)Object.assign(e,{text,latex,speech});
+ else{e={id:Math.max(0,...S.eqs.map(q=>q.id))+1,text,latex,speech,time:'Just now'};S.eqs.push(e);}
+ W.target=e.id;return e;}
+function startListening(auto){resetExpr();W.target=W.preTarget||null;W.preTarget=null;W.mode='listening';
+ if(!auto)sysMsg('Listening. Say your equation. Say “Pause” to fix something mid-sentence, or “Done” to finish.');say('Listening');}
+function finishDictation(){if(!W.root.items.length){say('Nothing to save yet. Dictate an equation first.','error');return false;}
+ const e=commit();W.mode='confirm';W.sel=null;
+ sysMsg(`${mathSpan(e.text)}<br>Saved as Equation ${e.id}. Is that correct? If yes, no action is needed. If not, say “Refine with AI” or “Refine manually.”`);say(`Saved as Equation ${e.id}`);refreshSaved();}
+function refineAI(){W.opts=genCands(W.root);W.mode='refine-ai';
+ sysMsg(`If any of these edits are correct, say the number of the edit that is correct:<ol class="opts">${W.opts.map((r,i)=>`<li><b>${i+1}.</b>${mathSpan(toText(r))}</li>`).join('')}<li><b>${W.opts.length+1}.</b>Refine manually</li></ol>`);say('Choose an option by number');}
+function startManual(){W.mode='manual';if(W.sel==null){buildLayers();const f=LROOT&&LROOT.kind==='range'?LROOT.kids.filter(nonOp)[0]:LROOT;if(f)setSelNode(f);}
+ sysMsg('OK. The left side is highlighted. Say “In” to go a layer deeper, “Out” to go up, “Left” and “Right” for neighbors, say “Delete” to remove it or speak to add, then say “Done.”');buildLayers();const sn=selNodeL();say(sn?`Refining manually. Selected ${nameOf(sn)}: ${nodeSay(sn)}`:'Refining manually.');}
+function choose(k){if(k===W.opts.length+1){startManual();return;}if(k<1||k>W.opts.length){say(`Say a number from 1 to ${W.opts.length+1}.`,'error');return false;}
+ W.root=clone(W.opts[k-1]);toEnd();const e=commit();W.mode='idle';sysMsg(`Corrected: ${mathSpan(e.text)}<br>Equation ${e.id} updated.`);say(`Equation ${e.id} corrected`);refreshSaved();}
+function finishManual(){const e=commit();W.mode='idle';W.sel=null;sysMsg(`Edit has been successfully implemented. Equation ${e.id} is now ${mathSpan(e.text)}.`);say(`Equation ${e.id} updated`);refreshSaved();}
+function runCmd(a,text){
+ if(OK[a]!=='*'&&!OK[a].includes(W.mode)){say(`“${text[0].toUpperCase()+text.slice(1)}” isn't available right now. Mode: ${MODES[W.mode]}.`,'error');return false;}
+ switch(a){
+ case 'start':if(W.mode==='paused'){W.mode='listening';collapseSel();sysMsg('Listening again. New words go where the cursor is.');say('Listening');}else startListening(false);return;
+ case 'pause':W.mode='paused';sysMsg('Paused. Say “Select that” to highlight what you just said, move with “Left”, “Right”, “In” and “Out”, then say “Delete” or keep talking to add. Say “Done” when finished.');say('Paused');return;
+ case 'selthat':return selThat();
+ case 'left':return moveSel(-1);case 'right':return moveSel(1);
+ case 'in':return goIn();case 'out':return goOut();case 'del':return del();
+ case 'done':return W.mode==='manual'?finishManual():finishDictation();
+ case 'ai':return refineAI();case 'manual':return startManual();
+ case 'clear':resetExpr();say('Expression cleared');return;
+ case 'next':return navMove(1);case 'back':return navMove(-1);case 'select':return navSelect();
+ }}
+function apply(m){
+ if(m.kind==='x'){say(`“${m.text}” was not recognized as math or a command.`,'error');return false;}
+ if(m.kind==='cmd')return runCmd(m.a,m.text);
+ if(W.mode==='refine-ai'){if(m.a==='num')return choose(+m.v);say('Say the number of an option.','error');return false;}
+ if(W.mode==='idle'||W.mode==='confirm')startListening(true);
+ mathOp(m);}
+async function processUtter(text,instant){
+ const words=normalize(text);if(!words.length)return;let msg=null,i=0;
+ while(i<words.length){const m=matchAt(words,i);i+=m.len;
+  if(W.chat[W.chat.length-1]!==msg){msg={who:'user',parts:[]};W.chat.push(msg);}
+  const part={t:m.kind==='cmd'?'cmd':m.kind==='x'?'x':'w',v:m.text};msg.parts.push(part);
+  if(apply(m)===false)part.bad=true;
+  if(!instant){wsRefresh();await sleep(m.kind==='cmd'?420:170);}}
+ if(!instant)wsRefresh();}
+function utter(t){W.q=W.q.then(()=>processUtter(t)).catch(e=>console.error(e));return W.q;}
+async function runDemo(k){W.demo=true;updDemoBtn();for(const u of DEMOS[k][1]){if(!W.demo)break;await utter(u);await sleep(550);}W.demo=false;updDemoBtn();}
+function updDemoBtn(){const b=document.querySelector('[data-k="ws-demo"]');if(b)b.innerHTML=W.demo?`${ic('stop',14)} Stop demo`:`${ic('play',14)} Play demo`;}
+
+/* --- Feature 1 focus navigation --- */
+function navEls(){return [...document.querySelectorAll('#view [data-nav]')].filter(e=>!e.disabled&&e.offsetParent!==null);}
+function navMove(d){const els=navEls();if(!els.length)return;let i=els.findIndex(e=>e.dataset.k===W.navK);i=i<0?(d>0?0:els.length-1):(i+d+els.length)%els.length;W.navK=els[i].dataset.k;applyNav();
+ say(`Focused: ${(els[i].getAttribute('aria-label')||els[i].textContent).trim().replace(/[“”]/g,'')}. Say “Select” to activate.`);}
+function navSelect(){const el=W.navK&&document.querySelector(`[data-k="${W.navK}"]`);if(!el){say('Nothing is focused. Say “Next” first.','error');return false;}
+ if(/INPUT|SELECT|TEXTAREA/.test(el.tagName)){el.focus();say('Field selected');}else setTimeout(()=>el.click(),0);}
+function applyNav(){document.querySelectorAll('.nav-focus').forEach(e=>e.classList.remove('nav-focus'));const el=W.navK&&document.querySelector(`[data-k="${W.navK}"]`);if(el){el.classList.add('nav-focus');el.scrollIntoView({block:'nearest'});}}
+
+/* --- views --- */
+function chatHTML(){return W.chat.map(m=>m.who==='sys'?`<li class="msg sys"><span class="who">MathVoice</span><div class="bub">${m.html}</div></li>`
+ :`<li class="msg user"><span class="who">You said</span><div class="bub">${m.parts.map(p=>p.t==='cmd'?`<span class="chip ${p.bad?'bad':''}">${esc(p.v)}${p.bad?'<span class="sr"> (not available)</span>':''}</span>`:p.t==='x'?`<span class="unk w" title="Not recognized">${esc(p.v)}</span>`:`<span class="w">${esc(p.v)}</span>`).join('')}</div></li>`).join('');}
+function modeChip(){return `<span class="mode m-${W.mode}"><span class="dot" aria-hidden="true"></span>${MODES[W.mode]}</span>`;}
+function barHTML(){const m=W.mode,edit=m==='paused'||m==='manual';
+ const B=(label,on,icon)=>`<button class="btn btn-sm cmdb" data-act="ws-cmd" data-say="${label}" data-k="wsb-${label.toLowerCase().replace(/\W+/g,'-')}" data-nav ${on?'':'disabled'}>${icon?ic(icon,14):''}“${label}”</button>`;
+ const G=(label,btns)=>`<div class="grp"><p class="label">${label}</p><div class="grp-b">${btns.join('')}</div></div>`;
+ const n=W.opts.length;
+ return G('Dictation',[B('Start listening',['idle','confirm','paused'].includes(m),'mic'),B('Pause',m==='listening','pause'),B('Done',['listening','paused','manual'].includes(m),'check'),B('Clear',['listening','paused'].includes(m))])
+  +G('Edit the math',[B('Select that',edit),B('Left',edit),B('Right',edit),B('In',edit),B('Out',edit),B('Delete',edit)])
+  +G('Refine',[B('Refine with AI',m==='confirm'),B('Refine manually',m==='confirm'||m==='refine-ai'),...(m==='refine-ai'?W.opts.map((_,i)=>B(String(i+1),true)):[])])
+  +G('Navigate',[B('Next',true),B('Back',true),B('Select',true)])
+  +`<div class="grp"><p class="label"><label for="ws-demo-sel">Scripted demo</label></p><div class="grp-b"><select class="input demo-sel" id="ws-demo-sel" data-k="ws-demo-sel" data-nav>${DEMOS.map((d,i)=>`<option value="${i}" ${W.demoSel===i?'selected':''}>${d[0]}</option>`).join('')}</select><button class="btn btn-sm" data-act="ws-demo" data-k="ws-demo" data-nav>${W.demo?ic('stop',14)+' Stop demo':ic('play',14)+' Play demo'}</button></div></div>`
+  +`<div class="grp grp-export"><p class="label">Export</p><div class="grp-b"><span class="hint"><strong>${eqCount()}</strong> selected</span><button class="btn btn-sm btn-primary" data-act="go" data-page="organize" data-k="wsb-organize" data-nav ${eqCount()?'':'disabled'}>Organize &amp; Export ${ic('right',14)}</button></div></div>`;}
+function wsHTML(){return `<section class="ws" aria-label="Dictation workspace"><div class="ws-grid">
+ <div class="ws-chat">
+  <div class="ws-h"><div><h2>Conversation</h2><p class="hint">What MathVoice captures, word by word</p></div><span id="ws-mode">${modeChip()}</span></div>
+  <ol class="log" id="ws-chat-log" aria-live="polite" aria-label="Conversation">${chatHTML()}</ol>
+  <form class="say" id="ws-form"><label class="sr" for="ws-input">Type what you would say</label><input class="input" id="ws-input" data-k="ws-input" data-nav autocomplete="off" placeholder="Type what you'd say, e.g. x squared plus 5 x equals 6"><button class="btn btn-primary" type="submit" data-k="ws-say" data-nav>${ic('mic',16)} Say it</button></form>
+ </div>
+ <div class="ws-out">
+  <section aria-labelledby="o-eq"><div class="row-between"><h3 class="eyebrow" id="o-eq">Equation</h3><span class="eqhint-row"><span class="hint" id="ws-eqhint"></span><button class="link-btn" id="ws-clearsel" data-act="ws-clearsel" data-k="ws-clearsel" hidden>Clear</button></span></div><div class="eq-render" id="ws-eq" role="img"></div></section>
+  <section aria-labelledby="o-tex"><div class="row-between"><h3 class="eyebrow" id="o-tex">LaTeX</h3><button class="link-btn" data-act="ws-copy" data-k="ws-copy" data-nav aria-label="Copy LaTeX">Copy</button></div><pre id="ws-latex"></pre><p class="hint">Generated first. The equation above and the MathSpeak below are both built from this LaTeX.</p></section>
+  <section aria-labelledby="o-ms"><div class="row-between"><h3 class="eyebrow" id="o-ms">MathSpeak</h3><button class="link-btn" data-act="ws-play" data-k="ws-play" data-nav aria-label="Play MathSpeak aloud">${ic('speaker',14)} Play</button></div><p id="ws-speech"></p></section>
+ </div></div>
+ <div class="ws-bar" id="ws-bar" role="toolbar" aria-label="Voice prompts">${barHTML()}</div></section>`;}
+/* --- Layered structure (after speak-math.html): Equation → sides → Sum → Term → parts; operators are leaves --- */
+const REL=new Set(['=','<','>']),ADD=new Set(['+','-','\\pm']);
+const FIELDS=n=>[...(n.t==='paren'?[['body','Inside']]:n.t==='frac'?[['num','Numerator'],['den','Denominator']]:n.t==='sqrt'?[['body','Under the root']]:[]),...(n.sup?[['sup','Exponent']]:[])];
+const OPN={'=':'Equals','+':'Plus','-':'Minus','\\cdot':'Times','\\div':'Divide','\\pm':'Plus-or-minus','<':'Less-than','>':'Greater-than',',':'Comma'};
+const kindOf=n=>n.t==='num'?'Number':n.t==='var'?'Variable':n.t==='op'?(OPN[n.v]||'Operator'):n.t==='fn'?'Function':n.t==='paren'?'Group':n.t==='frac'?'Fraction':n.t==='sqrt'?'Root':'Part';
+let LY=[],LROOT=null,SHOWCUR=false;
+function mkL(o){o.id=LY.length;LY.push(o);o.kids=o.kids||[];o.kids.forEach(k=>k.parent=o);o.parent=null;return o;}
+function opL(seq,i,stack){return mkL({kind:'op',seq,from:i,to:i,stack,item:seq.items[i]});}
+function itemL(seq,i,stack,role){const n=seq.items[i],kids=[],fieldNodes={};
+ FIELDS(n).forEach(([f,lab])=>{const sub=n[f];const c=sub.items.length?rangeL(sub,0,sub.items.length-1,[...stack,{seq,node:n,field:f,auto:null}],lab):null;fieldNodes[f]=c;if(c)kids.push(c);});
+ return mkL({kind:'item',label:kindOf(n),seq,from:i,to:i,stack,role,item:n,kids,fieldNodes});}
+function rangeL(seq,a,b,stack,role){const it=seq.items;
+ if(a===b)return it[a].t==='op'?opL(seq,a,stack):itemL(seq,a,stack,role);
+ const cut=(set,skipFirst)=>{const c=[];for(let i=skipFirst?a+1:a;i<=b;i++)if(it[i].t==='op'&&set.has(it[i].v))c.push(i);return c;};
+ let cuts=cut(REL),label;
+ if(cuts.length)label=cuts.some(i=>it[i].v==='=')?'Equation':'Inequality';
+ else{cuts=cut(ADD,true);if(cuts.length)label='Sum';}
+ const kids=[];
+ if(cuts.length){let s=a;const segs=[];cuts.forEach(c=>{if(c>s){const g=rangeL(seq,s,c-1,stack);kids.push(g);segs.push(g);}kids.push(opL(seq,c,stack));s=c+1;});
+  if(s<=b){const g=rangeL(seq,s,b,stack);kids.push(g);segs.push(g);}
+  if((label==='Equation'||label==='Inequality')&&segs.length===2){segs[0].role='Left side';segs[1].role='Right side';}}
+ else{label='Term';for(let i=a;i<=b;i++)kids.push(it[i].t==='op'?opL(seq,i,stack):itemL(seq,i,stack));}
+ return mkL({kind:'range',label,seq,from:a,to:b,stack,role,kids});}
+function buildLayers(){LY=[];LROOT=W.root.items.length?rangeL(W.root,0,W.root.items.length-1,[]):null;}
+const spT=s=>/\\[a-zA-Z]+$/.test(s)?s+' ':s;
+const tidy=s=>s.replace(/\s+/g,' ').replace(/\(\s/g,'(').replace(/\s\)/g,')').trim();
+function curHere(k){return SHOWCUR&&k.seq===W.seq&&(k.kind==='item'||k.kind==='op')&&k.from===W.idx;}
+function emitSeq(seq,node,mode){let s=node?emit(node,mode):'';
+ if(SHOWCUR&&seq===W.seq){if(W.idx>=seq.items.length)s+=' \\square';else if(node&&(node.kind==='item'||node.kind==='op')&&W.idx===0)s='\\square '+s;}
+ if(!s.trim()&&mode==='mj'&&(W.mode==='paused'||W.mode==='manual'))s='\\square';return s;}
+function emit(node,mode){
+ const wrap=s=>mode==='mj'?`\\class{mx-${node.id}}{${s}}`:mode==='mark'?`\\MVB{${node.id}}${s}\\MVE{}`:s;
+ if(node.kind==='op'){const v=node.item.v;return v===','?', ':` ${v} `;}
+ if(node.kind==='range'){let s='';node.kids.forEach(k=>{if(curHere(k))s+='\\square ';s+=emit(k,mode);});return wrap(tidy(s));}
+ const n=node.item,F=f=>tidy(emitSeq(n[f],node.fieldNodes[f],mode));let s;
+ if(n.t==='fn')s=n.v;else if(n.t==='paren')s=`(${F('body')})`;else if(n.t==='frac')s=`\\frac{${F('num')}}{${F('den')}}`;else if(n.t==='sqrt')s=`\\sqrt{${F('body')}}`;else s=n.v;
+ if(n.sup)s=`${spT(s)}^{${F('sup')}}`;
+ return wrap(spT(s));}
+const selEnd=()=>W.sel==null?null:(W.selEnd!=null&&W.selEnd>=W.sel?W.selEnd:W.sel);
+function selNodeL(){if(W.sel==null)return null;const e=selEnd();return LY.find(x=>x.kind!=='op'&&x.seq===W.seq&&x.from===W.sel&&x.to===e)||null;}
+function setSelNode(n){W.seq=n.seq;W.stack=n.stack.map(e=>({...e}));W.sel=n.from;W.selEnd=n.to;W.idx=n.to+1;}
+function chainOf(n){const c=[];while(n){c.unshift(n);n=n.parent;}return c;}
+const nameOf=n=>n.role||n.label;
+const pathLabel=n=>chainOf(n).map(nameOf).join(' › ');
+const nodeSay=n=>latexToSpeech(emit(n,'plain'))||'an empty part';
+function announce(n){say(`Selected ${nameOf(n)}: ${nodeSay(n)}`);}
+const nonOp=n=>n.kind!=='op';
+const ownerItem=()=>{const t=W.stack[W.stack.length-1];return t?LY.find(x=>x.kind==='item'&&x.item===t.node):null;};
+function selThat(){buildLayers();const cur=selNodeL();if(cur){announce(cur);return;}
+ if(W.idx>0){const n=LY.find(x=>x.kind==='item'&&x.seq===W.seq&&x.from===W.idx-1);if(n){setSelNode(n);announce(n);return;}}
+ const o=ownerItem();if(o){setSelNode(o);announce(o);return;}say('Nothing to select yet.','error');return false;}
+function moveSel(d){buildLayers();const n=selNodeL();
+ if(!n){const j=d<0?W.idx-1:W.idx;const it=LY.find(x=>x.kind==='item'&&x.seq===W.seq&&x.from===j);if(it){setSelNode(it);announce(it);return;}say(d<0?'Start of this part.':'End of this part.');return;}
+ if(!n.parent){say('This is the whole equation. Say “In” to go into it.');return;}
+ const sib=n.parent.kids.filter(nonOp),k=sib.indexOf(n)+d;
+ if(k<0||k>=sib.length){say(`No more parts to the ${d<0?'left':'right'} in this layer. Say “Out” to go up a layer.`);return;}
+ setSelNode(sib[k]);announce(sib[k]);}
+function goIn(){buildLayers();const n=selNodeL();if(!n){say('Select something first, then say “In”.','error');return false;}
+ const ks=n.kids.filter(nonOp);if(!ks.length){say(`${nodeSay(n)} has nothing inside.`,'error');return false;}setSelNode(ks[0]);announce(ks[0]);}
+function goOut(){buildLayers();const n=selNodeL();
+ if(!n){const o=ownerItem()||LROOT;if(o){setSelNode(o);announce(o);return;}say('Nothing to select yet.');return;}
+ if(!n.parent){say('Already at the whole equation.');return;}setSelNode(n.parent);announce(n.parent);}
+function del(){if(W.sel!=null){const a=W.sel,b=selEnd(),gone=W.seq.items.splice(a,b-a+1);W.idx=a;W.sel=null;W.selEnd=null;say(`Deleted ${latexToSpeech(toLatex({items:gone},false))}`);return;}
+ if(W.idx>0){const n=W.seq.items.splice(W.idx-1,1)[0];W.idx--;say(`Deleted ${nodeSpeech(n)}`);return;}say('Nothing to delete here.','error');return false;}
+function selectNode(id){buildLayers();const n=LY[id];if(!n||n.kind==='op')return;
+ if(W.mode==='listening'){W.mode='paused';sysMsg('Paused so you can edit the part you selected. Say “Delete”, keep talking to add after it, or say “Start listening” to continue.');}
+ setSelNode(n);announce(n);wsRefresh();}
+function addRect(g,ci,isSel){let bb;try{bb=g.getBBox();}catch(e){return;}if(!bb||(!bb.width&&!bb.height))return;const pad=45;
+ const r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('class','mx-hl');
+ r.setAttribute('x',bb.x-pad);r.setAttribute('y',bb.y-pad);r.setAttribute('width',bb.width+pad*2);r.setAttribute('height',bb.height+pad*2);r.setAttribute('rx',60);
+ r.setAttribute('style',`fill:var(--l${ci});${isSel?'stroke:var(--ink);stroke-width:40;':'stroke:none;'}`);g.insertBefore(r,g.firstChild);}
+function applyHL(){document.querySelectorAll('#ws-latex .hl-n, #ws-speech .hl-n').forEach(e=>{e.classList.remove('anc','on');e.style.removeProperty('--hc');});
+ document.querySelectorAll('#ws-eq rect.mx-hl').forEach(r=>r.remove());
+ const sel=selNodeL();if(!sel)return;const chain=chainOf(sel),svg=document.querySelector('#ws-eq svg');
+ chain.forEach((n,pos)=>{if(pos===0&&chain.length>1)return;const isSel=n===sel,ci=Math.min(chain.length>1?pos:1,4);
+  document.querySelectorAll(`#ws-latex [data-n="${n.id}"], #ws-speech [data-n="${n.id}"]`).forEach(e=>{e.classList.add(isSel?'on':'anc');e.style.setProperty('--hc',`var(--l${ci})`);});
+  if(svg)svg.querySelectorAll('.mx-'+n.id).forEach(g=>addRect(g,ci,isSel));});}
+function renderResult(){const eqEl=document.getElementById('ws-eq');if(!eqEl)return;
+ buildLayers();const clean=toLatex(W.root,false),speech=latexToSpeech(clean),selN=selNodeL(),edit=W.mode==='paused'||W.mode==='manual';
+ SHOWCUR=false;const mark=LROOT?emit(LROOT,'mark'):'';
+ const lx=document.getElementById('ws-latex'),sx=document.getElementById('ws-speech');
+ lx.innerHTML=mark?esc(mark).replace(/\\MVB\{(\d+)\}/g,'<span class="hl-n" data-n="$1">').replace(/\\MVE\{\}/g,'</span>'):'—';
+ const spk=mark?latexToSpeech(mark):'';sx.innerHTML=spk?esc(spk).replace(/(\s*)\u0001(\d+)\u0002\s*/g,'$1<span class="hl-n" data-n="$2">').replace(/\s*\u0003(\s*)/g,'</span>$1'):'—';
+ document.getElementById('ws-eqhint').textContent=selN?pathLabel(selN):edit?'□ marks where new words go':W.mode==='listening'?'Updates as you speak':W.target?`Equation ${W.target}`:'Click any part to explore its layers';
+ const cb=document.getElementById('ws-clearsel');if(cb)cb.hidden=!selN;
+ eqEl.setAttribute('aria-label',speech||'No equation yet');
+ if(!W.root.items.length&&!edit){eqEl.innerHTML='<p class="eq-empty">Your equation appears here as you speak.</p>';applyHL();return;}
+ if(window.__mj&&window.MathJax&&MathJax.tex2svg){SHOWCUR=edit&&W.sel==null;const tx=LROOT?tidy(emitSeq(W.root,LROOT,'mj')):'\\square';SHOWCUR=false;
+  try{const n=MathJax.tex2svg(tx,{display:true});n.setAttribute('aria-hidden','true');eqEl.replaceChildren(n);applyHL();return;}catch(e){console.error(e);}}
+ eqEl.innerHTML=`<p class="fallback">${esc(toText(W.root))}</p>`;applyHL();}
+function wsRefresh(){if(S.page!=='workspace')return;const ae=document.activeElement,k=ae&&ae.dataset?ae.dataset.k:null;
+ const log=document.getElementById('ws-chat-log');if(!log)return;log.innerHTML=chatHTML();log.scrollTop=log.scrollHeight;
+ document.getElementById('ws-mode').innerHTML=modeChip();document.getElementById('ws-bar').innerHTML=barHTML();renderResult();
+ if(k&&k.startsWith('wsb-')){const el=document.querySelector(`[data-k="${k}"]`);if(el&&!el.disabled)el.focus({preventScroll:true});}
+ applyNav();}
+function refreshSaved(){renderNav();const s=document.getElementById('ws-saved');if(s)s.innerHTML=savedHTML();}
+function renderNav(){document.getElementById('nav').innerHTML=[['grid','Math Workspace','ws'],['book','MathSpeak Help','help-sec']].map(([i,l,id])=>`<button data-act="nav" data-sec="${id}" data-k="nav-${id}" ${(id==='help-sec')===(S.page==='mathspeak')?'aria-current="page"':''}>${ic(i)}${l}${id==='ws'?`<span class="badge" aria-label="${S.eqs.length} equations">${S.eqs.length}</span>`:''}</button>`).join('');}
+function afterWs(){const log=document.getElementById('ws-chat-log');if(log)log.scrollTop=log.scrollHeight;renderResult();applyNav();}
+
+function savedHTML(){const sel=eqCount();
+ const rows=S.eqs.map(e=>{const on=!!inDoc(e.id);return `<li class="eq-row ${on?'is-sel':''}">
+  <label class="sel" for="sel-${e.id}"><input type="checkbox" id="sel-${e.id}" data-act="toggle-eq" data-id="${e.id}" data-k="sel-${e.id}" ${on?'checked':''} aria-label="Include Equation ${e.id} in document">Select</label>
+  <div class="eq-main"><span class="num" aria-hidden="true">${e.id}</span><div style="min-width:0"><p class="label">Equation ${e.id}</p><p class="math">${esc(e.text)}</p><p class="time">${e.time}</p></div></div>
+  <div class="row-actions"><button class="btn btn-sm" data-act="read-eq" data-id="${e.id}" data-k="read-${e.id}" aria-label="Read Equation ${e.id} aloud">${ic('speaker',16)} Read Aloud</button><button class="btn btn-sm" data-act="edit-lib" data-id="${e.id}" data-k="editlib-${e.id}" aria-label="Edit Equation ${e.id}">${ic('pencil',16)} Edit</button></div></li>`;}).join('');
+ return `<div class="saved-h"><h2>Saved equations <span class="hint">· ${S.eqs.length} · Creation order</span></h2><button class="btn btn-ghost btn-sm" data-act="read-all" data-k="read-all">${ic('speaker',16)} Read all</button></div>
+ <ol class="eq-list" aria-label="Saved equations">${rows}</ol>
+ <div class="dock"><p><strong>${sel}</strong> selected for export</p><button class="btn btn-primary" data-act="go" data-page="organize" data-k="go-org-dock" ${sel?'':'disabled'}>Organize &amp; Export</button></div>`;}
+function vLibrary(){
+ return `<h1 class="sr" tabindex="-1">Math Workspace</h1>
+ ${wsHTML()}<section id="ws-saved" aria-label="Saved equations">${savedHTML()}</section>`;}
+
+
+/* ===== MathSpeak Help (Feature 2): one library, three navigation mocks ===== */
+const DISC={math:'Mathematics',phys:'Physics',chem:'Chemistry'};
+const TOPICS={math:['Algebra','Trigonometry','Calculus','Linear algebra','Statistics'],phys:['Mechanics','Electromagnetism','Modern physics'],chem:['Reactions','Ions & isotopes','Equilibrium & acids','Gases']};
+const STRUCT={
+ basic:['Letters & operators','F=ma','Variables are read letter by letter, and capitals are read as “upper”. F = ma is “upper F equals m a.”'],
+ fraction:['Fractions','\\frac{a}{b}','Read as StartFraction … Over … EndFraction, so the listener hears exactly where the numerator and denominator begin and end. Simple numeric fractions are read as words, like “one half.”'],
+ script:['Superscripts & subscripts','x^{2}_{1}','Superscript … Baseline marks where a raised part starts and where the line returns. “Squared” and “cubed” are shortcuts. Simple numeric subscripts are read directly: q 1, H 2.'],
+ root:['Roots','\\sqrt{x}','StartRoot … EndRoot brackets everything under the radical sign.'],
+ group:['Grouping','\\left[(x)\\right]','Parentheses, brackets and absolute-value bars are named out loud: left-parenthesis, left-bracket, StartAbsoluteValue … EndAbsoluteValue.'],
+ largeop:['Sums, integrals & limits','\\textstyle\\sum\\int\\lim','Integrals take Subscript/Superscript for their bounds. Sums and limits use Underscript … Overscript … Endscripts.'],
+ accent:['Accents & vectors','\\vec{v}\;\\bar{x}','Marks above a symbol are read as ModifyingAbove … With …, as in “ModifyingAbove v With right-arrow.” A bar over x is “x overbar.”'],
+ matrix:['Matrices','\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}','Start m By n Matrix, then each row and column in order, then EndMatrix.'],
+ arrow:['Arrows & relations','\\rightleftharpoons','Reaction arrows and relations are named: right-arrow, right-arrow-over-left-arrow, less-than, plus-or-minus.'],
+ function:['Functions & operators','\\sin\\theta','Named functions are read as words: sine, cosine, log, det. Operators keep their names: nabla, partial-differential.']
+};
+const LIB=[
+ ['math','Algebra','fraction','Quadratic formula','x = \\frac{-b \\pm \\sqrt{b^{2} - 4ac}}{2a}','x equals StartFraction negative b plus-or-minus StartRoot b squared minus 4 a c EndRoot Over 2 a EndFraction','x equals start fraction minus b plus or minus start root b squared minus 4 a c end root over 2 a end fraction'],
+ ['math','Algebra','script','Pythagorean theorem','a^{2} + b^{2} = c^{2}','a squared plus b squared equals c squared','a squared plus b squared equals c squared'],
+ ['math','Algebra','script','Product of powers','x^{m} \\cdot x^{n} = x^{m+n}','x Superscript m Baseline times x Superscript n Baseline equals x Superscript m plus n Baseline',null],
+ ['math','Algebra','group','Absolute-value inequality','|x - 3| < 5','StartAbsoluteValue x minus 3 EndAbsoluteValue less-than 5',null],
+ ['math','Trigonometry','function','Pythagorean identity','\\sin^{2}\\theta + \\cos^{2}\\theta = 1','sine squared theta plus cosine squared theta equals 1','sine squared theta plus cosine squared theta equals 1'],
+ ['math','Trigonometry','function','Law of cosines','c^{2} = a^{2} + b^{2} - 2ab\\cos C','c squared equals a squared plus b squared minus 2 a b cosine upper C','c squared equals a squared plus b squared minus 2 a b cosine capital c'],
+ ['math','Calculus','fraction','Derivative (Leibniz notation)','\\frac{dy}{dx} = 2x','StartFraction d y Over d x EndFraction equals 2 x','start fraction d y over d x end fraction equals 2 x'],
+ ['math','Calculus','largeop','Definite integral','\\int_{0}^{1} 3x^{2}\\,dx = 1','integral Subscript 0 Superscript 1 Baseline 3 x squared d x equals 1',null],
+ ['math','Calculus','largeop','Limit','\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1','limit Underscript x right-arrow 0 Endscripts StartFraction sine x Over x EndFraction equals 1',null],
+ ['math','Calculus','fraction','Partial derivative','\\frac{\\partial f}{\\partial x}','StartFraction partial-differential f Over partial-differential x EndFraction',null],
+ ['math','Calculus','largeop','Sum of the first n integers','\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}','sigma-summation Underscript i equals 1 Overscript n Endscripts i equals StartFraction n left-parenthesis n plus 1 right-parenthesis Over 2 EndFraction',null],
+ ['math','Linear algebra','matrix','2 × 2 matrix','A = \\begin{pmatrix} 4 & 1 \\\\ 2 & 3 \\end{pmatrix}','upper A equals Start 2 By 2 Matrix 1st Row 1st Column 4 2nd Column 1 2nd Row 1st Column 2 2nd Column 3 EndMatrix',null],
+ ['math','Linear algebra','function','Characteristic equation','\\det(A - \\lambda I) = 0','det left-parenthesis upper A minus lamda upper I right-parenthesis equals 0',null],
+ ['math','Linear algebra','accent','Vector in component form','\\vec{v} = \\langle 3, -4 \\rangle','ModifyingAbove v With right-arrow equals left-angle-bracket 3 comma negative 4 right-angle-bracket',null],
+ ['math','Linear algebra','accent','Dot product','\\vec{u} \\cdot \\vec{v} = |\\vec{u}||\\vec{v}|\\cos\\theta','ModifyingAbove u With right-arrow dot ModifyingAbove v With right-arrow equals StartAbsoluteValue ModifyingAbove u With right-arrow EndAbsoluteValue StartAbsoluteValue ModifyingAbove v With right-arrow EndAbsoluteValue cosine theta',null],
+ ['math','Statistics','accent','Sample mean','\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_{i}','x overbar equals StartFraction 1 Over n EndFraction sigma-summation Underscript i equals 1 Overscript n Endscripts x Subscript i',null],
+ ['math','Statistics','root','Standard deviation','\\sigma = \\sqrt{\\frac{1}{N}\\sum_{i=1}^{N}(x_{i} - \\mu)^{2}}','sigma equals StartRoot StartFraction 1 Over upper N EndFraction sigma-summation Underscript i equals 1 Overscript upper N Endscripts left-parenthesis x Subscript i Baseline minus mu right-parenthesis squared EndRoot',null],
+ ['math','Statistics','fraction','z-score','z = \\frac{x - \\mu}{\\sigma}','z equals StartFraction x minus mu Over sigma EndFraction','z equals start fraction x minus mu over sigma end fraction'],
+ ['phys','Mechanics','basic','Newton’s second law','F = ma','upper F equals m a','capital f equals m a'],
+ ['phys','Mechanics','fraction','Kinetic energy','KE = \\frac{1}{2}mv^{2}','upper K upper E equals one half m v squared','capital k capital e equals start fraction 1 over 2 end fraction m v squared'],
+ ['phys','Mechanics','fraction','Average velocity','v = \\frac{\\Delta x}{\\Delta t}','v equals StartFraction upper Delta x Over upper Delta t EndFraction',null],
+ ['phys','Mechanics','script','Projectile height','y = v_{0}t - \\frac{1}{2}gt^{2}','y equals v Subscript 0 Baseline t minus one half g t squared',null],
+ ['phys','Electromagnetism','script','Coulomb’s law','F = k\\frac{q_{1}q_{2}}{r^{2}}','upper F equals k StartFraction q 1 q 2 Over r squared EndFraction',null],
+ ['phys','Electromagnetism','function','Gauss’s law','\\nabla \\cdot \\vec{E} = \\frac{\\rho}{\\varepsilon_{0}}','nabla dot ModifyingAbove upper E With right-arrow equals StartFraction rho Over epsilon 0 EndFraction',null],
+ ['phys','Electromagnetism','basic','Ohm’s law','V = IR','upper V equals upper I upper R','capital v equals capital i capital r'],
+ ['phys','Modern physics','script','Mass–energy equivalence','E = mc^{2}','upper E equals m c squared','capital e equals m c squared'],
+ ['phys','Modern physics','accent','Schrödinger equation','i\\hbar\\frac{\\partial \\Psi}{\\partial t} = \\hat{H}\\Psi','i h-bar StartFraction partial-differential upper Psi Over partial-differential t EndFraction equals ModifyingAbove upper H With caret upper Psi',null],
+ ['chem','Reactions','arrow','Combustion of hydrogen','\\mathrm{2H_{2} + O_{2} \\rightarrow 2H_{2}O}','2 upper H 2 plus upper O 2 right-arrow 2 upper H 2 upper O',null],
+ ['chem','Reactions','arrow','Photosynthesis','\\mathrm{6CO_{2} + 6H_{2}O \\rightarrow C_{6}H_{12}O_{6} + 6O_{2}}','6 upper C upper O 2 plus 6 upper H 2 upper O right-arrow upper C 6 upper H 12 upper O 6 plus 6 upper O 2',null],
+ ['chem','Ions & isotopes','script','Sulfate ion','\\mathrm{SO_{4}^{2-}}','upper S upper O Subscript 4 Superscript 2 minus Baseline',null],
+ ['chem','Ions & isotopes','script','Carbon-14 isotope','{}^{14}_{6}\\mathrm{C}','Presubscript 6 Presuperscript 14 upper C',null],
+ ['chem','Ions & isotopes','arrow','Forming sodium chloride','\\mathrm{Na^{+} + Cl^{-} \\rightarrow NaCl}','upper N a Superscript plus Baseline plus upper C l Superscript minus Baseline right-arrow upper N a upper C l',null],
+ ['chem','Equilibrium & acids','arrow','Haber process','\\mathrm{N_{2} + 3H_{2} \\rightleftharpoons 2NH_{3}}','upper N 2 plus 3 upper H 2 right-arrow-over-left-arrow 2 upper N upper H 3',null],
+ ['chem','Equilibrium & acids','group','Equilibrium constant','K_{c} = \\frac{[\\mathrm{NH_{3}}]^{2}}{[\\mathrm{N_{2}}][\\mathrm{H_{2}}]^{3}}','upper K Subscript c Baseline equals StartFraction left-bracket upper N upper H 3 right-bracket squared Over left-bracket upper N 2 right-bracket left-bracket upper H 2 right-bracket cubed EndFraction',null],
+ ['chem','Equilibrium & acids','function','pH','\\mathrm{pH} = -\\log[\\mathrm{H^{+}}]','p upper H equals negative log left-bracket upper H Superscript plus Baseline right-bracket',null],
+ ['chem','Gases','basic','Ideal gas law','PV = nRT','upper P upper V equals n upper R upper T','capital p capital v equals n capital r capital t'],
+ ['chem','Gases','fraction','Combined gas law','\\frac{P_{1}V_{1}}{T_{1}} = \\frac{P_{2}V_{2}}{T_{2}}','StartFraction upper P 1 upper V 1 Over upper T 1 EndFraction equals StartFraction upper P 2 upper V 2 Over upper T 2 EndFraction',null]
+].map((r,i)=>({id:i+1,d:r[0],topic:r[1],st:r[2],title:r[3],latex:r[4],speak:r[5],say:r[6]}));
+const MOCKS={A:['Browse by subject','Subject → topic → notation, like a course catalog. Best when students know which class they are in.'],B:['Browse by structure','Learn about ten notation shapes that cover every discipline. Best for building MathSpeak fluency that transfers between classes.'],C:['Search & practice','Say or type what you are looking for, or drill cards by subject. Best for fast, hands-free lookups mid-assignment.']};
+const H=S.help={mock:'A',disc:'math',open:{math:true,phys:false,chem:false},topic:'Calculus',struct:'fraction',filter:'all',cfilter:'all',q:'',mode:'search',entry:8,p:{disc:null,i:0,revealed:false,result:null,attempt:''}};
+const entById=id=>LIB.find(e=>e.id===+id);
+
+function typesetAll(root){(root||document).querySelectorAll('[data-tex]').forEach(el=>{
+ if(window.__mj&&window.MathJax&&MathJax.tex2svg){try{const n=MathJax.tex2svg(el.dataset.tex,{display:el.dataset.display==='1'});n.setAttribute('aria-hidden','true');el.replaceChildren(n);el.classList.remove('tex-fb');return;}catch(e){}}
+ el.textContent=el.dataset.tex;el.classList.add('tex-fb');});}
+const tex=(l,disp,cls)=>`<span class="${cls||''}" data-tex="${esc(l)}" ${disp?'data-display="1"':''}></span>`;
+
+function entRow(e,ctx,showDisc){return `<li><button class="ent-row" data-act="h-entry" data-id="${e.id}" data-k="ent-${ctx}-${e.id}" ${H.entry===e.id?'aria-current="true"':''}><span class="ent-t">${esc(e.title)}${showDisc?` <span class="tag">${DISC[e.d]}</span>`:''}</span>${tex(e.latex,false,'ent-m')}</button></li>`;}
+function vEntry(){const e=entById(H.entry);if(!e)return `<div class="ent-empty">Choose an entry to hear how MathSpeak reads it.</div>`;
+ return `<article class="entry" aria-labelledby="ent-h"><p class="crumb">${DISC[e.d]} › ${esc(e.topic)}</p><h2 id="ent-h">${esc(e.title)}</h2>
+ <div class="tags"><span class="tag">${STRUCT[e.st][0]}</span></div>
+ <div class="ent-eq" role="img" aria-label="${esc(e.speak)}">${tex(e.latex,true)}</div>
+ <section><div class="row-between"><h3 class="eyebrow">MathSpeak</h3><button class="link-btn" data-act="h-play" data-k="h-play">${ic('speaker',14)} Play</button></div><p class="ms">${esc(e.speak)}</p></section>
+ <section><h3 class="eyebrow">LaTeX</h3><pre class="tx">${esc(e.latex)}</pre></section>
+ <section><h3 class="eyebrow">Say it in MathVoice</h3>${e.say?`<p class="say-phrase">“${esc(e.say)}”</p><div><button class="btn btn-sm" data-act="h-try" data-k="h-try">${ic('mic',15)} Try it in Math Workspace</button></div>`:`<p class="hint">Dictating this notation isn't in the prototype yet. Read the MathSpeak above to hear the structure.</p>`}</section>
+ <section class="rule"><h3 class="eyebrow">Why it's read this way</h3><p>${STRUCT[e.st][2]}</p></section></article>`;}
+
+function mockA(){
+ const tree=Object.keys(DISC).map(d=>`<li><button class="tree-d" data-act="h-disc" data-d="${d}" data-k="disc-${d}" aria-expanded="${!!H.open[d]}">${ic(H.open[d]?'down':'right',14)}${DISC[d]}<span class="badge">${LIB.filter(e=>e.d===d).length}</span></button>
+  ${H.open[d]?`<ul class="tree-t">${TOPICS[d].map(t=>`<li><button data-act="h-topic" data-d="${d}" data-t="${esc(t)}" data-k="topic-${d}-${esc(t)}" ${H.disc===d&&H.topic===t?'aria-current="true"':''}>${esc(t)}<span class="cnt">${LIB.filter(e=>e.d===d&&e.topic===t).length}</span></button></li>`).join('')}</ul>`:''}</li>`).join('');
+ const list=LIB.filter(e=>e.d===H.disc&&e.topic===H.topic);
+ return `<div class="hb hb-a"><nav class="col" aria-label="Subjects"><p class="col-h">Subjects</p><ul class="tree">${tree}</ul></nav>
+ <section class="col" aria-labelledby="ta-h"><p class="col-h">${DISC[H.disc]}</p><h2 class="col-title" id="ta-h">${esc(H.topic)}</h2><ul class="ent-list">${list.map(e=>entRow(e,'a')).join('')}</ul></section>
+ <div class="col col-detail">${vEntry()}</div></div>`;}
+function mockB(){
+ const tiles=Object.entries(STRUCT).map(([k,v])=>`<li><button class="tile" data-act="h-struct" data-s="${k}" data-k="st-${k}" ${H.struct===k?'aria-current="true"':''}>${tex(v[1],false,'tile-g')}<span class="tile-n">${v[0]}</span><span class="cnt">${LIB.filter(e=>e.st===k).length} examples</span></button></li>`).join('');
+ const list=LIB.filter(e=>e.st===H.struct&&(H.filter==='all'||e.d===H.filter));
+ return `<div class="hb hb-b"><nav class="col" aria-label="Notation structures"><p class="col-h">Notation structures</p><ul class="tiles">${tiles}</ul></nav>
+ <section class="col" aria-labelledby="tb-h"><p class="col-h">Structure</p><h2 class="col-title" id="tb-h">${STRUCT[H.struct][0]}</h2><p class="rule-card">${STRUCT[H.struct][2]}</p>
+  <div class="chips" role="group" aria-label="Filter by subject">${[['all','All subjects'],...Object.entries(DISC)].map(([k,v])=>`<button class="chipb" data-act="h-filter" data-f="${k}" data-k="f-${k}" aria-pressed="${H.filter===k}">${v}</button>`).join('')}</div>
+  <ul class="ent-list">${list.map(e=>entRow(e,'b',true)).join('')||'<li class="hint">No examples in this subject yet.</li>'}</ul></section>
+ <div class="col col-detail">${vEntry()}</div></div>`;}
+function search(q){const t=q.toLowerCase().split(/\s+/).filter(Boolean);if(!t.length)return [];
+ return LIB.map(e=>{const hay=[e.title,e.topic,DISC[e.d],STRUCT[e.st][0],e.latex,e.speak,e.say||''].join(' ').toLowerCase();let sc=0;for(const w of t){if(!hay.includes(w))return null;if(e.title.toLowerCase().includes(w))sc+=3;if(e.speak.toLowerCase().includes(w))sc+=1;}return {e,sc};}).filter(Boolean).filter(x=>H.cfilter==='all'||x.e.d===H.cfilter).sort((a,b)=>b.sc-a.sc).map(x=>x.e);}
+function resultsHTML(){const r=search(H.q);
+ if(!H.q.trim())return `<p class="hint">Try one of these:</p><div class="chips">${['fraction','integral','vector','ion','matrix','squared','arrow'].map(s=>`<button class="chipb" data-act="h-sugg" data-q="${s}" data-k="sg-${s}">${s}</button>`).join('')}</div>`;
+ return `<p class="hint" role="status">${r.length} result${r.length===1?'':'s'} for “${esc(H.q)}”</p><ul class="ent-list">${r.map(e=>entRow(e,'c',true)).join('')}</ul>`;}
+function practiceHTML(){const P=H.p;
+ if(!P.disc)return `<div class="prac-pick"><h2 class="col-title">What subject do you want to practice?</h2><p class="hint">You'll see notation, say how MathSpeak reads it, then compare.</p><div class="pick">${Object.entries(DISC).map(([k,v])=>`<button class="tile" data-act="p-disc" data-d="${k}" data-k="pd-${k}"><span class="tile-n">${v}</span><span class="cnt">${LIB.filter(e=>e.d===k).length} cards</span></button>`).join('')}</div></div>`;
+ const pool=LIB.filter(e=>e.d===P.disc),e=pool[P.i%pool.length];
+ return `<div class="prac"><div class="prac-top"><span class="tag tag-strong">Currently practicing: ${DISC[P.disc]}</span><div class="btns"><button class="btn btn-sm btn-ghost" data-act="p-back" data-k="p-back">${ic('left',14)} Back to topics</button><button class="btn btn-sm" data-act="p-skip" data-k="p-skip">Skip topic ${ic('right',14)}</button></div></div>
+ <div class="prac-card"><p class="eyebrow">Card ${P.i%pool.length+1} of ${pool.length} · ${esc(e.topic)}</p><h2 class="col-title">${esc(e.title)}</h2><div class="ent-eq" role="img" aria-label="${esc(e.title)}">${tex(e.latex,true)}</div>
+ <form id="p-form" class="field"><label class="fl" for="p-try">How would MathSpeak read this?</label><div class="say-row"><input class="input" id="p-try" data-k="p-try" autocomplete="off" value="${esc(P.attempt)}" placeholder="Type or say it, e.g. StartFraction a Over b EndFraction"><button class="btn btn-primary" type="submit" data-k="p-check">Check</button></div></form>
+ ${P.result?`<p class="p-result" role="status">${P.result}</p>`:''}
+ <div class="btns"><button class="btn btn-sm" data-act="p-reveal" data-k="p-reveal" aria-expanded="${P.revealed}">${P.revealed?'Hide':'Reveal'} MathSpeak</button><button class="btn btn-sm" data-act="p-play" data-k="p-play">${ic('speaker',14)} Play</button><button class="btn btn-sm btn-primary" data-act="p-next" data-k="p-next">Next card ${ic('right',14)}</button></div>
+ ${P.revealed?`<p class="ms">${esc(e.speak)}</p><p class="hint">${STRUCT[e.st][2]}</p>`:''}</div></div>`;}
+function mockC(){
+ const tabs=`<div class="seg seg-2" role="group" aria-label="Mode">${[['search','Search'],['practice','Practice']].map(([k,v])=>`<button data-act="h-mode" data-m="${k}" data-k="m-${k}" aria-pressed="${H.mode===k}">${v}</button>`).join('')}</div>`;
+ if(H.mode==='practice')return `<div class="hb hb-c1"><div class="col">${tabs}${practiceHTML()}</div></div>`;
+ return `<div class="hb hb-c"><section class="col" aria-label="Search the library">${tabs}
+  <form id="h-form" class="say-row"><label class="sr" for="h-q">Search MathSpeak</label><input class="input" id="h-q" data-k="h-q" autocomplete="off" value="${esc(H.q)}" placeholder="Say or type: fraction, integral, sulfate…"><button class="btn btn-primary" type="submit" data-k="h-say">${ic('mic',15)} Search</button></form>
+  <div class="chips" role="group" aria-label="Filter by subject">${[['all','All subjects'],...Object.entries(DISC)].map(([k,v])=>`<button class="chipb" data-act="h-cfilter" data-f="${k}" data-k="fc-${k}" aria-pressed="${H.cfilter===k}">${v}</button>`).join('')}</div>
+  <div id="h-results">${resultsHTML()}</div></section>
+ <div class="col col-detail">${vEntry()}</div></div>`;}
+function vHelp(){const m=MOCKS[H.mock];
+ return `<div class="help-head"><div><p class="eyebrow">MathSpeak Help</p><h1 tabindex="-1">MathSpeak library</h1><p class="sub">${LIB.length} notations across mathematics, physics and chemistry.</p></div>
+ <div class="mock-sw"><p class="label" id="mock-l">Navigation mock</p><div class="seg seg-3" role="group" aria-labelledby="mock-l">${Object.entries(MOCKS).map(([k,v])=>`<button data-act="h-mock" data-m="${k}" data-k="mock-${k}" aria-pressed="${H.mock===k}"><b>${k}</b> ${v[0]}</button>`).join('')}</div><p class="hint">${m[1]}</p></div></div>
+ ${H.mock==='A'?mockA():H.mock==='B'?mockB():mockC()}`;}
+function lcs(a,b){const d=Array(b.length+1).fill(0);for(const x of a){let prev=0;for(let j=1;j<=b.length;j++){const tmp=d[j];d[j]=x===b[j-1]?prev+1:Math.max(d[j],d[j-1]);prev=tmp;}}return d[b.length];}
+const wordsOf=s=>s.toLowerCase().replace(/[-–]/g,' ').replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean);
+function speakOut(t){try{speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t));say(`Playing MathSpeak: ${t}`);}catch(_){say(`Audio is unavailable here. MathSpeak: ${t}`,'error');}}
+function helpAct(a,t){
+ switch(a){
+ case 'h-mock':H.mock=t.dataset.m;say(`Mock ${H.mock}: ${MOCKS[H.mock][0]}`);break;
+ case 'h-disc':{const d=t.dataset.d;H.open[d]=!H.open[d];break;}
+ case 'h-topic':H.disc=t.dataset.d;H.topic=t.dataset.t;{const f=LIB.find(e=>e.d===H.disc&&e.topic===H.topic);if(f)H.entry=f.id;}say(`${DISC[H.disc]}, ${H.topic}`);break;
+ case 'h-entry':{H.entry=+t.dataset.id;const e=entById(H.entry);H.disc=e.d;H.topic=e.topic;H.open[e.d]=true;say(`${e.title}: ${e.speak}`);break;}
+ case 'h-struct':H.struct=t.dataset.s;{const f=LIB.find(e=>e.st===H.struct&&(H.filter==='all'||e.d===H.filter));if(f)H.entry=f.id;}say(STRUCT[H.struct][0]);break;
+ case 'h-filter':H.filter=t.dataset.f;break;
+ case 'h-cfilter':H.cfilter=t.dataset.f;break;
+ case 'h-sugg':H.q=t.dataset.q;break;
+ case 'h-mode':H.mode=t.dataset.m;break;
+ case 'h-play':speakOut(entById(H.entry).speak);return;
+ case 'h-try':{const e=entById(H.entry);W.mode='idle';go('workspace',`Trying “${e.title}” in Math Workspace`);utter(e.say);return;}
+ case 'p-disc':H.p={disc:t.dataset.d,i:0,revealed:false,result:null,attempt:''};S.focusK='p-try';break;
+ case 'p-back':H.p.disc=null;break;
+ case 'p-skip':{const ks=Object.keys(DISC);H.p={disc:ks[(ks.indexOf(H.p.disc)+1)%ks.length],i:0,revealed:false,result:null,attempt:''};say(`Now practicing ${DISC[H.p.disc]}`);break;}
+ case 'p-next':H.p.i++;H.p.revealed=false;H.p.result=null;H.p.attempt='';S.focusK='p-try';break;
+ case 'p-reveal':H.p.revealed=!H.p.revealed;break;
+ case 'p-play':{const pool=LIB.filter(e=>e.d===H.p.disc);speakOut(pool[H.p.i%pool.length].speak);return;}
+ default:return false;}
+ render();}
+
+
+function stepper(cur){return `<ol class="stepper" aria-label="Progress">${['Workspace','Organize','Preview'].map((s,i)=>`<li class="step ${i+1===cur?'cur':''}" ${i+1===cur?'aria-current="step"':''}><i>${i+1<cur?ic('check',13):i+1}</i>${s}</li>`).join('')}</ol>`;}
+
+function vBlock(i,idx){
+ const b=i.b,n=S.blocks.length,ed=S.editing&&S.editing.key===b.key,lab=labelOf(b);
+ if(ed){const E=S.editing;const ta=b.type==='heading'?`<input class="input" id="edit-draft" data-k="edit-draft" value="${esc(E.draft)}">`:`<textarea class="input ${b.type==='eq'?'math':''}" id="edit-draft" data-k="edit-draft" rows="${b.type==='eq'?2:3}">${esc(E.draft)}</textarea>`;
+  return `<li class="block t-${b.type} is-editing"><span class="num" aria-label="Position ${idx+1}">${idx+1}</span><div class="b-body">
+   <p class="label">${lab}</p>
+   <p class="edit-status ${E.voice?'on':''}" id="edit-status" role="status">${ic('mic',15)}<span>${E.voice?`Voice input active for ${lab}`:`${lab} is the active editing block`}</span></p>
+   <label class="sr" for="edit-draft">Edit ${lab}</label>${ta}
+   <p class="hint">The live preview updates before you save.</p>
+   <div class="edit-actions"><button class="btn btn-sm" data-act="ed-voice" data-k="ed-voice" aria-pressed="${E.voice}">${ic('mic',16)} Edit with Voice</button><button class="btn btn-sm" data-act="ed-undo" data-k="ed-undo" ${E.draft===E.original?'disabled':''}>Undo</button><button class="btn btn-sm btn-ghost" data-act="ed-cancel" data-k="ed-cancel">Cancel</button><button class="btn btn-sm btn-primary" data-act="ed-save" data-k="ed-save">${ic('check',15)} Save Changes</button></div>
+  </div></li>`;}
+ return `<li class="block t-${b.type}"><span class="num" aria-label="Position ${idx+1}">${idx+1}</span><div class="b-body"><p class="label">${lab}</p><p class="b-text">${esc(i.text)}</p></div>
+  <div class="b-actions"><button class="ib" data-act="edit" data-key="${b.key}" data-k="edit-${b.key}" aria-label="Edit ${lab}">${ic('pencil',16)}</button><button class="ib" data-act="up" data-key="${b.key}" data-k="up-${b.key}" aria-label="Move ${lab} up" ${idx===0?'disabled':''}>${ic('up',16)}</button><button class="ib" data-act="down" data-key="${b.key}" data-k="down-${b.key}" aria-label="Move ${lab} down" ${idx===n-1?'disabled':''}>${ic('down',16)}</button><button class="ib" data-act="remove" data-key="${b.key}" data-k="rm-${b.key}" aria-label="Remove ${lab}">${ic('x',16)}</button></div></li>`;}
+
+function vAdd(){
+ const avail=S.eqs.filter(e=>!inDoc(e.id));
+ if(S.addEq&&!avail.some(e=>e.id===+S.addEq))S.addEq='';
+ let f='';
+ if(S.addTab==='eq'){f=avail.length?`<div class="field"><label class="fl" for="add-eq">Saved equation</label><select class="input" id="add-eq" data-k="add-eq">${avail.map(e=>`<option value="${e.id}" ${+S.addEq===e.id?'selected':''}>Equation ${e.id}: ${esc(e.text)}</option>`).join('')}</select><p class="hint">Only equations not already in the document are listed.</p></div>`:`<p class="hint">All saved equations are already in the document.</p>`;}
+ else if(S.addTab==='text'){f=`<div class="field"><label class="fl" for="add-text">Text block</label><textarea class="input" id="add-text" data-k="add-text" rows="3" placeholder="Type or dictate an explanation">${esc(S.addText)}</textarea></div><div><button class="btn btn-sm" data-act="add-dictate" data-k="add-dictate">${ic('mic',16)} Simulate Dictation</button></div>`;}
+ else{f=`<div class="field"><label class="fl" for="add-head">Heading</label><input class="input" id="add-head" data-k="add-head" placeholder="Type or dictate a heading" value="${esc(S.addHead)}"></div><div><button class="btn btn-sm" data-act="add-dictate" data-k="add-dictate">${ic('mic',16)} Simulate Dictation</button></div>`;}
+ return `<div class="drawer" id="add-panel"><div class="drawer-head"><div><h3>Add document content</h3><p class="hint">Add a saved equation or a written block at the end of the document.</p></div><button class="ib" data-act="add-close" data-k="add-close" aria-label="Close Add Content">${ic('x',16)}</button></div>
+  <div class="seg" role="group" aria-label="Content type">${[['eq','Equation'],['text','Text Block'],['heading','Heading']].map(([v,l])=>`<button data-act="add-tab" data-tab="${v}" data-k="tab-${v}" aria-pressed="${S.addTab===v}">${l}</button>`).join('')}</div>
+  ${f}<div class="row-end"><button class="btn btn-primary btn-sm" data-act="add-submit" data-k="add-submit" ${S.addTab==='eq'&&!avail.length?'disabled':''}>Add to Document</button></div></div>`;}
+
+function vMove(){
+ const bl=S.blocks;if(!bl.length)return `<div class="drawer"><p class="hint">Add content before reordering.</p></div>`;
+ if(!blk(S.mv.block))S.mv.block=bl[0].key;
+ const others=bl.filter(b=>b.key!==S.mv.block);
+ let tOpts;
+ if(S.mv.mode==='position'){if(!(+S.mv.target>=1&&+S.mv.target<=bl.length))S.mv.target='1';tOpts=bl.map((_,i)=>`<option value="${i+1}" ${+S.mv.target===i+1?'selected':''}>Position ${i+1}</option>`).join('');}
+ else{if(!others.some(b=>b.key===S.mv.target))S.mv.target=others[0]?others[0].key:'';tOpts=others.map(b=>`<option value="${b.key}" ${S.mv.target===b.key?'selected':''}>${labelOf(b)} (position ${posOf(b.key)+1})</option>`).join('');}
+ return `<div class="drawer" id="move-panel"><div class="drawer-head"><div><h3>Move content</h3><p class="hint">Choose a block, then where it should go.</p></div><button class="ib" data-act="move-close" data-k="move-close" aria-label="Close Move Content">${ic('x',16)}</button></div>
+  <div class="mv-grid"><div class="field"><label class="fl" for="mv-block">Block</label><select class="input" id="mv-block" data-k="mv-block">${bl.map((b,i)=>`<option value="${b.key}" ${S.mv.block===b.key?'selected':''}>${i+1}. ${labelOf(b)}</option>`).join('')}</select></div>
+  <div class="field"><label class="fl" for="mv-mode">Placement</label><select class="input" id="mv-mode" data-k="mv-mode">${[['position','Move to position'],['before','Place before'],['after','Place after']].map(([v,l])=>`<option value="${v}" ${S.mv.mode===v?'selected':''}>${l}</option>`).join('')}</select></div>
+  <div class="field"><label class="fl" for="mv-target">${S.mv.mode==='position'?'Position':'Reference block'}</label><select class="input" id="mv-target" data-k="mv-target" ${S.mv.mode!=='position'&&!others.length?'disabled':''}>${tOpts}</select></div></div>
+  <div class="row-between"><button class="btn btn-sm btn-ghost" data-act="move-restore" data-k="move-restore">Restore creation order</button><button class="btn btn-sm btn-primary" data-act="move-apply" data-k="move-apply">Move block</button></div></div>`;}
+
+function vSettings(){
+ const c=CATS[S.cat];
+ return `<section class="panel settings" aria-label="Export settings">
+  <div class="field"><label class="fl" for="doc-title">Document title</label><input class="input" id="doc-title" data-k="doc-title" value="${esc(S.title)}"></div>
+  <fieldset><legend>Export category</legend><div class="choices c2">${Object.entries(CATS).map(([k,v])=>`<button class="choice" data-act="cat" data-cat="${k}" data-k="cat-${k}" aria-pressed="${S.cat===k}"><b>${v.label}</b><span>${v.sub}</span></button>`).join('')}</div></fieldset>
+  <fieldset><legend>Export format</legend><div class="choices ${c.fmts.length===3?'c3':'c2'}">${c.fmts.map(f=>`<button class="choice" data-act="fmt" data-fmt="${f}" data-k="fmt-${f}" aria-pressed="${S.fmt===f}"><b>${FMT[f].label}</b><span>${FMT[f].ext}</span>${S.fmt===f?`<span class="tick">${ic('check',14)}</span>`:''}</button>`).join('')}</div></fieldset>
+  ${S.cat==='doc'?`<div class="toggle-row"><div><b id="num-l">Equation numbering</b><span class="hint">Number equations without numbering text</span></div><button class="switch" role="switch" aria-checked="${S.numbering}" aria-labelledby="num-l" data-act="numbering" data-k="numbering"></button></div>`:''}
+  <details class="adv" id="adv" ${S.adv?'open':''}><summary data-k="adv-sum">Advanced settings</summary><div class="adv-body">
+   <div class="field"><label class="fl" for="page-size">Page size</label><select class="input" id="page-size" data-k="page-size">${['Letter','A4'].map(p=>`<option ${S.pageSize===p?'selected':''}>${p}</option>`).join('')}</select></div>
+   <label class="check" for="hdr"><input type="checkbox" id="hdr" data-k="hdr" ${S.header?'checked':''}>Include course and name header</label></div></details>
+  <div class="preview-box"><div class="pb-head"><span class="label">Live preview · ${FMT[S.fmt].label}</span><button class="link-btn" data-act="go" data-page="export-preview" data-k="open-full">Open full preview</button></div><div class="pb-body" id="live-preview" aria-live="off">${paper(false)}</div></div>
+  <button class="btn btn-primary btn-wide" data-act="go" data-page="export-preview" data-k="continue" ${S.blocks.length?'':'disabled'}>Continue to Export Preview ${ic('right',16)}</button>
+ </section>`;}
+
+function vOrganize(){
+ const its=items();
+ return `<div class="page-head org-head"><button class="back" data-act="go" data-page="workspace" data-k="back-lib">${ic('left',16)} Math Workspace</button>
+  <div><p class="eyebrow">Document builder</p><h1 tabindex="-1">Organize &amp; Export</h1><p class="sub">Combine equations and explanations, then choose how to export them.</p></div>${stepper(2)}</div>
+ <div class="org-grid">
+  <section class="panel" aria-labelledby="dc-h">
+   <div class="panel-head"><div><h2 id="dc-h">Document content</h2><p class="hint">Shown in document order · ${S.blocks.length} blocks</p></div>
+    <div class="btns"><button class="btn btn-sm" data-act="toggle-add" data-k="toggle-add" aria-expanded="${S.addOpen}" aria-controls="add-panel">${ic('plus',16)} Add Content</button><button class="btn btn-sm btn-primary" data-act="toggle-move" data-k="toggle-move" aria-expanded="${S.moveOpen}" aria-controls="move-panel">${ic('dots',16)} Move Content</button></div></div>
+   ${S.addOpen?vAdd():''}${S.moveOpen?vMove():''}
+   <ol class="blocks" aria-label="Document content in order">${its.length?its.map(vBlock).join(''):'<li class="empty">Your document is empty. Use Add Content to add an equation, text block, or heading.</li>'}</ol>
+  </section>
+  ${vSettings()}
+ </div>`;}
+
+function readingStatus(){const r=S.reading,cur=r.items[r.idx];
+ const tgt=it=>it?(r.mode==='doc'?`Entire document · currently ${it.label}`:`Reading ${it.label}`):'';
+ const m={idle:['Not reading','Nothing is being read'],reading:['Reading',tgt(cur)],paused:['Paused',cur?`Reading paused at ${cur.label}`:'Paused'],stopped:['Not reading','Reading stopped'],done:['Not reading','Finished reading']}[r.state];
+ return `<div class="status ${r.state}" id="reading-status" role="status" aria-live="polite"><p class="label"><span class="dot" aria-hidden="true"></span>${m[0]}</p><p>${esc(m[1])}</p></div>`;}
+
+function vPreview(){
+ const f=FMT[S.fmt],c=CATS[S.cat],r=S.reading.state,eqs=S.blocks.filter(b=>b.type==='eq');
+ if(S.readSel&&!eqs.some(b=>String(b.eqId)===S.readSel))S.readSel='';
+ if(!S.readSel&&eqs[0])S.readSel=String(eqs[0].eqId);
+ return `<div class="toolbar"><button class="back" data-act="go" data-page="organize" data-k="back-org">${ic('left',16)} Back</button>
+  <div class="tb-title"><p class="eyebrow">Export preview · ${f.label}</p><h1 tabindex="-1">${esc(S.title)}</h1></div>
+  <div class="btns"><button class="btn" data-act="share" data-k="share">${ic('share',16)} Share</button><button class="btn btn-primary" data-act="download" data-k="dl-top">${ic('dl',16)} Download ${f.label}</button></div></div>
+ <div class="pv-grid">
+  <div class="sheet">
+   <section class="summary" aria-labelledby="sum-h"><div class="row-between"><h2 class="eyebrow" id="sum-h">Document summary</h2><span>${esc(S.title)}</span></div>
+    <dl><div><dt>Title</dt><dd>${esc(S.title)}</dd></div><div><dt>Equations</dt><dd>${eqs.length}</dd></div>${S.cat==='doc'?`<div><dt>Text blocks</dt><dd>${textCount()}</dd></div>`:`<div><dt>Content</dt><dd>Equations only</dd></div>`}<div><dt>Format</dt><dd>${f.label}</dd></div></dl></section>
+   <h2 class="sr">Document preview</h2>${paper(true)}
+  </div>
+  <aside class="aside">
+   <section aria-labelledby="ls-h"><p class="eyebrow">Audio accessibility</p><h2 id="ls-h">Listen to document</h2>${readingStatus()}
+    <button class="btn" data-act="read-summary" data-k="read-summary">${ic('speaker',16)} Read Summary Aloud</button>
+    <button class="btn" data-act="read-doc" data-k="read-doc" ${S.blocks.length?'':'disabled'}>${ic('speaker',16)} Read Entire Document</button>
+    <label class="fl" for="read-sel">Selected equation</label>
+    <div class="sel-row"><select class="input" id="read-sel" data-k="read-sel" ${eqs.length?'':'disabled'}>${eqs.map(b=>`<option value="${b.eqId}" ${S.readSel===String(b.eqId)?'selected':''}>Equation ${b.eqId}</option>`).join('')||'<option>No equations</option>'}</select><button class="btn" data-act="read-sel" data-k="read-sel-btn" ${eqs.length?'':'disabled'}>Read</button></div>
+    <div class="ctrl-row"><button class="btn" data-act="r-pause" data-k="r-pause" ${r==='reading'?'':'disabled'}>${ic('pause',14)} Pause</button><button class="btn" data-act="r-resume" data-k="r-resume" ${r==='paused'?'':'disabled'}>${ic('play',14)} Resume</button><button class="btn" data-act="r-stop" data-k="r-stop" ${r==='reading'||r==='paused'?'':'disabled'}>${ic('stop',14)} Stop</button></div>
+   </section>
+   <section aria-labelledby="ex-h"><p class="eyebrow">Export options</p><h2 id="ex-h">Download your file</h2>
+    <p class="hint">${S.cat==='doc'?'Download the complete document with equations and written explanations.':'Download equation images only. Headings and written explanations are not included.'}</p>
+    <div class="fmt-list" role="group" aria-label="Download format">${c.fmts.map(k=>`<button class="fmt" data-act="fmt" data-fmt="${k}" data-k="dfmt-${k}" aria-pressed="${S.fmt===k}">${S.fmt===k?'<span class="flag">Selected</span>':''}<span><b>${FMT[k].label}</b><small>${FMT[k].ext}</small></span><span class="desc">${FMT[k].desc}</span>${ic('dl',16)}</button>`).join('')}</div>
+    <div class="file"><p class="label">Current file</p><b>${esc(fileName())}</b><span>${countLabel()} · Simulated file</span></div>
+    <button class="btn btn-primary btn-wide" data-act="download" data-k="dl-bottom">${ic('dl',16)} Download ${f.label} (simulated)</button>
+   </section>
+  </aside>
+ </div>`;}
+
+/* ---------- render ---------- */
+function render(){
+ const ae=document.activeElement;const k=S.focusK||(ae&&ae.dataset?ae.dataset.k:null);
+ const lib=S.page==='workspace',org=S.page==='organize';
+ renderNav();
+ document.getElementById('view').innerHTML=lib?vLibrary():org?vOrganize():S.page==='mathspeak'?vHelp():vPreview();
+ if(S.page==='mathspeak')typesetAll(document.getElementById('view'));
+ document.getElementById('view').classList.toggle('ws-page',lib);
+ if(lib)afterWs();
+ renderVoice();
+ if(S.focusHead){const h=document.querySelector('#view h1');if(h)h.focus();window.scrollTo(0,0);S.focusHead=false;}
+ else if(k){const el=document.querySelector(`[data-k="${k}"]`);if(el&&!el.disabled){el.focus({preventScroll:!S.focusK});if(S.focusK==='edit-draft'&&el.setSelectionRange){const L=el.value.length;el.setSelectionRange(L,L);}}}
+ S.focusK=null;}
+function renderVoice(){
+ const fab=document.getElementById('fab');fab.innerHTML=`${ic('mic',22)}Voice`;fab.setAttribute('aria-expanded',S.voiceOpen);
+ document.getElementById('foot-mic').innerHTML=ic('mic',16);
+ const p=document.getElementById('vpanel');p.hidden=!S.voiceOpen;
+ if(S.voiceOpen)p.innerHTML=`<div class="row-between"><h2 id="vp-h">Simulated voice commands</h2><button class="ib" data-act="voice-toggle" data-k="vp-close" aria-label="Close voice commands">${ic('x',16)}</button></div><p class="hint">Select a phrase to simulate saying it. Commands share state with the on-screen controls.</p>${VC.map((c,i)=>`<button class="vcmd ${c[2]?'bad':''}" data-act="vc" data-i="${i}" data-k="vc-${i}">${ic(c[2]?'alert':'mic',15)}“${c[0]}”${c[2]?' <span class="hint">(unrecognized)</span>':''}</button>`).join('')}`;}
+function updateLive(){const lp=document.getElementById('live-preview');if(lp)lp.innerHTML=paper(false);}
+
+function go(p,fb){if(!PAGES.includes(p))return;if(S.page===p&&location.hash==='#'+p){render();return;}
+ S.page=p;S.focusHead=true;say(fb||({'workspace':'Math Workspace opened','organize':'Organize and Export opened','export-preview':'Export Preview opened','mathspeak':'MathSpeak Help opened'}[p]));
+ if(location.hash!=='#'+p){try{history.replaceState(null,'','#'+p);}catch(e){}}
+ render();}
+
+/* ---------- reading ---------- */
+function startReading(mode,list){const r=S.reading;clearTimeout(r.timer);Object.assign(r,{state:'reading',mode,items:list,idx:0});step();}
+function step(){const r=S.reading;if(r.state!=='reading')return;
+ if(r.idx>=r.items.length){r.state='done';say('Finished reading.');render();return;}
+ const it=r.items[r.idx];say(r.mode==='doc'?`Entire document · ${it.label}: ${it.speech}`:`Reading ${it.label}: ${it.speech}`);render();
+ r.timer=setTimeout(()=>{r.idx++;step();},2600);}
+function docReadItems(){const its=items().filter(i=>S.cat==='doc'||i.b.type==='eq');return its.map(i=>({label:i.label,speech:i.speech}));}
+function summaryItem(){return [{label:'Document summary',speech:`${S.title}. ${eqCount()} equations${S.cat==='doc'?`, ${textCount()} text blocks`:''}. Format: ${FMT[S.fmt].label}.`}];}
+function readEq(id){const e=eqById(id);startReading('eq',[{label:`Equation ${e.id}`,speech:e.speech}]);}
+function pauseR(){const r=S.reading;if(r.state!=='reading'){say('Nothing is being read right now.','error');return false;}clearTimeout(r.timer);r.state='paused';say(`Reading paused at ${r.items[r.idx].label}.`);render();return true;}
+function resumeR(){const r=S.reading;if(r.state!=='paused')return;r.state='reading';step();}
+function stopR(){const r=S.reading;if(r.state!=='reading'&&r.state!=='paused'){say('Nothing is being read right now.','error');return;}clearTimeout(r.timer);r.state='stopped';say('Reading stopped.');render();}
+function download(){if(S.cat==='doc'&&!S.blocks.length||S.cat==='img'&&!eqCount()){say('There is nothing to download yet. Add content first.','error');return;}say(`${FMT[S.fmt].label} download simulated successfully: ${fileName()} · ${countLabel()}. No file was saved.`);}
+
+const VC=[
+ ['How many equations are in my document?',()=>say(`Your document contains ${eqCount()} equation${eqCount()===1?'':'s'}.`)],
+ ['Read my document.',()=>{if(!S.blocks.length){say('Your document is empty.','error');return;}if(S.page!=='export-preview')go('export-preview');startReading('doc',docReadItems());}],
+ ['Read Equation 3.',()=>{if(!inDoc(3)){say('Equation 3 is not in your document. Select it in Math Workspace first.','error');return;}if(S.page!=='export-preview')go('export-preview');S.readSel='3';readEq(3);}],
+ ['Pause reading.',()=>pauseR()],
+ ['Stop reading.',()=>stopR()],
+ ['Download as PDF.',()=>{if(S.cat!=='doc'){say('PDF is only available for Document exports. Switch the export category to Document, then try again.','error');return;}S.fmt='pdf';render();download();}],
+ ['Make the font purple.',()=>say('“Make the font purple” is not a MathVoice command. Say “What can I say?” to hear the commands.','error'),true]
+];
+
+/* ---------- edit ---------- */
+function startEdit(key){const b=blk(key);if(!b)return;
+ if(S.editing&&S.editing.key!==key){const o=blk(S.editing.key);if(o&&S.editing.draft!==S.editing.original)say(`Unsaved changes to ${labelOf(o)} were discarded.`);}
+ const orig=b.type==='eq'?eqById(b.eqId).text:b.text;S.editing={key,draft:orig,original:orig,voice:false,speech:null};
+ S.addOpen=false;S.moveOpen=false;S.focusK='edit-draft';say(`${labelOf(b)} is ready for keyboard or voice editing`);render();}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-act]');if(!t||t.disabled)return;const a=t.dataset.act;if(t.type==='checkbox')return;
+ if(/^(h|p)-/.test(a)&&helpAct(a,t)!==false)return;
+ const key=t.dataset.key,b=key?blk(key):null;
+ switch(a){
+ case 'go':go(t.dataset.page);break;
+ case 'nav':if(t.dataset.sec==='ws')go('workspace');else if(t.dataset.sec==='help-sec')go('mathspeak');else say(`${t.textContent.trim()} belongs to Feature 2 and is not part of this prototype.`);break;
+ case 'side':{const off=document.body.classList.toggle('side-off');t.setAttribute('aria-expanded',String(!off));t.setAttribute('aria-label',off?'Show workspace menu':'Hide workspace menu');t.innerHTML=ic(off?'menu':'menuClose',18);say(off?'Workspace menu hidden':'Workspace menu shown');break;}
+ case 'help':say('Help: say “What can I say?” or open the Voice button to see commands.');break;
+ case 'read-eq':{const q=eqById(t.dataset.id);say(`Reading Equation ${q.id}: ${q.speech}`);break;}
+ case 'read-all':say(`Reading all ${S.eqs.length} saved equations. Equation 1: ${S.eqs[0].speech}…`);break;
+ case 'edit-lib':{const id=+t.dataset.id;let bb=inDoc(id);if(!bb){bb=mk('eq',{eqId:id});S.blocks.push(bb);}S.page='organize';try{history.replaceState(null,'','#organize');}catch(_){}startEdit(bb.key);window.scrollTo(0,0);break;}
+ case 'edit':startEdit(key);break;
+ case 'up':case 'down':{const i=posOf(key),j=a==='up'?i-1:i+1;if(j<0||j>=S.blocks.length)return;[S.blocks[i],S.blocks[j]]=[S.blocks[j],S.blocks[i]];say(`${labelOf(b)} moved ${a}. It is now in position ${j+1}.`);render();break;}
+ case 'remove':{if(S.editing&&S.editing.key===key)S.editing=null;S.blocks.splice(posOf(key),1);say(`${labelOf(b)} removed. The document now has ${S.blocks.length} blocks.`);S.focusK='toggle-add';render();break;}
+ case 'toggle-add':S.addOpen=!S.addOpen;if(S.addOpen)S.moveOpen=false;render();break;
+ case 'toggle-move':S.moveOpen=!S.moveOpen;if(S.moveOpen)S.addOpen=false;render();break;
+ case 'add-close':S.addOpen=false;S.focusK='toggle-add';render();break;
+ case 'move-close':S.moveOpen=false;S.focusK='toggle-move';render();break;
+ case 'add-tab':S.addTab=t.dataset.tab;render();break;
+ case 'add-dictate':if(S.addTab==='text'){S.addText='First, I factor the quadratic into two binomials.';say('Dictation captured for the new text block.');}else{S.addHead='Problem 2';say('Dictation captured for the new heading.');}render();break;
+ case 'add-submit':{let nb;
+  if(S.addTab==='eq'){const id=+(S.addEq||(document.getElementById('add-eq')||{}).value);if(!id)return;if(inDoc(id)){say(`Equation ${id} is already in the document.`,'error');return;}nb=mk('eq',{eqId:id});S.addEq='';}
+  else{const v=(S.addTab==='text'?S.addText:S.addHead).trim();if(!v){say(`Type or dictate the ${S.addTab==='text'?'text block':'heading'} before adding it.`,'error');return;}nb=mk(S.addTab,{text:v});if(S.addTab==='text')S.addText='';else S.addHead='';}
+  S.blocks.push(nb);say(`${labelOf(nb)} added at position ${S.blocks.length}.`);render();break;}
+ case 'move-apply':{const mb=blk(S.mv.block);if(!mb){say('Choose a block to move.','error');return;}
+  const from=posOf(mb.key);let to;
+  if(S.mv.mode==='position'){to=+S.mv.target-1;}else{const ref=blk(S.mv.target);if(!ref||ref.key===mb.key){say('Choose a different reference block.','error');return;}}
+  S.blocks.splice(from,1);
+  if(S.mv.mode!=='position'){const j=posOf(S.mv.target);to=S.mv.mode==='before'?j:j+1;}
+  to=Math.max(0,Math.min(S.blocks.length,to));S.blocks.splice(to,0,mb);
+  const how=S.mv.mode==='position'?`to position ${to+1}`:`${S.mv.mode} ${labelOf(blk(S.mv.target))}`;
+  say(from===to?`${labelOf(mb)} is already in position ${to+1}.`:`${labelOf(mb)} moved ${how}. It is now in position ${to+1}.`);render();break;}
+ case 'move-restore':S.blocks.sort((x,y)=>x.created-y.created);say('Creation order restored.');render();break;
+ case 'ed-voice':{const E=S.editing,eb=blk(E.key);
+  if(eb.type==='eq'){const fx=VOICE_FIX[eb.eqId];E.draft=fx?fx[0]:E.draft;E.speech=fx?fx[1]:null;say(`Voice input active for ${labelOf(eb)}. MathSpeak heard: “${E.speech||speak(E.draft)}”`);}
+  else if(eb.type==='text'){E.draft=eb.n===1?'First, I factor the quadratic into two binomials.':E.draft.replace(/\s*$/,'')+' I check each step by substitution.';E.speech=null;say(`Voice input active for ${labelOf(eb)}. Dictation captured.`);}
+  else{E.draft=/— Revised$/.test(E.draft)?E.draft:E.draft+' — Revised';say(`Voice input active for ${labelOf(eb)}. Dictation captured.`);}
+  E.voice=true;S.focusK='ed-voice';render();break;}
+ case 'ed-undo':S.editing.draft=S.editing.original;S.editing.voice=false;S.editing.speech=null;say(`${labelOf(blk(S.editing.key))} restored to the value from when editing began.`);S.focusK='edit-draft';render();break;
+ case 'ed-cancel':{const k2=S.editing.key;say(`Editing cancelled. ${labelOf(blk(k2))} is unchanged.`);S.editing=null;S.focusK='edit-'+k2;render();break;}
+ case 'ed-save':{const E=S.editing,eb=blk(E.key),v=E.draft.trim();if(!v){say('This block cannot be empty. Type or dictate content, or select Cancel.','error');return;}
+  if(eb.type==='eq'){const q=eqById(eb.eqId);if(v!==q.text){q.text=v;q.speech=E.speech||speak(v);}}else eb.text=v;
+  S.editing=null;S.focusK='edit-'+eb.key;say(`${labelOf(eb)} saved.`);render();break;}
+ case 'cat':if(S.cat!==t.dataset.cat){S.cat=t.dataset.cat;S.fmt=CATS[S.cat].fmts[0];say(S.cat==='doc'?'Document exports selected':'Equation image exports selected');render();}break;
+ case 'fmt':S.fmt=t.dataset.fmt;say(`${FMT[S.fmt].label} format selected`);render();break;
+ case 'numbering':S.numbering=!S.numbering;say(`Equation numbering ${S.numbering?'on':'off'}`);render();break;
+ case 'share':say(`Share link for “${S.title}” simulated. Nothing was sent.`);break;
+ case 'download':download();break;
+ case 'read-summary':startReading('summary',summaryItem());break;
+ case 'read-doc':startReading('doc',docReadItems());break;
+ case 'read-sel':readEq(+S.readSel);break;
+ case 'r-pause':pauseR();break;
+ case 'r-resume':resumeR();break;
+ case 'r-stop':stopR();break;
+ case 'voice-toggle':S.voiceOpen=!S.voiceOpen;S.focusK=S.voiceOpen?'vc-0':'fab';if(S.voiceOpen)say('Listening for a command. Choose a phrase to simulate it.');render();break;
+ case 'ws-node':S.focusK=null;selectNode(+t.dataset.n);{const b2=document.querySelector(`[data-k="xn-${t.dataset.n}"]`);if(b2)b2.focus({preventScroll:true});}break;
+ case 'ws-clearsel':W.sel=null;W.selEnd=null;wsRefresh();say('Selection cleared');break;
+ case 'ws-cmd':utter(t.dataset.say+'.');break;
+ case 'ws-demo':if(W.demo){W.demo=false;updDemoBtn();say('Demo stopped after the current phrase.');}else{const sel=document.getElementById('ws-demo-sel');W.demoSel=+sel.value;runDemo(W.demoSel);}break;
+ case 'ws-copy':{const tx=toLatex(W.root,false);if(!tx){say('There is no LaTeX to copy yet.','error');break;}
+  const fall=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('ws-latex'));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);say('LaTeX selected. Press Ctrl+C or ⌘C to copy.');};
+  try{navigator.clipboard.writeText(tx).then(()=>say('LaTeX copied'),fall);}catch(_){fall();}break;}
+ case 'ws-play':{const sp=latexToSpeech(toLatex(W.root,false));if(!sp){say('There is nothing to read yet.','error');break;}
+  try{speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(sp));say(`Playing MathSpeak: ${sp}`);}catch(_){say(`Audio is unavailable here. MathSpeak: ${sp}`,'error');}break;}
+ case 'vc':{const c=VC[+t.dataset.i];c[1]();break;}
+ }
+});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.dataset.act==='toggle-eq'){const id=+t.dataset.id,ex=inDoc(id);
+  if(ex){if(S.editing&&S.editing.key===ex.key)S.editing=null;S.blocks.splice(posOf(ex.key),1);say(`Equation ${id} removed from the document.`);}
+  else{S.blocks.push(mk('eq',{eqId:id}));say(`Equation ${id} added to the document at position ${S.blocks.length}.`);}render();return;}
+ switch(t.id){
+ case 'add-eq':S.addEq=t.value;break;
+ case 'mv-block':S.mv.block=t.value;render();break;
+ case 'mv-mode':S.mv.mode=t.value;S.mv.target='';render();break;
+ case 'mv-target':S.mv.target=t.value;break;
+ case 'page-size':S.pageSize=t.value;say(`Page size set to ${t.value}`);break;
+ case 'hdr':S.header=t.checked;say(`Course and name header ${S.header?'included':'hidden'}`);break;
+ case 'read-sel':S.readSel=t.value;break;
+ case 'ws-demo-sel':W.demoSel=+t.value;break;}
+});
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='h-q'){H.q=t.value;const r=document.getElementById('h-results');if(r){r.innerHTML=resultsHTML();typesetAll(r);}return;}
+ if(t.id==='p-try'){H.p.attempt=t.value;return;}
+ if(t.id==='edit-draft'&&S.editing){S.editing.draft=t.value;S.editing.speech=null;
+  if(S.editing.voice){S.editing.voice=false;const st=document.getElementById('edit-status');if(st){st.classList.remove('on');st.querySelector('span').textContent=`${labelOf(blk(S.editing.key))} is the active editing block`;}const vb=document.querySelector('[data-act="ed-voice"]');if(vb)vb.setAttribute('aria-pressed','false');}
+  const ub=document.querySelector('[data-act="ed-undo"]');if(ub)ub.disabled=S.editing.draft===S.editing.original;updateLive();}
+ else if(t.id==='doc-title'){S.title=t.value;updateLive();}
+ else if(t.id==='add-text')S.addText=t.value;
+ else if(t.id==='add-head')S.addHead=t.value;
+});
+document.addEventListener('toggle',e=>{if(e.target.id==='adv')S.adv=e.target.open;},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.voiceOpen){S.voiceOpen=false;S.focusK='fab';render();}});
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(PAGES.includes(h)&&h!==S.page)go(h);});
+
+document.addEventListener('submit',e=>{if(e.target.id!=='ws-form')return;e.preventDefault();const i=document.getElementById('ws-input');const v=i.value.trim();if(!v){say('Type a phrase to simulate speaking it.','error');return;}i.value='';utter(v);});
+document.addEventListener('click',e=>{if(!e.target.closest)return;const sp=e.target.closest('#ws-latex [data-n], #ws-speech [data-n]');if(sp){selectNode(+sp.dataset.n);return;}
+ const g=e.target.closest('#ws-eq [class*="mx-"]');if(g){const m=String(g.getAttribute('class')).match(/mx-(\d+)/);if(m)selectNode(+m[1]);}});
+document.addEventListener('mj-ready',()=>{if(S.page==='workspace')renderResult();if(S.page==='mathspeak')typesetAll(document.getElementById('view'));});
+document.addEventListener('submit',e=>{const id=e.target.id;
+ if(id==='h-form'){e.preventDefault();H.q=document.getElementById('h-q').value;const r=search(H.q);if(r[0])H.entry=r[0].id;say(r.length?`${r.length} results for “${H.q}”`:`No results for “${H.q}”. Try a structure, like fraction or arrow.`,r.length?undefined:'error');S.focusK='h-q';render();}
+ else if(id==='p-form'){e.preventDefault();const pool=LIB.filter(x=>x.d===H.p.disc),en=pool[H.p.i%pool.length];const att=document.getElementById('p-try').value;H.p.attempt=att;
+  const ref=wordsOf(en.speak),got=wordsOf(att);if(!got.length){say('Type or say how you would read it first.','error');return;}
+  const l=lcs(ref,got),ratio=l/ref.length;H.p.result=ratio>=.9?'Match. That is how MathSpeak reads it.':`${l} of ${ref.length} words line up in order. Reveal MathSpeak to compare.`;
+  if(ratio<.9)H.p.revealed=true;say(H.p.result);S.focusK='p-next';render();}});
+sysMsg('What would you like to dictate today?');W.preTarget=1;
+['Start listening.','x squared plus 5 x plus 6 equals 0','Done.'].forEach(u=>processUtter(u,true));
+W.chat.forEach(m=>{if(m.who==='sys'&&/^Listening/.test(m.html))m.html='Listening. Say your equation. Say “Pause” to fix something mid-sentence, or “Done” to finish.';});
+const h0=location.hash.slice(1);if(PAGES.includes(h0))S.page=h0;
+document.getElementById('side-btn').innerHTML=ic('menuClose',18);
+say('Math Workspace opened');render();
+})();
+</script>
+
+</body></html>
