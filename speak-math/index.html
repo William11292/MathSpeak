@@ -57,6 +57,10 @@ h2 { font-family: var(--font-display); font-style: italic; font-weight: 500; fon
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 12px; min-width: 0; align-content: start; }
 .label { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .hint { font-size: 0.85rem; color: var(--muted); }
+.apikey { margin-top: 10px; font-size: 0.9rem; }
+.apikey summary { cursor: pointer; color: var(--muted); }
+.apikey .row { margin-top: 8px; }
+.apikey input { flex: 1 1 220px; min-width: 0; padding: 6px 8px; font: inherit; }
 textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; resize: vertical; }
 textarea#spoken { min-height: 92px; font-size: 1.15rem; }
 textarea#latex { font-family: var(--font-mono); font-size: 0.92rem; min-height: 150px; }
@@ -245,6 +249,16 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
         <option value="rules">Built-in rules only</option>
       </select>
     </div>
+    <details class="apikey" id="apikey" hidden>
+      <summary id="apikey-sum">Use your own Claude API key</summary>
+      <div class="row">
+        <label for="apikey-in">Anthropic API key</label>
+        <input id="apikey-in" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+        <button type="button" class="small" id="apikey-save">Save</button>
+        <button type="button" class="small" id="apikey-clear">Remove</button>
+      </div>
+      <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
+    </details>
     <div class="status" id="status" role="status" aria-live="polite"></div>
   </section>
 
@@ -1085,8 +1099,8 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
           );
           if (r && typeof r.latex === 'string' && r.latex.trim()) { latex = r.latex.trim(); method = 'claude'; }
         } catch (e) {
-          if (e && e.code === 'not_granted') { sample = null; markNoClaude(); }
-          note = 'Claude was unavailable, so the built-in rules were used.';
+          if (e && e.code === 'not_granted' && window.claude) { sample = null; markNoClaude(); }
+          note = 'Claude was unavailable' + (e && e.message && !window.claude ? ' (' + e.message + ')' : '') + ', so the built-in rules were used.';
         }
       }
       if (!latex) latex = ruleParse(text);
@@ -1418,7 +1432,67 @@ textarea#wsInput { min-height: 64px; font-size: 1rem; }
       } catch (e) { logCol = null; }
     });
   } else {
-    markNoClaude();
+    setupApiKey();
+  }
+
+  /* ---------- Standalone: call the Claude API with the user's own key ---------- */
+  function setupApiKey() {
+    const KEY = 'speak-math-anthropic-key';
+    const MODELS = { quick: 'claude-haiku-5-5', default: 'claude-sonnet-5-5' };
+    const panel = $('apikey'), input = $('apikey-in'), sum = $('apikey-sum');
+    const getKey = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+    const engine = $('engine');
+    function apply() {
+      const has = !!getKey();
+      sample = has ? directSample : null;
+      engine.options[0].disabled = !has;
+      engine.options[0].textContent = has ? 'Convert with Claude' : 'Claude (add your API key below)';
+      if (!has) engine.value = 'rules'; else engine.value = 'claude';
+      sum.textContent = has ? 'Claude API key saved in this browser' : 'Use your own Claude API key';
+      input.value = ''; input.placeholder = has ? 'Key saved. Paste a new one to replace it.' : 'sk-ant-…';
+      panel.open = !has;
+    }
+    const directSample = {
+      async json(prompt, opts) {
+        const key = getKey();
+        if (!key) { const e = new Error('No API key'); e.code = 'not_granted'; throw e; }
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: MODELS[(opts && opts.modelTier) || 'default'] || MODELS.default,
+            max_tokens: 1024,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        if (!res.ok) {
+          let msg = 'HTTP ' + res.status;
+          try { const b = await res.json(); if (b && b.error && b.error.message) msg = b.error.message; } catch (e) {}
+          const e = new Error(msg); e.code = res.status === 401 ? 'not_granted' : 'api_error';
+          if (res.status === 401) { try { localStorage.removeItem(KEY); } catch (x) {} setTimeout(apply, 0); }
+          throw e;
+        }
+        const data = await res.json();
+        const text = (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+        const m = text.match(/\{[\s\S]*\}/);
+        return JSON.parse(m ? m[0] : text);
+      }
+    };
+    $('apikey-save').onclick = () => {
+      const v = input.value.trim();
+      if (!v) { setStatus('Paste your API key first.', 'err'); input.focus(); return; }
+      try { localStorage.setItem(KEY, v); } catch (e) { setStatus('This browser blocked saving the key.', 'err'); return; }
+      apply(); setStatus('API key saved. Conversions now use Claude.', 'ok');
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('apikey-save').click(); } });
+    $('apikey-clear').onclick = () => { try { localStorage.removeItem(KEY); } catch (e) {} apply(); setStatus('API key removed.', 'ok'); };
+    panel.hidden = false;
+    apply();
   }
 })();
 </script>

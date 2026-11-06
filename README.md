@@ -13,4 +13,4 @@ Each app lives in its own folder and is fully isolated: a single self-contained 
 
 ## Notes
 
-- Both apps started as Claude artifacts. Speak Math calls Claude's in-artifact AI features when it runs inside Claude. When it runs anywhere else, those features are switched off and the app falls back to local-only behavior.
+- Both apps started as Claude artifacts. Speak Math uses Claude's in-artifact AI inside Claude; anywhere else it can call the Claude API with your own key (see `speak-math/README.md`).
