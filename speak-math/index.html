@@ -230,14 +230,62 @@ textarea.target { outline: 2px solid var(--rec); outline-offset: 1px; }
 .eq-body .eq mjx-container { margin: 0 !important; }
 .eq-body .ms { font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; }
 .entry .acts { display: flex; gap: 6px; align-items: center; padding: 0 14px; }
+/* Organize & Export */
+.org-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 16px; max-width: 1240px; }
+.org-head .ghost { margin-top: 4px; }
+.org-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); gap: 18px; align-items: start; max-width: 1240px; }
+.org-h3 { font-size: 15px; font-weight: 600; }
+.adder { display: grid; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.blocks { list-style: none; margin: 0; padding: 12px; display: grid; gap: 8px; background: var(--surface-2); }
+.blk { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-left-width: 4px; padding: 10px 10px 10px 8px; min-height: 62px; }
+.blk.t-heading { border-left-color: var(--ink); } .blk.t-text { border-left-color: var(--ink-3); } .blk.t-eq { border-left-color: var(--line); }
+.blk .eq-num { width: 28px; height: 28px; margin: 0 auto; }
+.blk-body { display: grid; gap: 3px; min-width: 0; }
+.blk-body .h { font-size: 17px; font-weight: 700; }
+.blk-body .t { font-size: 15px; overflow-wrap: anywhere; }
+.blk-body .eq { overflow-x: auto; font-size: 115%; } .blk-body .eq mjx-container { margin: 0 !important; }
+.blk-body textarea { min-height: 52px; }
+.blk-acts { display: flex; gap: 4px; }
+.blk-acts .ib { width: 34px; height: 34px; }
+.blk-acts .ib:disabled { opacity: .35; border-style: dashed; cursor: not-allowed; }
+.org-side { position: sticky; top: calc(var(--top-h) + 12px); }
+.org-side .pnl-b { gap: 12px; }
+.fl { font-size: 12.5px; font-weight: 700; }
+.input { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 2px; font: inherit; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg button { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); background: var(--surface); font-weight: 400; }
+.seg button b { font-size: 13.5px; } .seg button span { font-size: 11.5px; color: var(--muted); }
+.seg button[aria-checked="true"] { border: 1.5px solid var(--ink); box-shadow: var(--shadow); }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.switch > span { display: grid; gap: 2px; } .switch b { font-size: 13px; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 44px; height: 24px; border-radius: 999px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch input:checked + .track { background: var(--ink); } .switch input:checked + .track::after { transform: translateX(20px); }
+.switch input:focus-visible + .track { outline: 3px solid var(--ink); outline-offset: 2px; }
+.prev-wrap { border: 1px solid var(--line); background: var(--sunk); }
+.prev-h { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.paper { margin: 12px; padding: 22px 24px; background: #fff; color: #151515; min-height: 220px; max-height: 46vh; overflow-y: auto; font-family: var(--font-body); }
+.paper .pt { text-align: center; font-size: 19px; font-weight: 600; margin: 0 0 4px; }
+.paper .pt-rule { width: 48px; height: 2px; background: #151515; margin: 0 auto 16px; }
+.paper .ph { font-size: 15px; font-weight: 700; margin: 12px 0 4px; padding-bottom: 3px; border-bottom: 1px solid #ccc; }
+.paper .px { font-size: 13px; margin: 6px 0; }
+.paper .pe { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 4px 8px; margin: 6px 0; }
+.paper .pe.nonum { grid-template-columns: 1fr; }
+.paper .pe mjx-container { margin: 0 !important; }
+.paper .pn { font-weight: 700; font-size: 13px; }
+.paper .pm { grid-column: 2; font-size: 11px; color: #555; }
+.paper .pe.nonum .pm { grid-column: 1; }
+.paper .pempty { color: #777; font-style: italic; font-size: 13px; }
+button.wide { width: 100%; padding: 12px; font-size: 14px; }
+@media (max-width: 960px) { .org-grid { grid-template-columns: minmax(0, 1fr); } .org-side { position: static; } }
 #printArea { display: none; }
 @media print {
+  @page { margin: 18mm; }
   body > *:not(#printArea) { display: none !important; }
-  #printArea { display: block !important; color: #000; background: #fff; font: 12pt/1.5 var(--font-body); }
-  #printArea h1 { font-size: 16pt; margin: 0 0 12pt; }
-  #printArea .pe { display: grid; grid-template-columns: 28pt 1fr; gap: 4pt 10pt; padding: 10pt 0; border-top: 1px solid #bbb; break-inside: avoid; }
-  #printArea .pn { font-weight: 700; }
-  #printArea .pm { grid-column: 2; color: #333; }
+  #printArea { display: block !important; }
+  #printArea .paper { margin: 0; padding: 0; max-height: none; overflow: visible; font-size: 12pt; }
+  #printArea .pe, #printArea .ph { break-inside: avoid; }
 }
 .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 1px 6px; border-radius: 2px; background: var(--sunk); color: var(--ink); margin-left: 6px; }
 .empty { color: var(--muted); padding: 14px 16px; margin: 0; }
@@ -445,7 +493,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       <section class="page" id="page-export" hidden aria-labelledby="export-title">
         <div class="page-head">
           <h2 id="export-title">Export</h2>
-          <p>Equations you save with “Save” in the Math Workspace. Check the ones you want, then export them together.</p>
+          <p>Equations you save with “Save” in the Math Workspace. Check the ones you want, then press Organize &amp; Export to arrange them, add headings or text, and export.</p>
         </div>
         <div class="stack">
           <section class="pnl" aria-labelledby="log-title">
@@ -454,15 +502,58 @@ footer { font-size: 0.82rem; color: var(--muted); }
               <label class="pick-all"><input type="checkbox" id="pickAll"> <span>Select all</span></label>
               <span class="hint" id="pickCount" aria-live="polite">0 selected</span>
               <div class="row">
-                <button type="button" class="small" id="png">Save PNGs</button>
-                <button type="button" class="small" id="svg">Save SVGs</button>
-                <button type="button" class="small" id="copy">Copy LaTeX</button>
-                <button type="button" class="small" id="copyClean">Copy MathSpeak</button>
-                <button type="button" class="small primary" id="printSel">Print / PDF</button>
+                <button type="button" class="primary" id="toOrganize">Organize &amp; Export ›</button>
               </div>
             </div>
             <div id="entries"><p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p></div>
           </section>
+        </div>
+      </section>
+      <!-- ===== Organize & Export ===== -->
+      <section class="page" id="page-organize" hidden aria-labelledby="org-title">
+        <div class="org-head">
+          <button type="button" class="ghost" id="orgBack">← Export list</button>
+          <div class="page-head" style="border:0;margin:0;padding:0">
+            <h2 id="org-title">Organize &amp; Export</h2>
+            <p>Arrange the equations, add headings or text, then export. The preview updates as you go.</p>
+          </div>
+        </div>
+        <div class="org-grid">
+          <section class="pnl" aria-labelledby="blk-title">
+            <div class="pnl-h">
+              <div><h3 id="blk-title" class="org-h3">Document content</h3><span class="hint" id="blkCount"></span></div>
+              <div class="row">
+                <button type="button" class="small" id="addHead">+ Heading</button>
+                <button type="button" class="small" id="addText">+ Text</button>
+              </div>
+            </div>
+            <div class="adder" id="adder" hidden>
+              <label class="label" for="adderIn" id="adderLabel">New heading</label>
+              <textarea id="adderIn" rows="2" spellcheck="true"></textarea>
+              <div class="row"><button type="button" class="small primary" id="adderOk">Add to end</button><button type="button" class="small ghost" id="adderCancel">Cancel</button></div>
+            </div>
+            <ol class="blocks" id="blocks"></ol>
+          </section>
+
+          <aside class="pnl org-side" aria-label="Export settings">
+            <div class="pnl-b">
+              <label class="fl" for="docTitle">Document title</label>
+              <input class="input" id="docTitle" value="Algebra Practice" spellcheck="true">
+              <span class="fl" id="cat-l">Export category</span>
+              <div class="seg" role="radiogroup" aria-labelledby="cat-l" id="catSeg">
+                <button type="button" role="radio" data-cat="doc" aria-checked="true"><b>Document</b><span>Equations + written content</span></button>
+                <button type="button" role="radio" data-cat="img" aria-checked="false"><b>Equation images</b><span>Equations only</span></button>
+              </div>
+              <span class="fl" id="fmt-l">Export format</span>
+              <div class="seg" role="radiogroup" aria-labelledby="fmt-l" id="fmtSeg"></div>
+              <label class="switch" for="numbering"><span><b>Equation numbering</b><span class="hint">Number equations 1, 2, 3 in the document</span></span><input type="checkbox" id="numbering" role="switch" checked><span class="track" aria-hidden="true"></span></label>
+              <div class="prev-wrap">
+                <div class="prev-h"><span class="label" id="prevLabel">Live preview · PDF</span></div>
+                <div class="paper" id="paper" aria-label="Document preview"></div>
+              </div>
+              <button type="button" class="primary wide" id="doExport">Export PDF</button>
+            </div>
+          </aside>
         </div>
       </section>
     </main>
@@ -1214,7 +1305,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const k = pickedList().length, all = $('pickAll');
     $('pickCount').textContent = k + ' of ' + logList.length + ' selected';
     all.checked = !!logList.length && k === logList.length; all.indeterminate = k > 0 && k < logList.length; all.disabled = !logList.length;
-    ['png', 'svg', 'copy', 'copyClean', 'printSel'].forEach((id) => { $(id).disabled = !k; });
+    $('toOrganize').disabled = !k;
     entriesEl.querySelectorAll('.entry').forEach((r) => r.classList.toggle('is-sel', picked.has(r.dataset.id)));
   }
   $('pickAll').onchange = (ev) => { logList.forEach((e) => ev.target.checked ? picked.add(e.id) : picked.delete(e.id)); renderLog(logList); };
@@ -1413,7 +1504,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   }
 
   /* ---------- Export and copy ---------- */
-  function plainSvg(latex) {
+  function plainSvg(latex, print) {
     if (!mjReady() || !latex || !latex.trim()) return null;
     const holder = document.createElement('div');
     holder.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:' + getComputedStyle(stage.querySelector('mjx-container') || stage).fontSize;
@@ -1423,7 +1514,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const svg = node.querySelector('svg'); const box = svg.getBoundingClientRect();
     const clone = svg.cloneNode(true);
     holder.remove();
-    const color = getComputedStyle(stage).color;
+    const color = print ? '#151515' : getComputedStyle(stage).color;
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     clone.innerHTML = clone.innerHTML.replace(/currentColor/g, color);
     clone.setAttribute('width', box.width); clone.setAttribute('height', box.height);
@@ -1439,40 +1530,175 @@ footer { font-size: 0.82rem; color: var(--muted); }
     catch (e) { if (e && e.code !== 'declined' && e.code !== 'cancelled') setStatus('Couldn\'t save: ' + (e.message || e.code), 'err'); return false; }
   }
   const svgBlob = (r) => new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' });
-  function pngBlob(r) {
+  function pngBlob(r, print) {
     return new Promise((res) => {
       const scale = 4, pad = 24, { box } = r, url = URL.createObjectURL(svgBlob(r)), img = new Image();
       img.onload = () => {
         const c = document.createElement('canvas'); c.width = (box.width + pad * 2) * scale; c.height = (box.height + pad * 2) * scale;
-        const ctx = c.getContext('2d'); ctx.fillStyle = getComputedStyle(stage).backgroundColor || '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        const ctx = c.getContext('2d'); ctx.fillStyle = print ? '#ffffff' : (getComputedStyle(stage).backgroundColor || '#fff'); ctx.fillRect(0, 0, c.width, c.height);
         ctx.drawImage(img, pad * scale, pad * scale, box.width * scale, box.height * scale); URL.revokeObjectURL(url);
         c.toBlob((b) => res(b), 'image/png');
       };
       img.onerror = () => res(null); img.src = url;
     });
   }
-  async function saveImages(kind) {
-    const items = pickedList(); let ok = 0;
-    for (const { e, n } of items) {
-      const r = plainSvg(e.latex); if (!r) continue;
-      const blob = kind === 'svg' ? svgBlob(r) : await pngBlob(r);
-      if (blob && await saveFile('equation-' + n + '.' + kind, blob, true)) ok++;
+  /* ---------- Organize & Export: a document built from blocks ---------- */
+  let blocks = [], orgFrom = '', cat = 'doc', fmt = 'pdf';
+  const FMTS = { doc: [['pdf', 'PDF', '.pdf'], ['docx', 'Word', '.docx']], img: [['png', 'PNG', 'one image per equation'], ['svg', 'SVG', 'one image per equation']] };
+  const ICONS = {
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>', up: '<path d="M12 19V5M6.5 10.5L12 5l5.5 5.5"/>',
+    down: '<path d="M12 5v14M6.5 13.5L12 19l5.5-5.5"/>', x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>' };
+  const ib = (icon, label, fn, disabled) => { const b = el('button', 'ib'); b.type = 'button'; b.innerHTML = ICON(ICONS[icon]); b.setAttribute('aria-label', label); b.title = label; b.disabled = !!disabled; b.onclick = fn; return b; };
+  $('toOrganize').onclick = () => {
+    const items = pickedList(); if (!items.length) return;
+    const key = items.map((x) => x.e.id).join(',');
+    if (key !== orgFrom) { blocks = items.map(({ e }) => ({ t: 'eq', latex: e.latex, ms: msOf(e) })); orgFrom = key; }
+    go('organize', true);
+  };
+  $('orgBack').onclick = () => go('export', true);
+  let editing = -1;
+  function renderBlocks() {
+    const ol = $('blocks'); ol.textContent = '';
+    const nEq = blocks.filter((b) => b.t === 'eq').length;
+    $('blkCount').textContent = 'Shown in document order · ' + blocks.length + ' block' + (blocks.length === 1 ? '' : 's') + ' · ' + nEq + ' equation' + (nEq === 1 ? '' : 's');
+    const count = { heading: 0, text: 0, eq: 0 };
+    blocks.forEach((b, i) => {
+      count[b.t]++;
+      const kind = b.t === 'heading' ? 'Heading ' + count.heading : b.t === 'text' ? 'Text block ' + count.text : 'Equation ' + count.eq;
+      const li = el('li', 'blk t-' + b.t); li.setAttribute('aria-label', 'Block ' + (i + 1) + ', ' + kind);
+      const num = el('span', 'eq-num', String(i + 1)); num.setAttribute('aria-hidden', 'true');
+      const body = el('div', 'blk-body'); body.appendChild(el('span', 'label', kind));
+      if (editing === i) {
+        const ta = document.createElement('textarea'); ta.value = b.t === 'eq' ? b.latex : b.text; ta.setAttribute('aria-label', 'Edit ' + kind + (b.t === 'eq' ? ' (LaTeX)' : ''));
+        if (b.t === 'eq') ta.style.fontFamily = 'var(--font-mono)';
+        const row = el('div', 'row');
+        const ok = el('button', 'small primary', 'Done'); ok.type = 'button';
+        ok.onclick = () => { const v = ta.value.trim(); if (v) { if (b.t === 'eq') { b.latex = v; try { b.ms = Layers.plainText(Layers.build(v).spokenHtml); } catch (x) {} } else b.text = v; } editing = -1; renderBlocks(); };
+        const no = el('button', 'small ghost', 'Cancel'); no.type = 'button'; no.onclick = () => { editing = -1; renderBlocks(); };
+        ta.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !ev.shiftKey && b.t !== 'eq') { ev.preventDefault(); ok.click(); } if (ev.key === 'Escape') no.click(); });
+        row.append(ok, no); body.append(ta, row); setTimeout(() => ta.focus(), 0);
+      } else if (b.t === 'eq') { const eq = el('div', 'eq'); renderTex(eq, b.latex, false); body.append(eq, el('span', 'hint', b.ms)); }
+      else body.appendChild(el('span', b.t === 'heading' ? 'h' : 't', b.text));
+      const acts = el('div', 'blk-acts');
+      acts.append(
+        ib('edit', 'Edit ' + kind, () => { editing = i; renderBlocks(); }),
+        ib('up', 'Move ' + kind + ' up', () => { [blocks[i - 1], blocks[i]] = [blocks[i], blocks[i - 1]]; renderBlocks(); focusAct(i - 1, 1); }, i === 0),
+        ib('down', 'Move ' + kind + ' down', () => { [blocks[i + 1], blocks[i]] = [blocks[i], blocks[i + 1]]; renderBlocks(); focusAct(i + 1, 2); }, i === blocks.length - 1),
+        ib('x', 'Remove ' + kind, () => { blocks.splice(i, 1); if (!blocks.length) { orgFrom = ''; go('export', true); return; } renderBlocks(); setStatus('Removed ' + kind + '.'); }));
+      li.append(num, body, acts); ol.appendChild(li);
+    });
+    renderPaper();
+  }
+  function focusAct(i, k) { const b = $('blocks').children[i]; if (b) { const btn = b.querySelectorAll('.blk-acts .ib')[k]; (btn && !btn.disabled ? btn : b.querySelector('.ib')).focus(); } }
+  let addKind = 'heading';
+  function openAdder(kind) { addKind = kind; $('adder').hidden = false; $('adderLabel').textContent = kind === 'heading' ? 'New heading' : 'New text block'; $('adderIn').value = ''; $('adderIn').focus(); }
+  $('addHead').onclick = () => openAdder('heading');
+  $('addText').onclick = () => openAdder('text');
+  $('adderCancel').onclick = () => { $('adder').hidden = true; };
+  $('adderOk').onclick = () => { const v = $('adderIn').value.trim(); if (!v) { $('adderIn').focus(); return; } blocks.push({ t: addKind, text: v }); $('adder').hidden = true; renderBlocks(); setStatus('Added ' + (addKind === 'heading' ? 'a heading' : 'a text block') + ' at the end. Use the arrows to move it.', 'ok'); };
+  $('adderIn').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); $('adderOk').click(); } if (ev.key === 'Escape') $('adderCancel').click(); });
+
+  function setSeg(id, attr, val) { document.querySelectorAll('#' + id + ' [data-' + attr + ']').forEach((b) => b.setAttribute('aria-checked', String(b.dataset[attr] === val))); }
+  function renderFmts() {
+    const seg = $('fmtSeg'); seg.textContent = '';
+    FMTS[cat].forEach(([k, name, sub]) => { const b = el('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.fmt = k; b.append(el('b', null, name), el('span', null, sub)); b.onclick = () => { fmt = k; setSeg('fmtSeg', 'fmt', fmt); renderPaper(); }; seg.appendChild(b); });
+    setSeg('fmtSeg', 'fmt', fmt);
+  }
+  document.querySelectorAll('#catSeg [data-cat]').forEach((b) => b.onclick = () => { cat = b.dataset.cat; fmt = FMTS[cat][0][0]; setSeg('catSeg', 'cat', cat); renderFmts(); renderPaper(); });
+  $('docTitle').addEventListener('input', () => renderPaper());
+  $('numbering').addEventListener('change', () => renderPaper());
+  renderFmts();
+  function buildPaper(target) {
+    target.textContent = '';
+    const num = $('numbering').checked, doc = cat === 'doc';
+    const title = $('docTitle').value.trim();
+    if (doc && title) { target.append(el('p', 'pt', title), el('div', 'pt-rule')); }
+    let n = 0;
+    blocks.forEach((b) => {
+      if (b.t === 'eq') {
+        n++; const row = el('div', 'pe' + (num ? '' : ' nonum')); const eq = el('div'); renderTex(eq, b.latex, false);
+        if (num) row.appendChild(el('span', 'pn', n + '.')); row.append(eq);
+        if (!doc) row.appendChild(el('span', 'pm', b.ms));
+        target.appendChild(row);
+      } else if (doc) target.appendChild(el(b.t === 'heading' ? 'p' : 'p', b.t === 'heading' ? 'ph' : 'px', b.text));
+    });
+    if (!blocks.length) target.appendChild(el('p', 'pempty', 'Nothing to export.'));
+  }
+  function renderPaper() {
+    buildPaper($('paper'));
+    const name = FMTS[cat].find((f) => f[0] === fmt)[1];
+    $('prevLabel').textContent = 'Live preview · ' + name;
+    $('doExport').textContent = cat === 'doc' ? 'Export ' + name : 'Save ' + name + 's';
+  }
+  $('doExport').onclick = async () => {
+    if (!blocks.length) return;
+    const title = $('docTitle').value.trim() || 'Speak Math';
+    const base = title.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'speak-math';
+    if (fmt === 'pdf') { const area = $('printArea'); area.textContent = ''; const pp = el('div', 'paper'); buildPaper(pp); area.appendChild(pp); setStatus('In the print dialog, choose “Save as PDF”.'); window.print(); return; }
+    if (fmt === 'docx') { const blob = await buildDocx(title); if (blob && await saveFile(base + '.docx', blob, true)) setStatus('Saved ' + base + '.docx.', 'ok'); return; }
+    let ok = 0, n = 0;
+    for (const b of blocks) {
+      if (b.t !== 'eq') continue; n++;
+      const r = plainSvg(b.latex, true); if (!r) continue;
+      const blob = fmt === 'svg' ? svgBlob(r) : await pngBlob(r, true);
+      if (blob && await saveFile(base + '-equation-' + n + '.' + fmt, blob, true)) ok++;
       await new Promise((t) => setTimeout(t, 250));   // browsers drop rapid back-to-back downloads
     }
-    if (ok) setStatus('Saved ' + ok + ' ' + kind.toUpperCase() + (ok === 1 ? '' : 's') + '.', 'ok');
-  }
-  $('svg').onclick = () => saveImages('svg');
-  $('png').onclick = () => saveImages('png');
-  $('printSel').onclick = () => {
-    const items = pickedList(); if (!items.length) return;
-    const area = $('printArea'); area.textContent = '';
-    area.appendChild(el('h1', null, 'Speak Math · ' + items.length + ' equation' + (items.length === 1 ? '' : 's')));
-    items.forEach(({ e, n }) => {
-      const row = el('div', 'pe'); const eq = el('div'); renderTex(eq, e.latex, false);
-      row.append(el('span', 'pn', n + '.'), eq, el('span', 'pm', msOf(e))); area.appendChild(row);
-    });
-    window.print();
+    if (ok) setStatus('Saved ' + ok + ' ' + fmt.toUpperCase() + (ok === 1 ? '' : 's') + '.', 'ok');
   };
+
+  /* Word export: a minimal .docx (stored ZIP) with each equation as a PNG whose alt text is its MathSpeak */
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (u) => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zipStore(files) {
+    const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+    const u16 = (v) => [v & 255, (v >>> 8) & 255], u32 = (v) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+    for (const f of files) {
+      const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+      const head = [...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)];
+      parts.push(new Uint8Array(head), name, data);
+      central.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+      off += head.length + name.length + data.length;
+    }
+    const cdSize = central.reduce((a, b) => a + b.length, 0);
+    const end = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(off), ...u16(0)]);
+    return new Blob([...parts, ...central, end], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+  const xesc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  async function buildDocx(title) {
+    if (!mjReady()) { setStatus('The math renderer isn\'t loaded, so the Word file can\'t include equations.', 'err'); return null; }
+    setStatus('Building the Word file…');
+    const num = $('numbering').checked, media = [], P = [];
+    const run = (t, rpr) => '<w:r>' + (rpr ? '<w:rPr>' + rpr + '</w:rPr>' : '') + '<w:t xml:space="preserve">' + xesc(t) + '</w:t></w:r>';
+    if (title) P.push('<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>' + run(title, '<w:b/><w:sz w:val="40"/>') + '</w:p>');
+    let n = 0;
+    for (const b of blocks) {
+      if (b.t === 'heading') P.push('<w:p><w:pPr><w:spacing w:before="240" w:after="120"/></w:pPr>' + run(b.text, '<w:b/><w:sz w:val="30"/>') + '</w:p>');
+      else if (b.t === 'text') P.push('<w:p>' + run(b.text, '<w:sz w:val="24"/>') + '</w:p>');
+      else {
+        n++; const r = plainSvg(b.latex, true); if (!r) continue;
+        const png = await pngBlob(r, true); if (!png) continue;
+        const id = media.length + 1; media.push(new Uint8Array(await png.arrayBuffer()));
+        let w = r.box.width * 0.75, h = r.box.height * 0.75; const maxW = 430; if (w > maxW) { h *= maxW / w; w = maxW; }   // points-ish at 96 dpi
+        const cx = Math.round(w * 12700), cy = Math.round(h * 12700), alt = xesc(b.ms || b.latex);
+        const pic = '<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="' + id + '" name="Equation ' + n + '" descr="' + alt + '"/>' +
+          '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="' + id + '" name="equation' + n + '.png" descr="' + alt + '"/><pic:cNvPicPr/></pic:nvPicPr>' +
+          '<pic:blipFill><a:blip r:embed="rIdImg' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
+        const raise = Math.max(0, Math.round(h - 12));   // half-points: lift the number to the image's middle
+        P.push('<w:p><w:pPr><w:spacing w:before="80" w:after="80"/></w:pPr>' + (num ? run(n + '.\t', '<w:b/><w:sz w:val="24"/><w:position w:val="' + raise + '"/>') : '') + pic + '</w:p>');
+      }
+    }
+    const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+    const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    const files = [
+      { name: '[Content_Types].xml', data: X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>' },
+      { name: '_rels/.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/document.xml', data: X + '<w:document ' + NS + '><w:body>' + P.join('') + '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>' },
+      { name: 'word/_rels/document.xml.rels', data: X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + media.map((_, i) => '<Relationship Id="rIdImg' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image' + (i + 1) + '.png"/>').join('') + '</Relationships>' },
+      ...media.map((d, i) => ({ name: 'word/media/image' + (i + 1) + '.png', data: d })),
+    ];
+    return zipStore(files);
+  }
   async function copyText(text, label, fallbackEl) {
     try { await navigator.clipboard.writeText(text); setStatus(label + ' copied.', 'ok'); }
     catch (e) {
@@ -1480,8 +1706,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
       setStatus('Press Ctrl+C or ⌘C to copy.');
     }
   }
-  $('copy').onclick = () => copyText(pickedList().map((x) => x.e.latex).join('\n'), 'LaTeX for ' + pickedList().length + ' equation(s)');
-  $('copyClean').onclick = () => copyText(pickedList().map((x) => x.n + '. ' + msOf(x.e)).join('\n'), 'MathSpeak for ' + pickedList().length + ' equation(s)');
 
   /* ---------- Navigate & edit workspace ---------- */
   let chat = [], chatFor = null;
@@ -1586,13 +1810,15 @@ footer { font-size: 0.82rem; color: var(--muted); }
   document.querySelectorAll('.cmdbar [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
 
   /* ---------- Pages and sidebar ---------- */
-  const PAGES = { workspace: 'Math Workspace', help: 'MathSpeak Help', export: 'Export' };
+  const PAGES = { workspace: 'Math Workspace', help: 'MathSpeak Help', export: 'Export', organize: 'Organize & Export' };
   function go(page, focus) {
     if (!PAGES[page]) page = 'workspace';
     Object.keys(PAGES).forEach((k) => { $('page-' + k).hidden = k !== page; });
-    document.querySelectorAll('.nav [data-page]').forEach((b) => { if (b.dataset.page === page) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    const navPage = page === 'organize' ? 'export' : page;
+    document.querySelectorAll('.nav [data-page]').forEach((b) => { if (b.dataset.page === navPage) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     $('pageTitle').textContent = PAGES[page]; document.title = PAGES[page] + ' · Speak Math';
     if (page === 'workspace') highlight();
+    if (page === 'organize') { let n = 0; try { n = blocks.length; } catch (e) {} if (!n) { go('export'); return; } renderBlocks(); }   // nothing to organize after a reload
     if (location.hash !== '#' + page) { try { history.replaceState(null, '', '#' + page); } catch (e) {} }
     if (focus) $('pageTitle').focus();
     if (matchMedia('(max-width: 720px)').matches && focus) setSide(false);
