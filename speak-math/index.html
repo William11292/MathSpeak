@@ -176,13 +176,16 @@ mjx-assistive-mml { position: absolute !important; top: 0; left: 0; width: 1px !
 .selbox .inside { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
 .selbox .inside button { font-weight: 500; font-size: 12px; padding: 2px 9px; display: inline-flex; gap: 6px; align-items: center; border-width: 1px; border-color: var(--line); }
 /* Command bar (MathVoice style): each button shows the phrase to say */
-.cmdbar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: flex-start; border-top-width: 1.5px; border-top-color: var(--line-strong); }
-.cg { display: grid; gap: 6px; min-width: 0; }
+.cmdbar { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; padding: 8px 12px; border-top-width: 1.5px; border-top-color: var(--line-strong); }
+.cg { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cg-h { display: flex; align-items: center; gap: 8px; }
-.cbtns { display: flex; gap: 6px; flex-wrap: wrap; }
-.cbtns button { font-size: 12.5px; padding: 6px 11px; display: inline-flex; align-items: center; gap: 6px; }
+.cbtns { display: flex; gap: 4px; flex-wrap: wrap; }
+.cbtns button { font-size: 12px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; line-height: 1.4; }
+.cg .label { white-space: nowrap; }
+button.save { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.save:hover:not(:disabled) { background: var(--accent); opacity: .88; }
 .cbtns button.on { border-color: var(--rec); color: var(--rec); }
-.mode { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.mode { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
 .mode .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
 .mode.live { color: var(--rec); border-color: var(--rec); }
 .mode.live .dot { background: var(--rec); animation: pulse 1s infinite; }
@@ -338,7 +341,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
                 </div>
               </div>
               <div class="cg" role="group" aria-labelledby="cg-edit">
-                <h3 class="label" id="cg-edit">Edit the math</h3>
+                <h3 class="label" id="cg-edit">Edit</h3>
                 <div class="cbtns">
                   <button type="button" data-cmd="selthat">“Select that”</button>
                   <button type="button" data-mv="ArrowUp">↑ “Out a layer”</button>
@@ -354,6 +357,12 @@ footer { font-size: 0.82rem; color: var(--muted); }
                   <button type="button" data-cmd="change">“Say a change”</button>
                   <button type="button" data-cmd="ai">“Refine with AI”</button>
                   <button type="button" data-cmd="manual" id="vManual">“Refine manually”</button>
+                </div>
+              </div>
+              <div class="cg" role="group" aria-labelledby="cg-save">
+                <h3 class="label" id="cg-save">Export</h3>
+                <div class="cbtns">
+                  <button type="button" data-cmd="save" class="save" id="vSave">“Save”</button>
                 </div>
               </div>
               <div class="sr" id="announce" aria-live="polite"></div>
@@ -400,6 +409,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
               <li><b>“Delete”</b><span>Remove the selected layer</span></li>
               <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
               <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
+              <li><b>“Save”</b><span>Add the current equation to the Export list</span></li>
               <li><b>“Stop listening”</b><span>Turn the mic off</span></li>
             </ul>
           </section>
@@ -420,7 +430,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       <section class="page" id="page-export" hidden aria-labelledby="export-title">
         <div class="page-head">
           <h2 id="export-title">Export</h2>
-          <p>Save the current equation as an image or copy it as text. Every submitted equation is kept in the log below.</p>
+          <p>Save the current equation as an image or copy it as text. Equations you save with “Save” are listed below.</p>
         </div>
         <div class="stack">
           <section class="pnl" aria-labelledby="cur-title">
@@ -436,8 +446,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
             </div>
           </section>
           <section class="pnl" aria-labelledby="log-title">
-            <div class="pnl-h log-head"><h3 id="log-title" class="label">Log</h3><span class="hint" id="log-where">Saved in this browser</span></div>
-            <div id="entries"><p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p></div>
+            <div class="pnl-h log-head"><h3 id="log-title" class="label">Saved equations</h3><span class="hint" id="log-where">Saved in this browser</span></div>
+            <div id="entries"><p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p></div>
           </section>
         </div>
       </section>
@@ -1134,8 +1144,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
       setLatex(latex);
       chatNewEquation();
       const clean = L ? Layers.plainText(L.spokenHtml) : '';
-      if (statusEl.className !== 'status err') setStatus(note || (method === 'claude' ? 'Converted with Claude and logged.' : method === 'latex' ? 'Rendered your LaTeX and logged it.' : 'Converted with the built-in rules and logged.'), note ? 'err' : 'ok');
-      await addLog({ input: text, latex, clean, method, source: current.source, ts: Date.now() });
+      if (statusEl.className !== 'status err') setStatus(note || (method === 'claude' ? 'Converted with Claude. Say “Save” to keep it.' : method === 'latex' ? 'Rendered your LaTeX. Say “Save” to keep it.' : 'Converted with the built-in rules. Say “Save” to keep it.'), note ? 'err' : 'ok');
+      current.input = text; current.method = method; current.src = current.source;
       current.source = 'typed';
     } finally { vBusy = false; updateBar(); }
   }
@@ -1158,7 +1168,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   function renderLog(list) {
     entriesEl.textContent = '';
     $('logCount').textContent = list.length; $('logCount').setAttribute('aria-label', list.length + ' saved equation' + (list.length === 1 ? '' : 's'));
-    if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing logged yet. Submit an equation and it lands here with the LaTeX and what you said.</p>'; return; }
+    if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p>'; return; }
     for (const e of list) {
       const row = document.createElement('div'); row.className = 'entry';
       const left = document.createElement('div'); left.style.cssText = 'min-width:0;display:grid;gap:4px';
@@ -1187,8 +1197,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
     ['refine with ai', 'ai'], ['refine with a i', 'ai'], ['refine with a.i.', 'ai'], ['refine manually', 'manual'], ['say a change', 'change'], ['make a change', 'change'],
     ['out a layer', 'out'], ['in a layer', 'in'], ['go out', 'out'], ['go in', 'in'], ['out', 'out'], ['in', 'in'],
     ['previous', 'left'], ['left', 'left'], ['back', 'left'], ['next', 'right'], ['right', 'right'],
-    ['pause', 'pause'], ['done', 'done'], ['stop', 'done'], ['clear', 'clear'], ['delete', 'del'], ['delete that', 'del']];
-  const TRAIL = ['stop listening', 'pause', 'done', 'stop', 'clear'];   // commands also caught at the end of dictated words
+    ['pause', 'pause'], ['done', 'done'], ['stop', 'done'], ['clear', 'clear'], ['delete', 'del'], ['delete that', 'del'], ['save', 'save'], ['save that', 'save'], ['save it', 'save']];
+  const TRAIL = ['stop listening', 'pause', 'done', 'stop', 'clear', 'save'];   // commands also caught at the end of dictated words
   const norm = (t) => t.toLowerCase().replace(/[,!?;:]/g, ' ').replace(/\.(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
   function parseChunk(t) {
     const n = norm(t); const whole = CMDS.find((c) => c[0] === n);
@@ -1256,7 +1266,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     B('done').disabled = vBusy || !(manualOpen() || box.value.trim() || (vMode === 'change' && has));
     B('clear').disabled = !box.value.trim();
     B('selthat').disabled = !has; B('del').disabled = !has;
-    B('change').disabled = !has; B('ai').disabled = vBusy || !has; B('manual').disabled = !current.latex.trim() && !manualOpen();
+    B('change').disabled = !has; B('save').disabled = vBusy || !current.latex.trim() || savedLatex === current.latex; $('vSave').textContent = current.latex.trim() && savedLatex === current.latex ? '✓ Saved' : '“Save”'; B('ai').disabled = vBusy || !has; B('manual').disabled = !current.latex.trim() && !manualOpen();
   }
   function runCmd(c, byVoice) {
     switch (c) {
@@ -1291,6 +1301,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
         return;
       case 'ai': if (listening) { base = ''; setMode(micOn ? 'paused' : 'off'); } refineAI(); return;
       case 'manual': setManual(!manualOpen()); return;
+      case 'save': if (listening) { base = ''; setMode(micOn ? 'paused' : 'off'); } saveEquation(); return;
     }
   }
   let lastTarget = 'equation';
@@ -1332,6 +1343,19 @@ footer { font-size: 0.82rem; color: var(--muted); }
     setStatus('Deleted “' + said + '”.', 'ok'); $('announce').textContent = 'Deleted ' + said;
   }
 
+  /* "Save": add the current equation to the Export list */
+  let savedLatex = null;
+  async function saveEquation() {
+    const latex = current.latex.trim();
+    if (!latex) { setStatus('Nothing to save yet.', 'err'); return; }
+    if (savedLatex === current.latex) { setStatus('Already saved.', 'ok'); return; }
+    const clean = L ? Layers.plainText(L.spokenHtml) : '';
+    await addLog({ input: current.input || spoken.value.trim() || latex, latex: current.latex, clean,
+      method: current.method || 'latex', source: current.src || 'typed', ts: Date.now() });
+    savedLatex = current.latex; updateBar();
+    setStatus('Saved to Export.', 'ok'); $('announce').textContent = 'Saved to Export: ' + clean;
+  }
+
   /* "Refine with AI": Claude applies the spoken or typed change to the selected layer */
   async function refineAI() {
     if (!L) { setStatus('Submit an equation first.', 'err'); return; }
@@ -1350,8 +1374,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
       if (!r || typeof r.latex !== 'string' || !r.latex.trim()) throw new Error('No LaTeX came back');
       setLatex(r.latex.trim()); wsInput.value = '';
       const clean = L ? Layers.plainText(L.spokenHtml) : '';
-      setStatus('Refined with Claude: “' + clean + '”', 'ok');
-      await addLog({ input: req || '(refine ' + sc.name + ')', latex: current.latex, clean, method: 'refine', source: vMode === 'off' ? 'typed' : 'voice', ts: Date.now() });
+      setStatus('Refined with Claude: “' + clean + '”. Say “Save” to keep it.', 'ok');
+      current.input = (current.input || spoken.value.trim()) + (req ? ' · then: ' + req : ''); current.method = 'refine'; current.src = vMode === 'off' ? 'typed' : 'voice';
     } catch (e) {
       if (e && e.code === 'not_granted' && window.claude) { sample = null; markNoClaude(); }
       setStatus('Couldn\'t refine with Claude' + (e && e.message ? ': ' + e.message : '') + '. Try again or use “Refine manually”.', 'err');

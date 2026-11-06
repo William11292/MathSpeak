@@ -8,9 +8,9 @@ Self-contained: everything is in `index.html`.
 
 A retractable left sidebar switches between three pages:
 
-- **Math Workspace**: split screen. Left: equation input and the change box for the selected layer. Right, top to bottom: Image, Text · LaTeX and Clean text equation, with the layer path pinned along the bottom. Navigation is always on: click any part or focus a view and use ↑ out, ↓ in, ← → neighbors. Controls live in a MathVoice-style command bar at the bottom right, and every button is also a voice command: **Dictation** (“Start listening”, “Pause”, “Done”, “Clear”), **Edit the math** (“Select that”, “Out a layer”, “In a layer”, “Previous”, “Next”, “Delete”) and **Refine** (“Say a change”, “Refine with AI”, “Refine manually”). Once the mic is on it stays on for commands, so the page can be used hands-free.
+- **Math Workspace**: split screen. Left: equation input and the change box for the selected layer. Right, top to bottom: Image, Text · LaTeX and Clean text equation, with the layer path pinned along the bottom. Navigation is always on: click any part or focus a view and use ↑ out, ↓ in, ← → neighbors. Controls live in a MathVoice-style command bar at the bottom right, and every button is also a voice command: **Dictation** (“Start listening”, “Pause”, “Done”, “Clear”), **Edit the math** (“Select that”, “Out a layer”, “In a layer”, “Previous”, “Next”, “Delete”) **Refine** (“Say a change”, “Refine with AI”, “Refine manually”) and **Export** (“Save” adds the current equation to the Export list; nothing is saved automatically). Once the mic is on it stays on for commands, so the page can be used hands-free.
 - **MathSpeak Help**: how it works, scope cues to say, and the navigation keys.
-- **Export**: save the current equation as PNG or SVG, copy LaTeX or clean text, and the log of past equations.
+- **Export**: save the current equation as PNG or SVG, copy LaTeX or clean text, and the list of saved equations.
 
 ## Claude conversion
 
