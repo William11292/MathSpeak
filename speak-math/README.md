@@ -2,7 +2,31 @@
 
 Speak or type an equation and see it as an image, as LaTeX and as clean spoken text. Then move through its layers and edit it in a chat workspace.
 
-Self-contained: everything is in `index.html`.
+## Files
+
+`index.html` holds the page markup for every tab (Math Workspace, MathSpeak Help, Export, Organize & Export). Styles and code live in separate files, grouped by tab:
+
+```
+index.html
+css/
+  base.css          design tokens, app shell, sidebar, shared controls
+  workspace.css     Math Workspace and its command bar
+  help.css          MathSpeak Help
+  export.css        Export list
+  organize.css      Organize & Export
+  print.css         printing (PDF export)
+js/
+  core/state.js        shared state and helpers (loads first)
+  core/rule-parser.js  built-in rules: spoken words to LaTeX
+  core/layers.js       layer engine: LaTeX to tree to MathSpeak
+  workspace/           render, convert, voice, commands, navigate
+  export/              saved-list, files, organize, docx
+  api-key.js           standalone mode: your own Claude API key
+  shell.js             tabs and sidebar
+  main.js              wiring and start-up (loads last)
+```
+
+The scripts are plain `<script>` files, not modules, so the page still works when you open `index.html` straight from disk. They share top-level names, and **load order matters**: a file can only use, at load time, names from files above it in `index.html`. New page-wide overlays (like a tutorial) go at the top level of `index.html`, outside the tab sections.
 
 ## Layout
 
