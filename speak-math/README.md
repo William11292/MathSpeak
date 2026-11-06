@@ -4,6 +4,14 @@ Speak or type an equation and see it as an image, as LaTeX and as clean spoken t
 
 Self-contained: everything is in `index.html`.
 
+## Layout
+
+A retractable left sidebar switches between three pages:
+
+- **Math Workspace**: split screen. Left: equation input (type or dictate) and the edit history. Right, top to bottom: Image, Text · LaTeX and Clean text equation, with the layer path pinned along the bottom. Navigation is always on: click any part or focus a view and use ↑ out, ↓ in, ← → neighbors. Press **Edit LaTeX** to edit the source directly.
+- **MathSpeak Help**: how it works, scope cues to say, and the navigation keys.
+- **Export**: save the current equation as PNG or SVG, copy LaTeX or clean text, and the log of past equations.
+
 ## Claude conversion
 
 - **Inside Claude (as an artifact):** uses Claude's built-in artifact AI. No setup needed.
