@@ -213,17 +213,32 @@ textarea.target { outline: 2px solid var(--rec); outline-offset: 1px; }
 .say-list li:nth-child(odd) { border-right: 1px solid var(--line); }
 .say-list b { font-size: 13px; }
 .say-list span { font-size: 13px; color: var(--muted); }
-.exp-prev { min-height: 120px; }
 
 .log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 14px 16px; border-top: 1px solid var(--line); }
-.entry:first-child { border-top: 0; }
-.entry .eq { overflow-x: auto; min-width: 0; }
-.entry .eq mjx-container { margin: 0 !important; }
-.entry .meta { font-size: 0.8rem; color: var(--muted); }
-.entry code { font-family: var(--font-mono); font-size: 0.8rem; overflow-wrap: anywhere; color: var(--ink); }
-.entry .said { font-size: 0.9rem; }
-.entry .acts { display: flex; gap: 6px; align-items: start; }
+.selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.selbar .row { margin-left: auto; gap: 6px; }
+.pick-all { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.pick-all input, .eq-pick input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; cursor: pointer; }
+#entries { display: grid; gap: 10px; padding: 12px; }
+.entry { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; background: var(--surface); border: 1px solid var(--line); min-height: 84px; }
+.entry.is-sel { border-color: var(--ink-3); }
+.eq-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid var(--line); cursor: pointer; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.eq-main { display: flex; align-items: center; gap: 14px; padding: 12px 18px; min-width: 0; }
+.eq-num { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; font-variant-numeric: tabular-nums; }
+.eq-body { display: grid; gap: 4px; min-width: 0; }
+.eq-body .eq { overflow-x: auto; min-width: 0; font-size: 125%; }
+.eq-body .eq mjx-container { margin: 0 !important; }
+.eq-body .ms { font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; }
+.entry .acts { display: flex; gap: 6px; align-items: center; padding: 0 14px; }
+#printArea { display: none; }
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; color: #000; background: #fff; font: 12pt/1.5 var(--font-body); }
+  #printArea h1 { font-size: 16pt; margin: 0 0 12pt; }
+  #printArea .pe { display: grid; grid-template-columns: 28pt 1fr; gap: 4pt 10pt; padding: 10pt 0; border-top: 1px solid #bbb; break-inside: avoid; }
+  #printArea .pn { font-weight: 700; }
+  #printArea .pm { grid-column: 2; color: #333; }
+}
 .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 1px 6px; border-radius: 2px; background: var(--sunk); color: var(--ink); margin-left: 6px; }
 .empty { color: var(--muted); padding: 14px 16px; margin: 0; }
 footer { font-size: 0.82rem; color: var(--muted); }
@@ -430,23 +445,22 @@ footer { font-size: 0.82rem; color: var(--muted); }
       <section class="page" id="page-export" hidden aria-labelledby="export-title">
         <div class="page-head">
           <h2 id="export-title">Export</h2>
-          <p>Save the current equation as an image or copy it as text. Equations you save with “Save” are listed below.</p>
+          <p>Equations you save with “Save” in the Math Workspace. Check the ones you want, then export them together.</p>
         </div>
         <div class="stack">
-          <section class="pnl" aria-labelledby="cur-title">
-            <div class="pnl-h"><h3 id="cur-title" class="label">Current equation</h3></div>
-            <div class="pnl-b">
-              <div class="stage exp-prev" id="exportPrev"></div>
-              <div class="row">
-                <button type="button" id="png">Save PNG</button>
-                <button type="button" id="svg">Save SVG</button>
-                <button type="button" id="copy">Copy LaTeX</button>
-                <button type="button" id="copyClean">Copy clean text</button>
-              </div>
-            </div>
-          </section>
           <section class="pnl" aria-labelledby="log-title">
             <div class="pnl-h log-head"><h3 id="log-title" class="label">Saved equations</h3><span class="hint" id="log-where">Saved in this browser</span></div>
+            <div class="selbar" role="group" aria-label="Export selected equations">
+              <label class="pick-all"><input type="checkbox" id="pickAll"> <span>Select all</span></label>
+              <span class="hint" id="pickCount" aria-live="polite">0 selected</span>
+              <div class="row">
+                <button type="button" class="small" id="png">Save PNGs</button>
+                <button type="button" class="small" id="svg">Save SVGs</button>
+                <button type="button" class="small" id="copy">Copy LaTeX</button>
+                <button type="button" class="small" id="copyClean">Copy MathSpeak</button>
+                <button type="button" class="small primary" id="printSel">Print / PDF</button>
+              </div>
+            </div>
             <div id="entries"><p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p></div>
           </section>
         </div>
@@ -454,6 +468,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     </main>
   </div>
 </div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script>
 (() => {
@@ -463,7 +478,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
   let current = { latex: '', source: 'typed' };
   let L = null, sel = null;
   const live = () => !!L;
-  const exportPrev = $('exportPrev');
   const wsInput = $('wsInput'), msgsEl = $('msgs');
   let sample = null, downloads = null, logCol = null, localLog = [];
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1024,13 +1038,11 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const tex = current.latex;
     if (!tex.trim()) {
       stage.innerHTML = '<span class="placeholder">Your equation will appear here.</span>';
-      exportPrev.innerHTML = '<span class="placeholder">Nothing to export yet.</span>';
       latexView.textContent = ''; cleanView.textContent = ''; renderChain(); return;
     }
     let ok = L ? renderTex(stage, L.tagged) : false;
     if (!ok) ok = renderTex(stage, tex);
     if (!ok && mjReady()) setStatus('That LaTeX has an error. Fix the equation input and submit again.', 'err');
-    renderTex(exportPrev, tex);
     latexView.innerHTML = L ? L.html : esc(tex);
     cleanView.innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
     highlight();
@@ -1165,29 +1177,47 @@ footer { font-size: 0.82rem; color: var(--muted); }
     if (logCol) { try { await logCol.doc(id).delete(); } catch (e) { setStatus('Couldn\'t delete that entry.', 'err'); } return; }
     localLog = localLog.filter((e) => e.id !== id); saveLocal(); renderLog(localLog);
   }
+  let logList = [];
+  const picked = new Set(), seen = new Set();
+  const msOf = (e) => e.clean || (() => { try { return Layers.plainText(Layers.build(e.latex).spokenHtml); } catch (x) { return ''; } })();
   function renderLog(list) {
+    logList = list.slice().sort((a, b) => a.ts - b.ts);          // Equation 1 = first saved
+    list.forEach((e) => { if (!seen.has(e.id)) { seen.add(e.id); picked.add(e.id); } });   // new saves start checked
+    [...picked].forEach((id) => { if (!list.some((e) => e.id === id)) picked.delete(id); });
     entriesEl.textContent = '';
     $('logCount').textContent = list.length; $('logCount').setAttribute('aria-label', list.length + ' saved equation' + (list.length === 1 ? '' : 's'));
-    if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p>'; return; }
-    for (const e of list) {
-      const row = document.createElement('div'); row.className = 'entry';
-      const left = document.createElement('div'); left.style.cssText = 'min-width:0;display:grid;gap:4px';
-      const eq = document.createElement('div'); eq.className = 'eq'; renderTex(eq, e.latex, false);
-      const said = document.createElement('div'); said.className = 'said'; said.textContent = '“' + e.input + '”';
-      const code = document.createElement('code'); code.textContent = e.latex;
-      const meta = document.createElement('div'); meta.className = 'meta';
-      meta.textContent = new Date(e.ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-      const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = (e.source === 'voice' ? 'voice · ' : '') + (e.method || 'rules'); meta.appendChild(tag);
-      left.append(eq, said, code, meta);
-      const acts = document.createElement('div'); acts.className = 'acts';
-      const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Open';
-      open.onclick = () => { spoken.value = e.input; setLatex(e.latex); chatNewEquation(); go('workspace', true); setStatus('Loaded from log.'); };
-      const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Delete'; del.setAttribute('aria-label', 'Delete entry: ' + e.input);
+    if (!list.length) { entriesEl.innerHTML = '<p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p>'; updatePicks(); return; }
+    logList.forEach((e, i) => {
+      const n = i + 1, ms = msOf(e);
+      const row = el('div', 'entry'); row.dataset.id = e.id;
+      const pick = el('label', 'eq-pick'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = picked.has(e.id);
+      cb.setAttribute('aria-label', 'Select equation ' + n + ': ' + ms);
+      cb.onchange = () => { if (cb.checked) picked.add(e.id); else picked.delete(e.id); updatePicks(); };
+      pick.append(cb, el('span', null, 'Select'));
+      const main = el('div', 'eq-main'); const num = el('span', 'eq-num', String(n)); num.setAttribute('aria-hidden', 'true');
+      const body = el('div', 'eq-body');
+      const eq = el('div', 'eq'); renderTex(eq, e.latex, false);
+      body.append(el('span', 'label', 'Equation ' + n), eq, el('span', 'ms', ms));
+      main.append(num, body);
+      const acts = el('div', 'acts');
+      const open = el('button', 'small', 'Open'); open.type = 'button'; open.setAttribute('aria-label', 'Open equation ' + n + ' in the workspace');
+      open.onclick = () => { spoken.value = e.input || ''; setLatex(e.latex); savedLatex = e.latex; chatNewEquation(); go('workspace', true); setStatus('Opened equation ' + n + '.'); };
+      const del = el('button', 'small', 'Delete'); del.type = 'button'; del.setAttribute('aria-label', 'Delete equation ' + n);
       del.onclick = () => removeLog(e.id);
       acts.append(open, del);
-      row.append(left, acts); entriesEl.appendChild(row);
-    }
+      row.append(pick, main, acts); entriesEl.appendChild(row);
+    });
+    updatePicks();
   }
+  const pickedList = () => logList.map((e, i) => ({ e, n: i + 1 })).filter((x) => picked.has(x.e.id));
+  function updatePicks() {
+    const k = pickedList().length, all = $('pickAll');
+    $('pickCount').textContent = k + ' of ' + logList.length + ' selected';
+    all.checked = !!logList.length && k === logList.length; all.indeterminate = k > 0 && k < logList.length; all.disabled = !logList.length;
+    ['png', 'svg', 'copy', 'copyClean', 'printSel'].forEach((id) => { $(id).disabled = !k; });
+    entriesEl.querySelectorAll('.entry').forEach((r) => r.classList.toggle('is-sel', picked.has(r.dataset.id)));
+  }
+  $('pickAll').onchange = (ev) => { logList.forEach((e) => ev.target.checked ? picked.add(e.id) : picked.delete(e.id)); renderLog(logList); };
 
   /* ---------- Voice control: one mic for dictation and commands ---------- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1383,12 +1413,12 @@ footer { font-size: 0.82rem; color: var(--muted); }
   }
 
   /* ---------- Export and copy ---------- */
-  function plainSvg() {
-    if (!mjReady() || !current.latex.trim()) return null;
+  function plainSvg(latex) {
+    if (!mjReady() || !latex || !latex.trim()) return null;
     const holder = document.createElement('div');
     holder.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:' + getComputedStyle(stage.querySelector('mjx-container') || stage).fontSize;
     document.body.appendChild(holder);
-    const node = MathJax.tex2svg(current.latex, { display: true });
+    const node = MathJax.tex2svg(latex, { display: true });
     holder.appendChild(node);
     const svg = node.querySelector('svg'); const box = svg.getBoundingClientRect();
     const clone = svg.cloneNode(true);
@@ -1399,35 +1429,49 @@ footer { font-size: 0.82rem; color: var(--muted); }
     clone.setAttribute('width', box.width); clone.setAttribute('height', box.height);
     return { clone, box };
   }
-  async function saveFile(filename, blob) {
+  async function saveFile(filename, blob, quiet) {
     if (!downloads) {
-      if (window.claude) { setStatus('Saving files isn\'t available in this view. Copy the LaTeX instead.', 'err'); return; }
+      if (window.claude) { setStatus('Saving files isn\'t available in this view. Copy the LaTeX instead.', 'err'); return false; }
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000); setStatus('Saved ' + filename + '.', 'ok'); return;
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000); if (!quiet) setStatus('Saved ' + filename + '.', 'ok'); return true;
     }
-    try { await downloads.save({ filename, data: blob }); setStatus('Saved ' + filename + '.', 'ok'); }
-    catch (e) { if (e && e.code !== 'declined' && e.code !== 'cancelled') setStatus('Couldn\'t save: ' + (e.message || e.code), 'err'); }
+    try { await downloads.save({ filename, data: blob }); if (!quiet) setStatus('Saved ' + filename + '.', 'ok'); return true; }
+    catch (e) { if (e && e.code !== 'declined' && e.code !== 'cancelled') setStatus('Couldn\'t save: ' + (e.message || e.code), 'err'); return false; }
   }
-  $('svg').onclick = () => {
-    const r = plainSvg(); if (!r) return setStatus('Submit an equation first.', 'err');
-    saveFile('equation.svg', new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' }));
-  };
-  $('png').onclick = () => {
-    const r = plainSvg(); if (!r) return setStatus('Submit an equation first.', 'err');
-    const scale = 4, pad = 24, { box } = r;
-    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' }));
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = (box.width + pad * 2) * scale; c.height = (box.height + pad * 2) * scale;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = getComputedStyle(stage).backgroundColor || '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(img, pad * scale, pad * scale, box.width * scale, box.height * scale);
-      URL.revokeObjectURL(url);
-      c.toBlob((b) => b && saveFile('equation.png', b), 'image/png');
-    };
-    img.onerror = () => setStatus('Couldn\'t draw the PNG.', 'err');
-    img.src = url;
+  const svgBlob = (r) => new Blob([new XMLSerializer().serializeToString(r.clone)], { type: 'image/svg+xml' });
+  function pngBlob(r) {
+    return new Promise((res) => {
+      const scale = 4, pad = 24, { box } = r, url = URL.createObjectURL(svgBlob(r)), img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = (box.width + pad * 2) * scale; c.height = (box.height + pad * 2) * scale;
+        const ctx = c.getContext('2d'); ctx.fillStyle = getComputedStyle(stage).backgroundColor || '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, pad * scale, pad * scale, box.width * scale, box.height * scale); URL.revokeObjectURL(url);
+        c.toBlob((b) => res(b), 'image/png');
+      };
+      img.onerror = () => res(null); img.src = url;
+    });
+  }
+  async function saveImages(kind) {
+    const items = pickedList(); let ok = 0;
+    for (const { e, n } of items) {
+      const r = plainSvg(e.latex); if (!r) continue;
+      const blob = kind === 'svg' ? svgBlob(r) : await pngBlob(r);
+      if (blob && await saveFile('equation-' + n + '.' + kind, blob, true)) ok++;
+      await new Promise((t) => setTimeout(t, 250));   // browsers drop rapid back-to-back downloads
+    }
+    if (ok) setStatus('Saved ' + ok + ' ' + kind.toUpperCase() + (ok === 1 ? '' : 's') + '.', 'ok');
+  }
+  $('svg').onclick = () => saveImages('svg');
+  $('png').onclick = () => saveImages('png');
+  $('printSel').onclick = () => {
+    const items = pickedList(); if (!items.length) return;
+    const area = $('printArea'); area.textContent = '';
+    area.appendChild(el('h1', null, 'Speak Math · ' + items.length + ' equation' + (items.length === 1 ? '' : 's')));
+    items.forEach(({ e, n }) => {
+      const row = el('div', 'pe'); const eq = el('div'); renderTex(eq, e.latex, false);
+      row.append(el('span', 'pn', n + '.'), eq, el('span', 'pm', msOf(e))); area.appendChild(row);
+    });
+    window.print();
   };
   async function copyText(text, label, fallbackEl) {
     try { await navigator.clipboard.writeText(text); setStatus(label + ' copied.', 'ok'); }
@@ -1436,8 +1480,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
       setStatus('Press Ctrl+C or ⌘C to copy.');
     }
   }
-  $('copy').onclick = () => copyText(current.latex, 'LaTeX', latexEl.hidden ? null : latexEl);
-  $('copyClean').onclick = () => copyText(L ? Layers.plainText(L.spokenHtml) : '', 'Clean text');
+  $('copy').onclick = () => copyText(pickedList().map((x) => x.e.latex).join('\n'), 'LaTeX for ' + pickedList().length + ' equation(s)');
+  $('copyClean').onclick = () => copyText(pickedList().map((x) => x.n + '. ' + msOf(x.e)).join('\n'), 'MathSpeak for ' + pickedList().length + ' equation(s)');
 
   /* ---------- Navigate & edit workspace ---------- */
   let chat = [], chatFor = null;

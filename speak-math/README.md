@@ -10,7 +10,7 @@ A retractable left sidebar switches between three pages:
 
 - **Math Workspace**: split screen. Left: equation input and the change box for the selected layer. Right, top to bottom: Image, Text · LaTeX and Clean text equation, with the layer path pinned along the bottom. Navigation is always on: click any part or focus a view and use ↑ out, ↓ in, ← → neighbors. Controls live in a MathVoice-style command bar at the bottom right, and every button is also a voice command: **Dictation** (“Start listening”, “Pause”, “Done”, “Clear”), **Edit the math** (“Select that”, “Out a layer”, “In a layer”, “Previous”, “Next”, “Delete”) **Refine** (“Say a change”, “Refine with AI”, “Refine manually”) and **Export** (“Save” adds the current equation to the Export list; nothing is saved automatically). Once the mic is on it stays on for commands, so the page can be used hands-free.
 - **MathSpeak Help**: how it works, scope cues to say, and the navigation keys.
-- **Export**: save the current equation as PNG or SVG, copy LaTeX or clean text, and the list of saved equations.
+- **Export**: the saved equations, numbered in save order, each shown as an image with its MathSpeak text and a checkbox. Check several (or Select all) and export them together: Save PNGs, Save SVGs, Copy LaTeX, Copy MathSpeak, or Print / PDF.
 
 ## Claude conversion
 
