@@ -116,9 +116,10 @@ kbd { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(-
 .pnl-h h2 { font-size: 14px; font-weight: 600; }
 .ws-grid { display: grid; grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr); gap: 16px;
   height: calc(100vh - var(--top-h) - 40px); height: calc(100dvh - var(--top-h) - 40px); min-height: 520px; }
-.ws-left { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; min-height: 0; min-width: 0; }
+.ws-left { display: grid; grid-template-rows: auto auto; align-content: start; gap: 16px; min-height: 0; min-width: 0; }
 .in-body { padding: 14px 16px; display: grid; gap: 10px; }
-.chat-pnl { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.chat-pnl { display: grid; }
+.chat-pnl .composer { border-top: 0; }
 
 .msgs { overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 .msg { max-width: 92%; display: grid; gap: 5px; min-width: 0; }
@@ -212,8 +213,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
 @media (max-width: 960px) {
   .ws-grid { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
-  .ws-left { grid-template-rows: auto auto; }
-  .chat-pnl .msgs { max-height: 40vh; }
   .ws-right { order: -1; grid-template-rows: auto auto; }
   .outs { overflow: visible; }
   .how { grid-template-columns: repeat(2, minmax(0, 1fr)); } .how div:nth-child(3) { border-left: 0; } .how div:nth-child(n+3) { border-top: 1px solid var(--line); }
@@ -262,14 +261,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
               <div class="in-body">
                 <label class="sr" for="spoken">Equation, in words or LaTeX</label>
                 <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
-                <div class="examples" aria-label="Examples">
-                  <button type="button" data-ex="integral from zero to one of x squared d x">integral</button>
-                  <button type="button" data-ex="x equals negative b plus or minus the square root of b squared minus four a c end root all over two a">quadratic formula</button>
-                  <button type="button" data-ex="sum from i equals one to n of i squared">summation</button>
-                  <button type="button" data-ex="limit as x approaches zero of sine x over x">limit</button>
-                  <button type="button" data-ex="\frac{d}{dx}\int_{0}^{x^{2}}\cos\left(t^{3}\right)dt">LaTeX: FTC</button>
-                  <button type="button" data-ex="\begin{vmatrix} 2-\lambda & 1 \\ 1 & 2-\lambda \end{vmatrix}=\left(2-\lambda\right)^{2}-1=0">LaTeX: eigenvalues</button>
-                </div>
                 <div class="row">
                   <button type="button" class="mic" id="mic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="mic-text">Start dictation</span></button>
                   <button type="button" class="primary" id="submit">Submit</button>
@@ -292,9 +283,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
               </div>
             </section>
 
-            <section class="pnl chat-pnl" aria-labelledby="chat-title">
-              <div class="pnl-h"><h2 id="chat-title">Edit history</h2><button type="button" class="small" id="wsClear">Start over</button></div>
-              <div class="msgs" id="msgs" aria-live="polite"></div>
+            <section class="pnl chat-pnl" aria-label="Edit the selected layer">
               <form class="composer" id="wsForm">
                 <div class="scope-row">
                   <span class="label">Editing</span>
@@ -314,31 +303,21 @@ footer { font-size: 0.82rem; color: var(--muted); }
             <div class="outs">
               <section class="out" aria-labelledby="img-label">
                 <div class="out-h"><h3 class="label" id="img-label">Image</h3></div>
-                <div class="stage" id="stage" tabindex="0" aria-describedby="nav-help"><span class="placeholder">Your equation will appear here.</span></div>
+                <div class="stage" id="stage" tabindex="0"><span class="placeholder">Your equation will appear here.</span></div>
               </section>
               <section class="out" aria-labelledby="txt-label">
-                <div class="out-h">
-                  <h3 class="label" id="txt-label">Text · LaTeX</h3>
-                  <button type="button" class="small" id="editLatex" aria-pressed="false">Edit LaTeX</button>
-                </div>
-                <div class="vw tex" id="latexView" tabindex="0" aria-describedby="nav-help"></div>
+                <div class="out-h"><h3 class="label" id="txt-label">Text · LaTeX</h3></div>
+                <div class="vw tex" id="latexView" tabindex="0"></div>
                 <label class="sr" for="latex">LaTeX source</label>
                 <textarea id="latex" spellcheck="false" hidden></textarea>
-                <span class="hint" id="latex-hint" hidden>Edit the LaTeX and the image updates. Press Done to go back to navigating.</span>
               </section>
               <section class="out" aria-labelledby="clean-label">
-                <div class="out-h">
-                  <h3 class="label" id="clean-label">Clean text equation</h3>
-                  <button type="button" class="small" id="speak">Read aloud</button>
-                </div>
-                <div class="vw clean" id="cleanView" tabindex="0" aria-describedby="nav-help"></div>
+                <div class="out-h"><h3 class="label" id="clean-label">Clean text equation</h3></div>
+                <div class="vw clean" id="cleanView" tabindex="0"></div>
               </section>
             </div>
 
-            <section class="pathbar" aria-labelledby="path-title">
-              <div class="out-h"><h3 class="label" id="path-title">Layer path</h3><span class="hint" id="nav-help">Click any part, or focus a view and use the arrow keys.</span></div>
-              <ol class="path" id="wsPath"></ol>
-              <div class="selbox" id="wsSel"></div>
+            <section class="pathbar" aria-label="Move between layers">
               <div class="navpad" role="group" aria-label="Move between layers">
                 <button type="button" data-mv="ArrowUp">↑ Out a layer</button>
                 <button type="button" data-mv="ArrowDown">↓ In a layer</button>
@@ -993,7 +972,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     }
     let ok = L ? renderTex(stage, L.tagged) : false;
     if (!ok) ok = renderTex(stage, tex);
-    if (!ok && mjReady()) setStatus('That LaTeX has an error. Press Edit LaTeX to fix it.', 'err');
+    if (!ok && mjReady()) setStatus('That LaTeX has an error. Fix the equation input and submit again.', 'err');
     renderTex(exportPrev, tex);
     latexView.innerHTML = L ? L.html : esc(tex);
     cleanView.innerHTML = L ? L.spokenHtml : '<span class="hint">Couldn\'t read this LaTeX into layers.</span>';
@@ -1080,14 +1059,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
     v.addEventListener('focus', () => { if (L && sel == null) select(L.root.id); });
   });
 
-  /* LaTeX box: navigable tagged view by default; Edit LaTeX swaps in the source textarea */
-  const editBtn = $('editLatex');
-  function setEditing(on) {
-    latexEl.hidden = !on; $('latex-hint').hidden = !on; latexView.hidden = on;
-    editBtn.textContent = on ? 'Done' : 'Edit LaTeX'; editBtn.setAttribute('aria-pressed', String(on));
-    if (on) { latexEl.value = current.latex; latexEl.focus(); } else latexView.focus();
-  }
-  editBtn.onclick = () => setEditing(latexEl.hidden);
 
   /* ---------- Convert ---------- */
   async function convert() {
@@ -1246,11 +1217,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
   }
   $('copy').onclick = () => copyText(current.latex, 'LaTeX', latexEl.hidden ? null : latexEl);
   $('copyClean').onclick = () => copyText(L ? Layers.plainText(L.spokenHtml) : '', 'Clean text');
-  $('speak').onclick = () => {
-    if (!('speechSynthesis' in window)) return setStatus('Read aloud isn\'t supported in this browser.', 'err');
-    const text = L ? Layers.plainText(L.spokenHtml) : ''; if (!text) return;
-    speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  };
 
   /* ---------- Navigate & edit workspace ---------- */
   let chat = [], chatFor = null, wsRec = null, wsListening = false;
@@ -1265,8 +1231,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
   }
 
   function renderWsNav(chain) {
-    const ol = $('wsPath'), box = $('wsSel'); ol.textContent = ''; box.textContent = '';
-    if (!L) { box.textContent = 'Couldn\'t read this LaTeX into layers. Press Edit LaTeX to fix it.'; return; }
+    const ol = $('wsPath') || document.createElement('ol'), box = $('wsSel') || document.createElement('div'); ol.textContent = ''; box.textContent = '';
+    if (!L) { box.textContent = 'Couldn\'t read this LaTeX into layers. Fix the equation input and submit again.'; return; }
     const c = chain && chain.length ? chain : [L.root];
     c.forEach((n, pos) => {
       const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
@@ -1315,6 +1281,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const c = el('span', 'scope-chip'); const s = el('span', 'sw'); s.style.background = scope.color; c.append(s, document.createTextNode(scope.name)); return c;
   }
   function renderChat() {
+    if (!msgsEl) return;
     msgsEl.textContent = '';
     for (const m of chat) {
       const wrap = el('div', 'msg ' + (m.role === 'user' ? 'user' : m.role === 'sys' ? 'sys' : 'bot'));
@@ -1360,7 +1327,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
   $('wsForm').addEventListener('submit', (e) => { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; });
   wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; } });
   wsInput.addEventListener('input', () => { if (!wsListening) lastVoice = false; });
-  $('wsClear').onclick = () => { seedChat(); renderChat(); };
   $('wsScope').onclick = () => { if (L) select(L.root.id); };
   $('wsEditThis').onclick = () => { wsInput.focus(); };
   document.querySelectorAll('.navpad [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
