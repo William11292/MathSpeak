@@ -175,9 +175,23 @@ mjx-assistive-mml { position: absolute !important; top: 0; left: 0; width: 1px !
 .selbox code { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
 .selbox .inside { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
 .selbox .inside button { font-weight: 500; font-size: 12px; padding: 2px 9px; display: inline-flex; gap: 6px; align-items: center; border-width: 1px; border-color: var(--line); }
-.navpad { display: flex; gap: 6px; flex-wrap: wrap; }
-.navpad button { font-size: 12.5px; padding: 6px 11px; }
-.navpad button.primary { margin-left: auto; }
+/* Command bar (MathVoice style): each button shows the phrase to say */
+.cmdbar { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: flex-start; }
+.cg { display: grid; gap: 6px; min-width: 0; }
+.cg-h { display: flex; align-items: center; gap: 8px; }
+.cbtns { display: flex; gap: 6px; flex-wrap: wrap; }
+.cbtns button { font-size: 12.5px; padding: 6px 11px; display: inline-flex; align-items: center; gap: 6px; }
+.cbtns button.on { border-color: var(--rec); color: var(--rec); }
+.mode { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.mode .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.mode.live { color: var(--rec); border-color: var(--rec); }
+.mode.live .dot { background: var(--rec); animation: pulse 1s infinite; }
+.mode.paused { color: var(--ink); border-color: var(--ink); }
+textarea.target { outline: 2px solid var(--rec); outline-offset: 1px; }
+.side-ai { padding: 22px 18px 0; display: grid; gap: 8px; }
+.side-ai select { width: 100%; }
+.side-ai .apikey .row { display: grid; gap: 6px; }
+.side-ai .apikey input { width: 100%; }
 
 /* ---------- Help and Export pages ---------- */
 .page-head { padding: 6px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 18px; display: grid; gap: 4px; max-width: 1100px; }
@@ -222,9 +236,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
   .app { grid-template-columns: minmax(0, 1fr); }
   .side { position: fixed; inset: 0 auto 0 0; width: 250px; z-index: 20; box-shadow: 4px 0 0 var(--line-strong); }
   .view { padding: 12px; }
-  .navpad button.primary { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { button.mic[aria-pressed="true"] .dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { button.mic[aria-pressed="true"] .dot, .mode.live .dot { animation: none; } }
 </style>
 
 <div class="app">
@@ -237,6 +250,23 @@ footer { font-size: 0.82rem; color: var(--muted); }
         <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Help</button>
         <button type="button" data-page="export"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>Export<span class="badge" id="logCount" aria-label="0 saved equations">0</span></button>
       </nav>
+    </div>
+    <div class="side-ai">
+      <p class="eyebrow">AI conversion</p>
+      <label class="sr" for="engine">Converter</label>
+      <select id="engine">
+        <option value="claude">Convert with Claude</option>
+        <option value="rules">Built-in rules only</option>
+      </select>
+      <details class="apikey" id="apikey" hidden>
+        <summary id="apikey-sum">Use your own Claude API key</summary>
+        <div class="row">
+          <label for="apikey-in" class="hint">Anthropic API key</label>
+          <input id="apikey-in" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+          <div class="row"><button type="button" class="small" id="apikey-save">Save</button><button type="button" class="small" id="apikey-clear">Remove</button></div>
+        </div>
+        <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
+      </details>
     </div>
     <div class="side-foot">
       <b>Move by keyboard</b>
@@ -261,25 +291,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
               <div class="in-body">
                 <label class="sr" for="spoken">Equation, in words or LaTeX</label>
                 <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
-                <div class="row">
-                  <button type="button" class="mic" id="mic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="mic-text">Start dictation</span></button>
-                  <button type="button" class="primary" id="submit">Submit</button>
-                  <label class="sr" for="engine">Converter</label>
-                  <select id="engine">
-                    <option value="claude">Convert with Claude</option>
-                    <option value="rules">Built-in rules only</option>
-                  </select>
-                </div>
-                <details class="apikey" id="apikey" hidden>
-                  <summary id="apikey-sum">Use your own Claude API key</summary>
-                  <div class="row">
-                    <label for="apikey-in">Anthropic API key</label>
-                    <input id="apikey-in" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
-                    <button type="button" class="small" id="apikey-save">Save</button>
-                    <button type="button" class="small" id="apikey-clear">Remove</button>
-                  </div>
-                  <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
-                </details>
               </div>
             </section>
 
@@ -290,11 +301,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
                   <button type="button" class="scope-btn" id="wsScope"><span class="sw" id="wsScopeSw"></span><span id="wsScopeText">Whole equation</span></button>
                 </div>
                 <label class="sr" for="wsInput">Edit request</label>
-                <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say or type a change, like “make the exponent 3”"></textarea>
-                <div class="row" style="justify-content:space-between">
-                  <button type="button" class="mic" id="wsMic" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="wsMicText">Dictate</span></button>
-                  <button type="submit" class="primary">Send</button>
-                </div>
+                <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say “Say a change”, then the change, like “make the exponent 3”. Then “Refine with AI”."></textarea>
               </form>
             </section>
           </div>
@@ -317,13 +324,34 @@ footer { font-size: 0.82rem; color: var(--muted); }
               </section>
             </div>
 
-            <section class="pathbar" aria-label="Move between layers">
-              <div class="navpad" role="group" aria-label="Move between layers">
-                <button type="button" data-mv="ArrowUp">↑ Out a layer</button>
-                <button type="button" data-mv="ArrowDown">↓ In a layer</button>
-                <button type="button" data-mv="ArrowLeft">← Previous</button>
-                <button type="button" data-mv="ArrowRight">→ Next</button>
-                <button type="button" class="primary" id="wsEditThis">Edit this layer</button>
+            <section class="pathbar cmdbar" aria-label="Voice commands">
+              <div class="cg" role="group" aria-labelledby="cg-dict">
+                <div class="cg-h"><h3 class="label" id="cg-dict">Dictation</h3><span class="mode" id="vMode"><span class="dot" aria-hidden="true"></span><span id="vModeText">Mic off</span></span></div>
+                <div class="cbtns">
+                  <button type="button" data-cmd="start" id="vStart"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg><span id="vStartText">“Start listening”</span></button>
+                  <button type="button" data-cmd="pause">“Pause”</button>
+                  <button type="button" data-cmd="done">“Done”</button>
+                  <button type="button" data-cmd="clear">“Clear”</button>
+                </div>
+              </div>
+              <div class="cg" role="group" aria-labelledby="cg-edit">
+                <h3 class="label" id="cg-edit">Edit the math</h3>
+                <div class="cbtns">
+                  <button type="button" data-cmd="selthat">“Select that”</button>
+                  <button type="button" data-mv="ArrowUp">↑ “Out a layer”</button>
+                  <button type="button" data-mv="ArrowDown">↓ “In a layer”</button>
+                  <button type="button" data-mv="ArrowLeft">← “Previous”</button>
+                  <button type="button" data-mv="ArrowRight">→ “Next”</button>
+                  <button type="button" data-cmd="del">“Delete”</button>
+                </div>
+              </div>
+              <div class="cg" role="group" aria-labelledby="cg-ref">
+                <h3 class="label" id="cg-ref">Refine</h3>
+                <div class="cbtns">
+                  <button type="button" data-cmd="change">“Say a change”</button>
+                  <button type="button" data-cmd="ai">“Refine with AI”</button>
+                  <button type="button" data-cmd="manual" id="vManual">“Refine manually”</button>
+                </div>
               </div>
               <div class="sr" id="announce" aria-live="polite"></div>
             </section>
@@ -356,6 +384,21 @@ footer { font-size: 0.82rem; color: var(--muted); }
               <li><b>“to the power of … end exponent”</b><span>A longer exponent</span></li>
               <li><b>“integral from a to b of … d x”</b><span>Definite integral with limits</span></li>
               <li><b>“sum from i equals 1 to n of …”</b><span>Summation with limits</span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="voice-title">
+            <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">Say a command on its own, with a short pause before it</span></div>
+            <ul class="say-list">
+              <li><b>“Start listening”</b><span>Turn the mic on and dictate a new equation</span></li>
+              <li><b>“Pause”</b><span>Stop adding words; the mic keeps listening for commands</span></li>
+              <li><b>“Done”</b><span>Convert what you said (or apply the change you said)</span></li>
+              <li><b>“Clear”</b><span>Empty the box you are dictating into</span></li>
+              <li><b>“Select that”</b><span>Read back the selected layer and edit only that part</span></li>
+              <li><b>“Out a layer”, “In a layer”, “Previous”, “Next”</b><span>Move around the equation</span></li>
+              <li><b>“Delete”</b><span>Remove the selected layer</span></li>
+              <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
+              <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
+              <li><b>“Stop listening”</b><span>Turn the mic off</span></li>
             </ul>
           </section>
           <section class="pnl" aria-labelledby="keys-title">
@@ -409,6 +452,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   let L = null, sel = null;
   const live = () => !!L;
   const exportPrev = $('exportPrev');
+  const wsInput = $('wsInput'), msgsEl = $('msgs');
   let sample = null, downloads = null, logCol = null, localLog = [];
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const setStatus = (msg, kind) => { statusEl.textContent = msg || ''; statusEl.className = 'status' + (kind ? ' ' + kind : ''); };
@@ -959,8 +1003,9 @@ footer { font-size: 0.82rem; color: var(--muted); }
     try { L = latex.trim() ? Layers.build(latex) : null; } catch (e) { L = null; }
     if (!opts.fromEditor) latexEl.value = latex;
     if (!L) sel = null;
-    else if (sel == null || !L.byId.has(sel)) sel = L.root.id;
+    else if (sel == null || !L.byId.has(sel) || !opts.fromEditor) sel = L.root.id;   // a new equation starts at the whole equation
     renderResults();
+    if (typeof updateBar === 'function') try { updateBar(); } catch (e) {}
   }
 
   function renderResults() {
@@ -1064,7 +1109,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   async function convert() {
     const text = spoken.value.trim();
     if (!text) { setStatus('Type or dictate an equation first.', 'err'); spoken.focus(); return; }
-    const btn = $('submit'); btn.disabled = true;
+    vBusy = true; updateBar();
     let latex = '', method = 'rules', note = '';
     try {
       if (looksLikeLatex(text)) { latex = text; method = 'latex'; }
@@ -1090,7 +1135,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       if (statusEl.className !== 'status err') setStatus(note || (method === 'claude' ? 'Converted with Claude and logged.' : method === 'latex' ? 'Rendered your LaTeX and logged it.' : 'Converted with the built-in rules and logged.'), note ? 'err' : 'ok');
       await addLog({ input: text, latex, clean, method, source: current.source, ts: Date.now() });
       current.source = 'typed';
-    } finally { btn.disabled = false; }
+    } finally { vBusy = false; updateBar(); }
   }
   function markNoClaude() {
     const s = $('engine'); s.value = 'rules'; s.options[0].disabled = true; s.options[0].textContent = 'Claude (not available here)';
@@ -1132,34 +1177,184 @@ footer { font-size: 0.82rem; color: var(--muted); }
     }
   }
 
-  /* ---------- Dictation ---------- */
+  /* ---------- Voice control: one mic for dictation and commands ---------- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let rec = null, listening = false, base = '';
-  const micBtn = $('mic');
-  if (!SR) { micBtn.disabled = true; $('mic-text').textContent = 'Dictation not supported'; }
-  micBtn.onclick = () => {
-    if (!SR) return;
-    if (listening) { rec && rec.stop(); return; }
+  let rec = null, micOn = false, vMode = 'off', vBusy = false, base = '';   // vMode: off | equation | change | paused
+  let listening = false;  // true while words are being added to a box
+  const CMDS = [['stop listening', 'stop'], ['turn off the mic', 'stop'], ['start listening', 'start'], ['resume', 'start'], ['select that', 'selthat'],
+    ['refine with ai', 'ai'], ['refine with a i', 'ai'], ['refine with a.i.', 'ai'], ['refine manually', 'manual'], ['say a change', 'change'], ['make a change', 'change'],
+    ['out a layer', 'out'], ['in a layer', 'in'], ['go out', 'out'], ['go in', 'in'], ['out', 'out'], ['in', 'in'],
+    ['previous', 'left'], ['left', 'left'], ['back', 'left'], ['next', 'right'], ['right', 'right'],
+    ['pause', 'pause'], ['done', 'done'], ['stop', 'done'], ['clear', 'clear'], ['delete', 'del'], ['delete that', 'del']];
+  const TRAIL = ['stop listening', 'pause', 'done', 'stop', 'clear'];   // commands also caught at the end of dictated words
+  const norm = (t) => t.toLowerCase().replace(/[,!?;:]/g, ' ').replace(/\.(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+  function parseChunk(t) {
+    const n = norm(t); const whole = CMDS.find((c) => c[0] === n);
+    if (whole) return { text: '', cmd: whole[1] };
+    for (const p of TRAIL) if (n.endsWith(' ' + p)) {
+      const words = t.trim().split(/\s+/); return { text: words.slice(0, words.length - p.split(' ').length).join(' '), cmd: CMDS.find((c) => c[0] === p)[1] };
+    }
+    return { text: t, cmd: null };
+  }
+  const targetBox = () => (vMode === 'change' ? wsInput : spoken);
+  function addWords(text) {
+    const box = targetBox(); base = (base ? base + ' ' : '') + text.trim(); box.value = base;
+  }
+  function startRec() {
+    if (!SR) { setStatus('Voice control needs Chrome or Edge. Type instead.', 'err'); return false; }
+    if (micOn) return true;
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
-    base = ''; spoken.value = '';
     rec.onresult = (ev) => {
-      let fin = '', interim = '';
+      let interim = '';
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
         const t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) fin += t + ' '; else interim += t;
+        if (ev.results[i].isFinal) handleFinal(t); else interim += t;
       }
-      base += fin; spoken.value = (base + interim).trim();
+      if (listening && interim) targetBox().value = (base ? base + ' ' : '') + interim.trim();
     };
     rec.onerror = (ev) => {
-      const msg = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
-        ? 'The microphone is blocked in this view. Open the page as a standalone file in Chrome, or type instead.'
-        : ev.error === 'no-speech' ? 'No speech heard. Try again closer to the mic.' : 'Dictation stopped: ' + ev.error;
-      setStatus(msg, 'err');
+      if (ev.error === 'no-speech' || ev.error === 'aborted') return;
+      const blocked = ev.error === 'not-allowed' || ev.error === 'service-not-allowed';
+      setStatus(blocked ? 'The microphone is blocked in this view. Open the page as a standalone file in Chrome, or type instead.' : 'Voice control stopped: ' + ev.error, 'err');
+      if (blocked) { micOn = false; setMode('off'); }
     };
-    rec.onend = () => { listening = false; micBtn.setAttribute('aria-pressed', 'false'); $('mic-text').textContent = 'Start dictation'; if (spoken.value.trim()) setStatus('Dictation done. Check the text, then press Submit.'); };
-    try { rec.start(); listening = true; current.source = 'voice'; micBtn.setAttribute('aria-pressed', 'true'); $('mic-text').textContent = 'Stop dictation'; setStatus('Listening… say the equation, then press Stop.'); }
-    catch (e) { setStatus('Couldn\'t start dictation: ' + e.message, 'err'); }
-  };
+    rec.onend = () => { if (micOn) { try { rec.start(); } catch (e) { micOn = false; setMode('off'); } } };   // Chrome stops after silence; keep going
+    try { rec.start(); micOn = true; return true; } catch (e) { setStatus('Couldn\'t start the mic: ' + e.message, 'err'); return false; }
+  }
+  function stopRec() { micOn = false; try { rec && rec.stop(); } catch (e) {} setMode('off'); }
+  function handleFinal(t) {
+    const { text, cmd } = parseChunk(t);
+    if (text.trim()) {
+      if (listening) addWords(text);
+      else if (!cmd) setStatus('“' + text.trim() + '” isn\'t a command. Say “Start listening” to dictate, or “Say a change”.', 'err');
+    }
+    if (cmd) runCmd(cmd, true);
+  }
+  function setMode(m) {
+    vMode = m; listening = m === 'equation' || m === 'change';
+    spoken.classList.toggle('target', m === 'equation'); wsInput.classList.toggle('target', m === 'change');
+    const M = { off: 'Mic off', equation: 'Listening · equation', change: 'Listening · change', paused: 'Paused · commands only' };
+    $('vModeText').textContent = M[m]; $('vMode').className = 'mode' + (listening ? ' live' : m === 'paused' ? ' paused' : '');
+    updateBar();
+  }
+  const manualOpen = () => !latexEl.hidden;
+  function setManual(on) {
+    latexEl.hidden = !on; latexView.hidden = on;
+    $('vManual').textContent = on ? '“Done editing”' : '“Refine manually”'; $('vManual').setAttribute('aria-pressed', String(on));
+    if (on) { latexEl.value = current.latex; latexEl.focus(); setStatus('Editing the LaTeX by hand. Say or press “Done” when finished.'); }
+    else { latexView.focus({ preventScroll: true }); }
+    updateBar();
+  }
+  function updateBar() {
+    const has = !!L, box = targetBox();
+    const B = (c) => document.querySelector('.cmdbar [data-cmd="' + c + '"]');
+    $('vStartText').textContent = listening ? '“Stop listening”' : vMode === 'paused' ? '“Resume”' : '“Start listening”';
+    $('vStart').classList.toggle('on', listening); $('vStart').setAttribute('aria-pressed', String(micOn));
+    B('pause').disabled = !listening;
+    B('done').disabled = vBusy || !(manualOpen() || box.value.trim() || (vMode === 'change' && has));
+    B('clear').disabled = !box.value.trim();
+    B('selthat').disabled = !has; B('del').disabled = !has;
+    B('change').disabled = !has; B('ai').disabled = vBusy || !has; B('manual').disabled = !current.latex.trim() && !manualOpen();
+  }
+  function runCmd(c, byVoice) {
+    switch (c) {
+      case 'start':
+        if (listening && !byVoice) { stopRec(); setStatus('Mic off.'); return; }
+        if (!startRec()) return;
+        if (vMode === 'paused' && base) { setMode(lastTarget); setStatus('Listening again. New words are added to the end.'); return; }
+        base = ''; spoken.value = ''; current.source = 'voice'; lastTarget = 'equation'; setMode('equation');
+        setStatus('Listening for the equation. Say “Done” when finished.'); return;
+      case 'stop': stopRec(); setStatus('Mic off.'); return;
+      case 'pause':
+        if (!listening) return; lastTarget = vMode; setMode('paused');
+        setStatus('Paused. Words are no longer added. Say “Resume”, a command, or “Done”.'); return;
+      case 'done':
+        if (manualOpen()) { setManual(false); setStatus('LaTeX updated.', 'ok'); return; }
+        { const wasChange = vMode === 'change' || (vMode === 'paused' && lastTarget === 'change');
+          base = ''; if (micOn) setMode('paused'); else setMode('off');
+          if (wasChange) refineAI(); else convert(); }
+        return;
+      case 'clear': { const box = targetBox(); box.value = ''; base = ''; setStatus('Cleared.'); updateBar(); return; }
+      case 'selthat': selectThat(); return;
+      case 'del': deleteLayer(); return;
+      case 'out': move('ArrowUp'); return;
+      case 'in': move('ArrowDown'); return;
+      case 'left': move('ArrowLeft'); return;
+      case 'right': move('ArrowRight'); return;
+      case 'change':
+        if (!L) return;
+        if (byVoice || micOn) { if (!startRec()) return; base = ''; wsInput.value = ''; lastTarget = 'change'; setMode('change');
+          setStatus('Say the change for ' + scopeInfo().name + '. Then say “Refine with AI” or “Done”.'); }
+        else { wsInput.focus(); setStatus('Type the change for ' + scopeInfo().name + ', then press “Refine with AI”.'); }
+        return;
+      case 'ai': if (listening) { base = ''; setMode(micOn ? 'paused' : 'off'); } refineAI(); return;
+      case 'manual': setManual(!manualOpen()); return;
+    }
+  }
+  let lastTarget = 'equation';
+  document.querySelectorAll('.cmdbar [data-cmd]').forEach((b) => b.onclick = () => runCmd(b.dataset.cmd, false));
+  [spoken, wsInput].forEach((t) => t.addEventListener('input', updateBar));
+  if (!SR) { $('vStart').disabled = true; $('vStartText').textContent = 'Voice needs Chrome or Edge'; }
+
+  /* "Select that": confirm the selection, read it back, and scope edits to it */
+  function selectThat() {
+    if (!L) return;
+    if (sel == null) sel = L.root.id;
+    const n = L.byId.get(sel), say = Layers.plainText(L.speak(n)), sc = scopeInfo();
+    highlight();
+    setStatus('Selected ' + sc.name + ': “' + say + '”. Say “Delete”, or “Say a change”.', 'ok');
+    $('announce').textContent = 'Selected ' + sc.name + ': ' + say;
+  }
+
+  /* "Delete": remove the selected layer (and the operator next to it) from the tree, then rebuild the LaTeX */
+  function deleteLayer() {
+    if (!L || sel == null) return;
+    const n = L.byId.get(sel), p = L.parent(n), said = Layers.plainText(L.speak(n));
+    if (!p) { setLatex(''); setStatus('Deleted the whole equation.', 'ok'); return; }
+    const ph = () => ({ t: 'atom', k: 'sym', tex: '\\square', id: -1 });
+    const isOp = (k) => k && k.t === 'atom' && k.k === 'op';
+    if (p.t === 'row') {
+      const i = p.kids.indexOf(n);
+      if (isOp(p.kids[i - 1])) p.kids.splice(i - 1, 2);
+      else if (isOp(p.kids[i + 1])) p.kids.splice(i, 2);
+      else p.kids.splice(i, 1);
+      if (!p.kids.length) p.kids.push(ph());
+    } else if (p.t === 'script') {
+      if (p.sub === n) p.sub = null; else if (p.sup === n) p.sup = null; else p.base = ph();
+    } else if (p.t === 'sqrt' && p.idx === n) p.idx = null;
+    else if (p.t === 'matrix') { if (p.rows.length > 1) p.rows.splice(p.rows.indexOf(n), 1); else { setLatex(''); return; } }
+    else if (p.t === 'mrow') p.cells[p.cells.indexOf(n)] = ph();
+    else ['num', 'den', 'body', 'base'].forEach((f) => { if (p[f] === n) p[f] = ph(); });
+    const next = L.tex(L.root).replace(/\s+/g, ' ').trim();
+    setLatex(next);
+    setStatus('Deleted “' + said + '”.', 'ok'); $('announce').textContent = 'Deleted ' + said;
+  }
+
+  /* "Refine with AI": Claude applies the spoken or typed change to the selected layer */
+  async function refineAI() {
+    if (!L) { setStatus('Submit an equation first.', 'err'); return; }
+    if (!sample) { setStatus('Refine with AI needs Claude. Add your API key in the sidebar, or use “Refine manually”.', 'err'); return; }
+    const req = wsInput.value.trim(), sc = scopeInfo();
+    vBusy = true; updateBar(); setStatus('Refining ' + sc.name + ' with Claude…');
+    try {
+      const r = await sample.json(
+        'You edit a LaTeX equation for a student who works by voice. The request comes from speech recognition and may contain recognition errors; infer the intended math.\n' +
+        'Full equation: ' + JSON.stringify(current.latex) + '\n' +
+        'Selected part (' + sc.name + '): ' + JSON.stringify(sc.tex) + '\n' +
+        'Request: ' + JSON.stringify(req || 'Fix likely speech-recognition or notation mistakes in the selected part.') + '\n' +
+        'Change only the selected part unless the request clearly says otherwise; keep everything else identical. ' +
+        'Return JSON only: {"latex": string} with the full updated equation body, no $ or \\[ delimiters, valid for MathJax with amsmath.',
+        { modelTier: 'quick' });
+      if (!r || typeof r.latex !== 'string' || !r.latex.trim()) throw new Error('No LaTeX came back');
+      setLatex(r.latex.trim()); wsInput.value = '';
+      const clean = L ? Layers.plainText(L.spokenHtml) : '';
+      setStatus('Refined with Claude: “' + clean + '”', 'ok');
+      await addLog({ input: req || '(refine ' + sc.name + ')', latex: current.latex, clean, method: 'refine', source: vMode === 'off' ? 'typed' : 'voice', ts: Date.now() });
+    } catch (e) {
+      if (e && e.code === 'not_granted' && window.claude) { sample = null; markNoClaude(); }
+      setStatus('Couldn\'t refine with Claude' + (e && e.message ? ': ' + e.message : '') + '. Try again or use “Refine manually”.', 'err');
+    } finally { vBusy = false; updateBar(); }
+  }
 
   /* ---------- Export and copy ---------- */
   function plainSvg() {
@@ -1219,8 +1414,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   $('copyClean').onclick = () => copyText(L ? Layers.plainText(L.spokenHtml) : '', 'Clean text');
 
   /* ---------- Navigate & edit workspace ---------- */
-  let chat = [], chatFor = null, wsRec = null, wsListening = false;
-  const wsInput = $('wsInput'), msgsEl = $('msgs');
+  let chat = [], chatFor = null;
   const swColor = (pos, len) => (pos === 0 && len > 1 ? 'var(--line)' : 'var(--s' + colorIdx(pos) + ')');
   const layerName = (n, pos) => (pos === 0 ? 'Whole equation' : L.label(n));
   function scopeInfo() {
@@ -1263,7 +1457,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       });
       box.appendChild(inside);
     }
-    document.querySelectorAll('.navpad [data-mv]').forEach((b) => { b.disabled = !target(b.dataset.mv) || (sel != null && target(b.dataset.mv).id === sel); });
+    document.querySelectorAll('.cmdbar [data-mv]').forEach((b) => { b.disabled = !target(b.dataset.mv) || (sel != null && target(b.dataset.mv).id === sel); });
     const sc = scopeInfo();
     $('wsScopeSw').style.background = sc.color;
     $('wsScopeText').textContent = sc.name + (sc.pos ? '  ×' : '');
@@ -1316,37 +1510,10 @@ footer { font-size: 0.82rem; color: var(--muted); }
     msgsEl.scrollTop = msgsEl.scrollHeight;
   }
 
-  function sendEdit(voice) {
-    const text = wsInput.value.trim(); if (!text) { wsInput.focus(); return; }
-    const scope = scopeInfo();
-    chat.push({ role: 'user', text, scope, voice: !!voice, ts: Date.now() });
-    chat.push({ role: 'bot', scope, ts: Date.now() });
-    wsInput.value = ''; renderChat();
-  }
-  let lastVoice = false;
-  $('wsForm').addEventListener('submit', (e) => { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; });
-  wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEdit(lastVoice); lastVoice = false; } });
-  wsInput.addEventListener('input', () => { if (!wsListening) lastVoice = false; });
+  $('wsForm').addEventListener('submit', (e) => { e.preventDefault(); refineAI(); });
+  wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); refineAI(); } });
   $('wsScope').onclick = () => { if (L) select(L.root.id); };
-  $('wsEditThis').onclick = () => { wsInput.focus(); };
-  document.querySelectorAll('.navpad [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
-
-  const wsMic = $('wsMic');
-  if (!SR) { wsMic.disabled = true; $('wsMicText').textContent = 'Dictation not supported'; }
-  wsMic.onclick = () => {
-    if (!SR) return;
-    if (wsListening) { wsRec && wsRec.stop(); return; }
-    wsRec = new SR(); wsRec.lang = 'en-US'; wsRec.interimResults = true; wsRec.continuous = true;
-    let fin = ''; wsInput.value = '';
-    wsRec.onresult = (ev) => {
-      let interim = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) fin += t + ' '; else interim += t; }
-      wsInput.value = (fin + interim).trim();
-    };
-    wsRec.onerror = (ev) => { wsInput.placeholder = ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'The microphone is blocked here. Type your change instead.' : 'Dictation stopped. Type your change instead.'; };
-    wsRec.onend = () => { wsListening = false; wsMic.setAttribute('aria-pressed', 'false'); $('wsMicText').textContent = 'Dictate'; };
-    try { wsRec.start(); wsListening = true; lastVoice = true; wsMic.setAttribute('aria-pressed', 'true'); $('wsMicText').textContent = 'Stop'; } catch (e) {}
-  };
+  document.querySelectorAll('.cmdbar [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));
 
   /* ---------- Pages and sidebar ---------- */
   const PAGES = { workspace: 'Math Workspace', help: 'MathSpeak Help', export: 'Export' };
@@ -1380,7 +1547,6 @@ footer { font-size: 0.82rem; color: var(--muted); }
   go(location.hash.slice(1) || 'workspace');
 
   /* ---------- Wiring ---------- */
-  $('submit').onclick = convert;
   spoken.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) convert(); });
   spoken.addEventListener('input', () => { if (!listening) current.source = 'typed'; });
   document.querySelectorAll('[data-ex]').forEach((b) => b.onclick = () => { spoken.value = b.dataset.ex; current.source = 'typed'; spoken.focus(); });
