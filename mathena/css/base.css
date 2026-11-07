@@ -45,6 +45,7 @@ h1, h2, h3, p { margin: 0; }
 .side { background: var(--surface); border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
 body.side-off { --side-w: 0px; }
 body.side-off .side { display: none; }
+body.side-off .app { grid-template-columns: minmax(0, 1fr); }   /* one column when hidden, so the main area keeps full width instead of landing in the 0px sidebar column */
 .brand { height: var(--top-h); display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); flex: none; }
 .logo { width: 30px; height: 30px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 10px; font-weight: 800; }
 .brand b { font-size: 17px; letter-spacing: -.01em; }
