@@ -174,9 +174,11 @@
             </ul>
           </section>
           <section class="pnl" aria-labelledby="voice-title">
-            <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">Say a command on its own, with a short pause before it</span></div>
+            <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">The mic turns on when the page opens and waits for a command. Say each command on its own, with a short pause before it</span></div>
             <ul class="say-list">
-              <li><b>“Start listening”</b><span>Turn the mic on and dictate a new equation</span></li>
+              <li><b>“Start new”</b><span>Dictate a new equation (also “Start listening”)</span></li>
+              <li><b>“Start edit”</b><span>Read back the selected part of the current equation and say a change to it</span></li>
+              <li><b>“Go to export”, “Help”, “Go to workspace”</b><span>Switch pages; works from any page</span></li>
               <li><b>“Pause”</b><span>Stop adding words; the mic keeps listening for commands</span></li>
               <li><b>“Done”</b><span>Convert what you said (or apply the change you said)</span></li>
               <li><b>“Clear”</b><span>Empty the box you are dictating into</span></li>
@@ -186,7 +188,8 @@
               <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
               <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
               <li><b>“Save”</b><span>Add the current equation to the Export list</span></li>
-              <li><b>“Stop listening”</b><span>Turn the mic off</span></li>
+              <li><b>“Stop listening”</b><span>Stop dictating; the mic stays on for commands</span></li>
+              <li><b>“Turn off the mic”</b><span>Turn the mic off completely</span></li>
             </ul>
           </section>
           <section class="pnl" aria-labelledby="keys-title">
