@@ -2,7 +2,7 @@
 // Tabs (pages) and the retractable sidebar
 
 /* ---------- Pages and sidebar ---------- */
-const PAGES = { workspace: 'Math Workspace', help: 'Learning Zone', export: 'Export', organize: 'Organize & Export' };
+const PAGES = { workspace: 'Math Workspace', help: 'MathSpeak Help', export: 'Export', organize: 'Organize & Export', developer: 'Developer' };
 function go(page, focus) {
   if (!PAGES[page]) page = 'workspace';
   Object.keys(PAGES).forEach((k) => { $('page-' + k).hidden = k !== page; });
@@ -10,6 +10,7 @@ function go(page, focus) {
   document.querySelectorAll('.nav [data-page]').forEach((b) => { if (b.dataset.page === navPage) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   $('pageTitle').textContent = PAGES[page]; document.title = PAGES[page] + ' · Speak Math';
   if (page === 'workspace') highlight();
+  if (page === 'developer') renderDev();
   if (page === 'organize') { let n = 0; try { n = blocks.length; } catch (e) {} if (!n) { go('export'); return; } renderBlocks(); }   // nothing to organize after a reload
   if (location.hash !== '#' + page) { try { history.replaceState(null, '', '#' + page); } catch (e) {} }
   if (focus) $('pageTitle').focus();

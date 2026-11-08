@@ -22,7 +22,7 @@ const xesc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').repla
 async function buildDocx(title) {
   if (!mjReady()) { setStatus('The math renderer isn\'t loaded, so the Word file can\'t include equations.', 'err'); return null; }
   setStatus('Building the Word file…');
-  const num = $('numbering').checked, media = [], P = [];
+  const num = $('numbering').checked, tex = $('showLatex').checked, media = [], P = [];
   const run = (t, rpr) => '<w:r>' + (rpr ? '<w:rPr>' + rpr + '</w:rPr>' : '') + '<w:t xml:space="preserve">' + xesc(t) + '</w:t></w:r>';
   if (title) P.push('<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="240"/></w:pPr>' + run(title, '<w:b/><w:sz w:val="40"/>') + '</w:p>');
   let n = 0;
@@ -39,7 +39,8 @@ async function buildDocx(title) {
         '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="' + id + '" name="equation' + n + '.png" descr="' + alt + '"/><pic:cNvPicPr/></pic:nvPicPr>' +
         '<pic:blipFill><a:blip r:embed="rIdImg' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>';
       const raise = Math.max(0, Math.round(h - 12));   // half-points: lift the number to the image's middle
-      P.push('<w:p><w:pPr><w:spacing w:before="80" w:after="80"/></w:pPr>' + (num ? run(n + '.\t', '<w:b/><w:sz w:val="24"/><w:position w:val="' + raise + '"/>') : '') + pic + '</w:p>');
+      P.push('<w:p><w:pPr><w:spacing w:before="80" w:after="' + (tex ? 0 : 80) + '"/></w:pPr>' + (num ? run(n + '.\t', '<w:b/><w:sz w:val="24"/><w:position w:val="' + raise + '"/>') : '') + pic + '</w:p>');
+      if (tex) P.push('<w:p><w:pPr><w:spacing w:before="0" w:after="120"/>' + (num ? '<w:ind w:left="720"/>' : '') + '</w:pPr>' + run(b.latex, '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:color w:val="555555"/><w:sz w:val="18"/>') + '</w:p>');
     }
   }
   const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';

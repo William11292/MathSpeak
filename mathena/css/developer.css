@@ -1,0 +1,24 @@
+/* ---------- Developer: AI token usage ---------- */
+.dev-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.dev-tile { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; display: grid; gap: 4px; }
+.dev-tile b { font-size: 22px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.dev-tile:last-child { border-color: var(--ink); box-shadow: var(--shadow); }
+.dev-note { margin-top: -6px; }
+.dev-scroll { overflow-x: auto; }
+.dev-table, .dev-sub { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dev-table th, .dev-sub th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.dev-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.dev-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dev-tex { font-family: var(--font-mono); font-size: 12px; display: block; max-width: 38ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dev-x { padding: 2px 8px; }
+.dev-calls > td { background: var(--surface-2); padding: 4px 12px 10px; }
+.dev-sub td { padding: 5px 12px; border-bottom: 1px solid var(--line); }
+.dev-sub .num { text-align: right; }
+.dev-sub tr.fail td { color: var(--rec); }
+.dev-table .empty { padding: 16px; }
+.dev-prices { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.dev-price { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; align-items: end; border: 1px solid var(--line); padding: 10px 12px; }
+.dev-price b, .dev-price code { grid-column: 1 / -1; }
+.dev-price code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.dev-price label { display: grid; gap: 3px; font-size: 11.5px; color: var(--muted); }
+.dev-price input { font: inherit; font-size: 13px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 2px; background: var(--surface); color: var(--ink); width: 100%; }

@@ -8,11 +8,12 @@ async function convert() {
   vBusy = true; updateBar();
   let latex = '', method = 'rules', note = '';
   try {
+    devBeginEquation(text);
     if (looksLikeLatex(text)) { latex = text; method = 'latex'; }
     else if ($('engine').value === 'claude' && sample) {
       setStatus('Converting with Claude…');
       try {
-        const r = await sample.json(
+        const r = await aiCall('convert', 
           'You convert spoken mathematics into LaTeX. The input is a transcript from speech recognition and may contain recognition errors (e.g. "x to" for "x two", "some" for "sum", "intro" for "integral"); infer the intended math. Scope cues like "the quantity … close quantity", "end root", "end exponent" and "all over" mark where a group ends.\n' +
           'Return JSON only: {"latex": string}. "latex" is the equation body only, no $ or \\[ delimiters, valid for MathJax with amsmath. Prefer \\frac, \\sqrt{}, \\left( \\right), \\int_{a}^{b}, \\sum_{}^{}, \\lim_{x \\to a}, bmatrix, \\,dx.\n\nTranscript: ' + JSON.stringify(text),
           { modelTier: 'quick' }
@@ -24,6 +25,7 @@ async function convert() {
       }
     }
     if (!latex) latex = ruleParse(text);
+    devSetResult(latex, method);
     setStatus('');
     setLatex(latex);
     chatNewEquation();

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/learning.css">
 <link rel="stylesheet" href="css/export.css">
 <link rel="stylesheet" href="css/organize.css">
+<link rel="stylesheet" href="css/developer.css">
 <link rel="stylesheet" href="css/print.css">
 </head><body>
 <script>
@@ -28,8 +29,9 @@
       <p class="eyebrow">Workspace</p>
       <nav class="nav" aria-label="Sections">
         <button type="button" data-page="workspace" aria-current="page"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>Math Workspace</button>
-        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>Learning Zone</button>
+        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Help</button>
         <button type="button" data-page="export"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>Export<span class="badge" id="logCount" aria-label="0 saved equations">0</span></button>
+        <button type="button" data-page="developer"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16"/></svg>Developer</button>
       </nav>
     </div>
     <div class="side-ai">
@@ -49,6 +51,18 @@
         <p class="hint">Your key stays in this browser's local storage and is sent only to api.anthropic.com. Don't use this on a shared computer.</p>
       </details>
     </div>
+    <section class="micw" id="micw" aria-labelledby="micState">
+      <div class="micw-row">
+        <button type="button" class="micw-btn" id="micToggle" aria-pressed="false" aria-label="Mute microphone" aria-describedby="micDetail"></button>
+        <div class="micw-info">
+          <b id="micState">Mic off</b>
+          <span id="micDetail"></span>
+        </div>
+      </div>
+      <div class="micw-meter" id="micMeter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="micw-foot"><span id="micHear" class="micw-hear">No voice</span><span class="hint"><kbd>Alt</kbd>+<kbd>M</kbd> mute</span></div>
+      <p class="hint micw-warn" id="micWarn" hidden>Opened as a file, so Chrome may ask for the mic again each time. Serve it over http to be asked once (see README).</p>
+    </section>
     <div class="side-foot">
       <b>Move by keyboard</b>
       <span>Focus a view, then <kbd>↑</kbd> out, <kbd>↓</kbd> in, <kbd>←</kbd> <kbd>→</kbd> neighbors.</span>
@@ -68,7 +82,7 @@
         <div class="ws-grid">
           <div class="ws-left">
             <section class="pnl" aria-labelledby="in-label">
-              <div class="pnl-h"><h2 id="in-label">Equation input</h2><span class="hint">Say or type it the way you'd read it aloud</span></div>
+              <div class="pnl-h"><h2 id="in-label">MathSpeak Input</h2><span class="hint">Say or type it the way you'd read it aloud</span></div>
               <div class="in-body">
                 <label class="sr" for="spoken">Equation, in words or LaTeX</label>
                 <textarea id="spoken" spellcheck="false">x plus y times the quantity sine squared x plus 2 close quantity</textarea>
@@ -94,13 +108,13 @@
                 <div class="stage" id="stage" tabindex="0"><span class="placeholder">Your equation will appear here.</span></div>
               </section>
               <section class="out" aria-labelledby="txt-label">
-                <div class="out-h"><h3 class="label" id="txt-label">Text · LaTeX</h3></div>
+                <div class="out-h"><h3 class="label" id="txt-label">LaTeX</h3></div>
                 <div class="vw tex" id="latexView" tabindex="0"></div>
                 <label class="sr" for="latex">LaTeX source</label>
                 <textarea id="latex" spellcheck="false" hidden></textarea>
               </section>
               <section class="out" aria-labelledby="clean-label">
-                <div class="out-h"><h3 class="label" id="clean-label">Clean text equation</h3></div>
+                <div class="out-h"><h3 class="label" id="clean-label">MathSpeak</h3></div>
                 <div class="vw clean" id="cleanView" tabindex="0"></div>
               </section>
             </div>
@@ -109,18 +123,18 @@
 
           <section class="pathbar cmdbar pnl" aria-label="Voice commands">
               <div class="cg" role="group" aria-labelledby="cg-dict">
-                <div class="cg-h"><h3 class="label" id="cg-dict">Dictation</h3><span class="mode" id="vMode"><span class="dot" aria-hidden="true"></span><span id="vModeText">Mic off</span></span></div>
+                <div class="cg-h"><h3 class="label" id="cg-dict">Input</h3><span class="mode" id="vMode"><span class="dot" aria-hidden="true"></span><span id="vModeText">Mic off</span></span></div>
                 <div class="cbtns">
-                  <button type="button" data-cmd="start" id="vStart"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg><span id="vStartText">“Start listening”</span></button>
+                  <button type="button" data-cmd="start" id="vStart"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg><span id="vStartText">“Create new”</span></button>
                   <button type="button" data-cmd="pause">“Pause”</button>
                   <button type="button" data-cmd="done">“Done”</button>
                   <button type="button" data-cmd="clear">“Clear”</button>
                 </div>
               </div>
               <div class="cg" role="group" aria-labelledby="cg-edit">
-                <h3 class="label" id="cg-edit">Edit</h3>
+                <h3 class="label" id="cg-edit">Navigate</h3>
                 <div class="cbtns">
-                  <button type="button" data-cmd="selthat">“Select that”</button>
+                  <button type="button" data-cmd="selthat">“Navigate”</button>
                   <button type="button" data-mv="ArrowUp">↑ “Out a layer”</button>
                   <button type="button" data-mv="ArrowDown">↓ “In a layer”</button>
                   <button type="button" data-mv="ArrowLeft">← “Previous”</button>
@@ -142,7 +156,6 @@
                   <button type="button" data-cmd="save" class="save" id="vSave">“Save”</button>
                 </div>
               </div>
-              <div class="sr" id="announce" aria-live="polite"></div>
             </section>
         </div>
       </section>
@@ -152,7 +165,7 @@
            The page id stays "page-help" so the existing #help link and sidebar button keep working. -->
       <section class="page lz" id="page-help" hidden aria-labelledby="lz-title">
         <div class="lz-head">
-          <h2 id="lz-title" class="sr">Learning Zone</h2>
+          <h2 id="lz-title" class="sr">MathSpeak Help</h2>
           <dl class="lz-summary" id="lz-summary" aria-label="Current selection"></dl>
         </div>
         <div class="lz-grid">
@@ -184,44 +197,151 @@
         <div class="sr" id="lz-live" aria-live="polite"></div>
       </section>
       <!-- ===== Learning Zone (end) ===== -->
+      <!-- Kept from main during the merge: the voice-command lists William added to the old MathSpeak Help page.
+           Not shown yet; they need a home (Learning Zone or Developer page).
+          <section class="pnl" aria-labelledby="say-title">
+            <div class="pnl-h"><h3 id="say-title" class="label">Scope cues</h3><span class="hint">Say these to mark where a group ends</span></div>
+            <ul class="say-list">
+              <li><b>“the quantity … close quantity”</b><span>Parentheses around a group</span></li>
+              <li><b>“square root of … end root”</b><span>Everything under the root</span></li>
+              <li><b>“… all over …”</b><span>Puts everything said so far on top of a fraction</span></li>
+              <li><b>“to the power of … end exponent”</b><span>A longer exponent</span></li>
+              <li><b>“integral from a to b of … d x”</b><span>Definite integral with limits</span></li>
+              <li><b>“sum from i equals 1 to n of …”</b><span>Summation with limits</span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="voice-title">
+            <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">The mic turns on when the page opens and waits for a command. Say each command on its own, with a short pause before it</span></div>
+            <ul class="say-list">
+              <li><b>“Create new”</b><span>Dictate a new equation (also “Start new”)</span></li>
+              <li><b>“Start edit”</b><span>Read back the selected part of the current equation and say a change to it</span></li>
+              <li><b>“Go to export”, “Help”, “Go to workspace”</b><span>Switch pages; works from any page</span></li>
+              <li><b>“Pause”</b><span>Stop adding words; the mic keeps listening for commands</span></li>
+              <li><b>“Done”</b><span>Convert what you said (or apply the change you said)</span></li>
+              <li><b>“Clear”</b><span>Empty the box you are dictating into</span></li>
+              <li><b>“Navigate”</b><span>Read back the selected layer and edit only that part</span></li>
+              <li><b>“Out a layer”, “In a layer”, “Previous”, “Next”</b><span>Move around the equation</span></li>
+              <li><b>“Delete”</b><span>Remove the selected layer</span></li>
+              <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
+              <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
+              <li><b>“Save”</b><span>Add the current equation to the Export list</span></li>
+              <li><b>“Stop listening”</b><span>Stop dictating; the mic stays on for commands</span></li>
+              <li><b>“Turn off the mic”</b><span>Mute: the mic closes completely. Unmute with the mic button at the bottom of the sidebar, or <kbd>Alt</kbd>+<kbd>M</kbd></span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="sel-voice-title">
+            <div class="pnl-h"><h3 id="sel-voice-title" class="label">Select equations by voice</h3><span class="hint">On the Export page; equations are named by their number</span></div>
+            <ul class="say-list">
+              <li><b>“Select all”, “Select none”</b><span>Check or clear every saved equation</span></li>
+              <li><b>“Select 3”, “Unselect 3”, “Select 2 to 5”</b><span>Check or clear specific equations</span></li>
+              <li><b>“Next page”, “Previous page”, “Read page”</b><span>Move through the list; hear what's on this page and what's selected</span></li>
+              <li><b>“Organize”</b><span>Go on to Organize &amp; Export with the selected equations. “Go back” returns here</span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="org-voice-title">
+            <div class="pnl-h"><h3 id="org-voice-title" class="label">Organize &amp; Export by voice</h3><span class="hint">Blocks are named the way they're labeled: Equation 3 is the third equation</span></div>
+            <ul class="say-list">
+              <li><b>“Next”, “Previous”, “Equation 3”</b><span>Move to a block; it's read back</span></li>
+              <li><b>“Move up”, “Move down”, “Move to the top”</b><span>Move the current block. Or name one: “Move equation 3 down”</span></li>
+              <li><b>“Remove”</b><span>Remove the current block. Or name one: “Remove heading 1”</span></li>
+              <li><b>“Add heading”, “Add text”</b><span>Then say the words and “Done” (or “Cancel”). Or all at once: “Add heading Kinematics”</span></li>
+              <li><b>“Title Calculus Review”</b><span>Set the document title (or “Set title”, then the words and “Done”)</span></li>
+              <li><b>“LaTeX on/off”, “Numbering on/off”</b><span>Document options</span></li>
+              <li><b>“PDF”, “Word”, “PNG”, “SVG”</b><span>Pick the format; PNG and SVG save one image per equation</span></li>
+              <li><b>“Read back”, “Finalize”</b><span>Hear the whole document, then export it</span></li>
+              <li><b>“Go back”</b><span>Return to Select equations</span></li>
+            </ul>
+          </section>
+          <section class="pnl" aria-labelledby="keys-title">
+            <div class="pnl-h"><h3 id="keys-title" class="label">Moving through layers</h3></div>
+            <ul class="say-list">
+              <li><b><kbd>↑</kbd> Out a layer</b><span>Select the group that contains this part</span></li>
+              <li><b><kbd>↓</kbd> In a layer</b><span>Select the first part inside this one</span></li>
+              <li><b><kbd>←</kbd> <kbd>→</kbd> Previous, next</b><span>Move to a neighbor in the same layer</span></li>
+              <li><b><kbd>Esc</kbd></b><span>Back to the whole equation</span></li>
+            </ul>
+          </section>
+          <footer>Dictation uses your browser's speech recognition (Chrome or Edge work best). If the microphone is blocked here, open the page as a standalone file, or type instead.</footer>
+      -->
 
       <!-- ===== Export ===== -->
       <section class="page" id="page-export" hidden aria-labelledby="export-title">
-        <div class="page-head">
-          <h2 id="export-title">Export</h2>
-          <p>Equations you save with “Save” in the Math Workspace. Check the ones you want, then press Organize &amp; Export to arrange them, add headings or text, and export.</p>
-        </div>
-        <div class="stack">
-          <section class="pnl" aria-labelledby="log-title">
+        <h2 id="export-title" class="sr">Export</h2>
+        <div class="stack exp-stack">
+          <section class="pnl exp-pnl" aria-labelledby="log-title">
             <div class="pnl-h log-head"><h3 id="log-title" class="label">Saved equations</h3><span class="hint" id="log-where">Saved in this browser</span></div>
             <div class="selbar" role="group" aria-label="Export selected equations">
               <label class="pick-all"><input type="checkbox" id="pickAll"> <span>Select all</span></label>
               <span class="hint" id="pickCount" aria-live="polite">0 selected</span>
               <div class="row">
-                <button type="button" class="primary" id="toOrganize">Organize &amp; Export ›</button>
+                <button type="button" class="primary" id="toOrganize">Organize ›</button>
               </div>
             </div>
             <div id="entries"><p class="empty">Nothing saved yet. Say or press “Save” in the Math Workspace to add the current equation here.</p></div>
+            <nav class="pager" id="logPager" aria-label="Saved equation pages" hidden>
+              <button type="button" class="small" id="pgPrev" aria-label="Previous page">‹ Previous</button>
+              <span class="hint" id="pgInfo" aria-live="polite"></span>
+              <button type="button" class="small" id="pgNext" aria-label="Next page">Next ›</button>
+            </nav>
+            <section class="cmdbar pnl org-bar exp-bar" id="expBar" aria-label="Voice commands for this page">
+          <div class="cg" role="group" aria-labelledby="ecg-sel">
+            <div class="cg-h"><h3 class="label" id="ecg-sel">Select</h3><span class="mode org-cur">Say “Select 3” or “Unselect 3”</span></div>
+            <div class="cbtns">
+              <button type="button" data-ecmd="all">“Select all”</button>
+              <button type="button" data-ecmd="none">“Select none”</button>
+            </div>
+          </div>
+          <div class="cg" role="group" aria-labelledby="ecg-pg">
+            <h3 class="label" id="ecg-pg">Pages</h3>
+            <div class="cbtns">
+              <button type="button" data-ecmd="prev">← “Previous page”</button>
+              <button type="button" data-ecmd="next">→ “Next page”</button>
+            </div>
+          </div>
+          <div class="cg" role="group" aria-labelledby="ecg-go">
+            <h3 class="label" id="ecg-go">Next step</h3>
+            <div class="cbtns">
+              <button type="button" data-ecmd="read">“Read page”</button>
+              <button type="button" data-ecmd="organize" class="save">“Organize”</button>
+            </div>
+          </div>
+        </section>
+      </section>
+        </div>
+      </section>
+      <!-- ===== Developer ===== -->
+      <section class="page" id="page-developer" hidden aria-labelledby="dev-title">
+        <div class="page-head">
+          <h2 id="dev-title">Developer</h2>
+          <p>AI token usage this session, grouped by the equation each call helped create. Use it to see what one equation costs us.</p>
+        </div>
+        <div class="stack">
+          <div class="dev-tiles" id="devTiles"></div>
+          <p class="hint dev-note" id="devNote" hidden>~ marks estimates: inside Claude the AI doesn't report token counts, so they're estimated at about 4 characters per token. With your own API key, counts are exact.</p>
+          <section class="pnl" aria-labelledby="dev-eq-title">
+            <div class="pnl-h"><h3 id="dev-eq-title" class="label">Per equation</h3><span class="hint" id="devSince"></span></div>
+            <div class="dev-scroll"><table class="dev-table">
+              <thead><tr><th class="num">#</th><th>Equation</th><th>How it was made</th><th class="num">AI calls</th><th class="num">Input tokens</th><th class="num">Output tokens</th><th class="num">Cost</th></tr></thead>
+              <tbody id="devRows"></tbody>
+            </table></div>
+            <div class="selbar"><span class="hint">An equation starts each time the input is converted; “Refine with AI” calls are added to it.</span><div class="row"><button type="button" class="small" id="devCsv">Export CSV</button><button type="button" class="small" id="devReset">Reset</button></div></div>
+          </section>
+          <section class="pnl" aria-labelledby="dev-price-title">
+            <div class="pnl-h"><h3 id="dev-price-title" class="label">Rates</h3><span class="hint">Claude API standard rates per million tokens, checked Nov 2026. Edit if they change.</span></div>
+            <div class="pnl-b dev-prices" id="devPrices"></div>
           </section>
         </div>
       </section>
       <!-- ===== Organize & Export ===== -->
       <section class="page" id="page-organize" hidden aria-labelledby="org-title">
+        <h2 id="org-title" class="sr">Organize &amp; Export</h2>
         <div class="org-head">
-          <button type="button" class="ghost" id="orgBack">← Export list</button>
-          <div class="page-head" style="border:0;margin:0;padding:0">
-            <h2 id="org-title">Organize &amp; Export</h2>
-            <p>Arrange the equations, add headings or text, then export. The preview updates as you go.</p>
-          </div>
+          <button type="button" class="ghost" id="orgBack" aria-label="Go back to select equations">← “Select equations”</button>
         </div>
         <div class="org-grid">
           <section class="pnl" aria-labelledby="blk-title">
             <div class="pnl-h">
               <div><h3 id="blk-title" class="org-h3">Document content</h3><span class="hint" id="blkCount"></span></div>
-              <div class="row">
-                <button type="button" class="small" id="addHead">+ Heading</button>
-                <button type="button" class="small" id="addText">+ Text</button>
-              </div>
             </div>
             <div class="adder" id="adder" hidden>
               <label class="label" for="adderIn" id="adderLabel">New heading</label>
@@ -243,6 +363,7 @@
               <span class="fl" id="fmt-l">Export format</span>
               <div class="seg" role="radiogroup" aria-labelledby="fmt-l" id="fmtSeg"></div>
               <label class="switch" for="numbering"><span><b>Equation numbering</b><span class="hint">Number equations 1, 2, 3 in the document</span></span><input type="checkbox" id="numbering" role="switch" checked><span class="track" aria-hidden="true"></span></label>
+              <label class="switch" for="showLatex"><span><b>Show LaTeX</b><span class="hint">Print each equation's LaTeX source under it (documents only)</span></span><input type="checkbox" id="showLatex" role="switch"><span class="track" aria-hidden="true"></span></label>
               <div class="prev-wrap">
                 <div class="prev-h"><span class="label" id="prevLabel">Live preview · PDF</span></div>
                 <div class="paper" id="paper" aria-label="Document preview"></div>
@@ -251,10 +372,53 @@
             </div>
           </aside>
         </div>
+        <section class="cmdbar pnl org-bar" id="orgBar" aria-label="Voice commands for this page">
+          <div class="cg" role="group" aria-labelledby="ocg-nav">
+            <div class="cg-h"><h3 class="label" id="ocg-nav">Navigate</h3><span class="mode org-cur" aria-live="polite"><span id="orgCur">—</span></span></div>
+            <div class="cbtns">
+              <button type="button" data-ocmd="prev">← “Previous”</button>
+              <button type="button" data-ocmd="next">→ “Next”</button>
+              <button type="button" data-ocmd="up">↑ “Move up”</button>
+              <button type="button" data-ocmd="down">↓ “Move down”</button>
+              <button type="button" data-ocmd="remove">“Remove”</button>
+            </div>
+          </div>
+          <div class="cg" role="group" aria-labelledby="ocg-add">
+            <h3 class="label" id="ocg-add">Add</h3>
+            <div class="cbtns">
+              <button type="button" data-ocmd="heading">“Add heading”</button>
+              <button type="button" data-ocmd="text">“Add text”</button>
+            </div>
+          </div>
+          <div class="cg" role="group" aria-labelledby="ocg-opt">
+            <h3 class="label" id="ocg-opt">Options</h3>
+            <div class="cbtns">
+              <button type="button" data-ocmd="latex">“LaTeX on”</button>
+              <button type="button" data-ocmd="numbering">“Numbering off”</button>
+            </div>
+          </div>
+          <div class="cg" role="radiogroup" aria-labelledby="ocg-fmt">
+            <h3 class="label" id="ocg-fmt">Format</h3>
+            <div class="cbtns">
+              <button type="button" role="radio" data-ofmt="pdf">“PDF”</button>
+              <button type="button" role="radio" data-ofmt="docx">“Word”</button>
+              <button type="button" role="radio" data-ofmt="png">“PNG”</button>
+              <button type="button" role="radio" data-ofmt="svg">“SVG”</button>
+            </div>
+          </div>
+          <div class="cg" role="group" aria-labelledby="ocg-fin">
+            <h3 class="label" id="ocg-fin">Finalize</h3>
+            <div class="cbtns">
+              <button type="button" data-ocmd="read">“Read back”</button>
+              <button type="button" data-ocmd="final" class="save">“Finalize”</button>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
   </div>
 </div>
+<div class="sr" id="announce" aria-live="polite"></div>
 <div id="printArea" aria-hidden="true"></div>
 
 
@@ -266,10 +430,14 @@
 <script src="js/workspace/convert.js"></script>
 <script src="js/export/saved-list.js"></script>
 <script src="js/workspace/voice.js"></script>
+<script src="js/workspace/mic.js"></script>
 <script src="js/workspace/commands.js"></script>
 <script src="js/export/files.js"></script>
 <script src="js/export/organize.js"></script>
 <script src="js/export/docx.js"></script>
+<script src="js/export/pdf.js"></script>
+<script src="js/export/organize-voice.js"></script>
+<script src="js/export/select-voice.js"></script>
 <script src="js/workspace/navigate.js"></script>
 <script src="js/api-key.js"></script>
 <!-- Learning Zone -->
@@ -277,6 +445,7 @@
 <script src="js/learning/refine-panels.js"></script>
 <script src="js/learning/practice.js"></script>
 <script src="js/learning/learning-zone.js"></script>
+<script src="js/developer.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/main.js"></script>
 

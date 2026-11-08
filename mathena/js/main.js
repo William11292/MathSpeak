@@ -35,3 +35,6 @@ if (window.claude && claude.use) {
 } else {
   setupApiKey();
 }
+
+/* Hands-free start: the mic turns on with the page and waits for “Create new”, “Start edit”, “Go to export” or “Help” */
+autoListen();
