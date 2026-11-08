@@ -35,6 +35,7 @@ function setupApiKey() {
           messages: [{ role: 'user', content: prompt }]
         })
       });
+      this.last = null;
       if (!res.ok) {
         let msg = 'HTTP ' + res.status;
         try { const b = await res.json(); if (b && b.error && b.error.message) msg = b.error.message; } catch (e) {}
@@ -43,6 +44,7 @@ function setupApiKey() {
         throw e;
       }
       const data = await res.json();
+      this.last = { model: data.model || MODELS[(opts && opts.modelTier) || 'default'], usage: data.usage || null };   // read by aiCall() for the Developer tab
       const text = (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
       const m = text.match(/\{[\s\S]*\}/);
       return JSON.parse(m ? m[0] : text);

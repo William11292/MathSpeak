@@ -15,3 +15,26 @@
 .eq-body .eq mjx-container { margin: 0 !important; }
 .eq-body .ms { font-size: 0.95rem; color: var(--muted); overflow-wrap: anywhere; }
 .entry .acts { display: flex; gap: 6px; align-items: center; padding: 0 14px; }
+
+/* ---------- No-scroll list: two columns of five per page, pager below ---------- */
+#page-export:not([hidden]) { display: flex; flex-direction: column; height: calc(100vh - var(--top-h) - 40px); height: calc(100dvh - var(--top-h) - 40px); min-height: 520px; }
+.exp-stack { flex: 1; min-height: 0; display: flex; max-width: none; }
+.exp-pnl { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.exp-pnl #entries { flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); grid-auto-flow: column; gap: 8px 10px; padding: 10px 12px; }
+.exp-pnl #entries > .empty { grid-column: 1 / -1; }
+.exp-pnl .entry { grid-template-columns: 58px minmax(0, 1fr) auto; min-height: 0; overflow: hidden; }
+.exp-pnl .eq-main { padding: 6px 12px; gap: 12px; min-height: 0; }
+.exp-pnl .eq-body { gap: 2px; min-height: 0; }
+.exp-pnl .eq-body .eq { overflow: hidden; font-size: 110%; }
+.exp-pnl .eq-body .ms { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp-pnl .eq-num { width: 26px; height: 26px; font-size: 11px; }
+.exp-pnl .entry .acts { flex-direction: column; justify-content: center; gap: 4px; padding: 0 10px; }
+.exp-pnl .entry .acts button { width: 100%; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-top: 1px solid var(--line); background: var(--surface-2); }
+.pager .hint { font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  #page-export:not([hidden]) { height: auto; min-height: 0; }
+  .exp-pnl #entries { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+}
+/* Select-equations command bar: part of the no-scroll page, under the list */
+.exp-bar { position: static; margin-top: 10px; max-width: none; box-shadow: none; flex: none; }

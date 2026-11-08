@@ -116,3 +116,25 @@ footer { font-size: 0.82rem; color: var(--muted); }
   .side { position: fixed; inset: 0 auto 0 0; width: 250px; z-index: 20; box-shadow: 4px 0 0 var(--line-strong); }
   .view { padding: 12px; }
 }
+
+/* ---------- Mic widget (bottom of the sidebar, like a call's mute control) ---------- */
+.micw { margin-top: auto; border-top: 1px solid var(--line); padding: 14px 14px 12px; display: grid; gap: 10px; background: var(--surface-2); }
+.micw + .side-foot { margin-top: 0; }
+.micw-row { display: flex; align-items: center; gap: 12px; }
+.micw-btn { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); flex: none; }
+.micw.live .micw-btn { border-color: var(--rec); color: var(--rec); }
+.micw.muted .micw-btn { background: var(--ink); color: var(--surface); }
+.micw.blocked .micw-btn { border-style: dashed; }
+.micw-info { display: grid; gap: 1px; min-width: 0; }
+.micw-info b { font-size: 13px; }
+.micw.live .micw-info b { color: var(--rec); }
+.micw-info span { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.micw-meter { display: flex; gap: 3px; height: 14px; align-items: flex-end; }
+.micw-meter i { flex: 1; height: 100%; background: var(--sunk); border-radius: 1px; }
+.micw-meter i.on { background: var(--ok); }
+.micw-meter i.on:nth-child(n+11) { background: var(--rec); }
+.micw.muted .micw-meter i, .micw-meter.na i { background: var(--sunk); opacity: .5; }
+.micw-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.micw-hear { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.micw-hear.on { color: var(--ok); }
+.micw-warn { font-size: 11px; }

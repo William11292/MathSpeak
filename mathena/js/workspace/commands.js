@@ -55,7 +55,7 @@ async function refineAI() {
   const req = wsInput.value.trim(), sc = scopeInfo();
   vBusy = true; updateBar(); setStatus('Refining ' + sc.name + ' with Claude…');
   try {
-    const r = await sample.json(
+    const r = await aiCall('refine', 
       'You edit a LaTeX equation for a student who works by voice. The request comes from speech recognition and may contain recognition errors; infer the intended math.\n' +
       'Full equation: ' + JSON.stringify(current.latex) + '\n' +
       'Selected part (' + sc.name + '): ' + JSON.stringify(sc.tex) + '\n' +
@@ -64,7 +64,7 @@ async function refineAI() {
       'Return JSON only: {"latex": string} with the full updated equation body, no $ or \\[ delimiters, valid for MathJax with amsmath.',
       { modelTier: 'quick' });
     if (!r || typeof r.latex !== 'string' || !r.latex.trim()) throw new Error('No LaTeX came back');
-    setLatex(r.latex.trim()); wsInput.value = '';
+    setLatex(r.latex.trim()); wsInput.value = ''; devSetResult(current.latex);
     const clean = L ? Layers.plainText(L.spokenHtml) : '';
     setStatus('Refined with Claude: “' + clean + '”. Say “Save” to keep it.', 'ok');
     current.input = (current.input || spoken.value.trim()) + (req ? ' · then: ' + req : ''); current.method = 'refine'; current.src = vMode === 'off' ? 'typed' : 'voice';
