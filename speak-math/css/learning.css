@@ -1,0 +1,151 @@
+/* ---------- Learning Zone ----------
+   Layout follows the Learning Zone wireframe: a Subject · Topic · Example bar, "Search math topics" with
+   Subjects | Topics columns on the left, and the Example on the right. Styling is adapted from the MathVoice
+   prototype, using Speak Math's design tokens so light and dark mode follow the rest of the app.
+   Every class starts with lz- so nothing here affects other pages.
+   Accessibility: no all-caps text anywhere (screen readers can spell uppercase words letter by letter). */
+
+/* On desktop the page fits the screen; long lists scroll inside their own column instead of the page. */
+.lz:not([hidden]) { display: flex; flex-direction: column; gap: 10px; height: calc(100vh - var(--top-h) - 40px); height: calc(100dvh - var(--top-h) - 40px); min-height: 560px; }
+.lz ul, .lz ol { margin: 0; padding: 0; list-style: none; }
+.lz h3, .lz h4, .lz dl, .lz dd { margin: 0; }   /* base.css only resets h1–h3 and p; browsers add ~17px around h4 */
+.lz-hint { font-size: 12.5px; color: var(--muted); }
+.lz-h { font-size: 15px; font-weight: 650; letter-spacing: -.005em; }
+.lz-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); white-space: nowrap; }
+.lz-cmd { font-weight: 700; white-space: nowrap; }
+
+/* Controls (scoped, so app-wide button styles elsewhere stay untouched) */
+.lz-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 12px; white-space: nowrap; }
+.lz-btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
+.lz-btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.lz-btn-primary:hover:not(:disabled) { background: var(--accent); opacity: .88; }
+.lz-btn[aria-pressed="true"] { background: var(--accent-soft); }
+.lz-input { width: 100%; min-height: 36px; padding: 7px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 2px; }
+.lz-input:hover { border-color: var(--ink-3); }
+
+/* ---------- Head: one short line + Subject · Topic · Example ---------- */
+/* The summary bar never moves or resizes: it spans the full width, with three equal fixed slots.
+   Only the words change; a name too long for its slot ends in "…" (the full name is in the Example heading). */
+.lz-head { display: block; }
+.lz-intro { color: var(--muted); font-size: 13px; }
+.lz-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; margin: 0; padding: 0 14px; height: 38px; align-items: center; background: var(--accent); color: var(--accent-ink); }
+.lz-summary div { display: flex; gap: 6px; min-width: 0; white-space: nowrap; }
+.lz-summary dt { font-weight: 700; flex: none; }
+.lz-summary dt::after { content: ":"; }
+.lz-summary dd { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.lz-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: clamp(280px, 25vw, 330px) minmax(0, 1fr); gap: 12px; }
+
+/* ---------- Left: Search math topics ---------- */
+.lz-browse { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.lz-browse-top { padding: 10px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.lz-cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.lz-col { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
+.lz-col:last-child { border-right: 0; }
+.lz-col-h { font-size: 13.5px; font-weight: 700; text-align: center; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.lz-col-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 7px; }
+.lz-col-foot { font-size: 12px; color: var(--muted); padding: 8px 10px; border-top: 1px solid var(--line); }
+.lz-search-results { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+
+.lz-subjects { display: flex; flex-direction: column; gap: 6px; }
+.lz-group { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 38px; padding: 0 10px; border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 14px; text-align: left; }
+.lz-group:hover:not(:disabled) { background: var(--accent); opacity: .88; }
+.lz-areas, .lz-topic-list { display: flex; flex-direction: column; gap: 5px; }
+.lz-areas { margin: 6px 0 4px !important; }
+.lz-pick span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.lz-pick { display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; min-height: 34px; padding: 6px 9px; border: 1px solid var(--line); background: var(--surface); text-align: left; font-weight: 500; font-size: 13.5px; color: var(--ink); line-height: 1.3; }
+.lz-pick:hover:not(:disabled) { border-color: var(--ink-3); background: var(--surface); }
+.lz-pick[aria-current="true"] { border: 2px solid var(--line-strong); padding: 5px 8px; box-shadow: var(--shadow); font-weight: 700; }
+.lz-cnt { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.lz-results { display: flex; flex-direction: column; gap: 6px; }
+.lz-result { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); background: var(--surface); text-align: left; font-weight: 500; color: var(--ink); min-width: 0; overflow: hidden; }
+.lz-result:hover:not(:disabled) { border-color: var(--ink-3); background: var(--surface); }
+.lz-result[aria-current="true"] { border: 2px solid var(--line-strong); padding: 7px 9px; box-shadow: var(--shadow); }
+.lz-result-t { font-weight: 650; font-size: 13.5px; }
+.lz-result-w { font-size: 12px; color: var(--muted); }
+.lz-result-m { font-size: 13px; max-width: 100%; overflow: hidden; color: var(--muted); }
+.lz-result-m mjx-container { margin: 0 !important; }
+
+/* ---------- Right: Example ---------- */
+.lz-example { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.lz-ex-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.lz-ex-bar h3:focus { outline: none; }
+.lz-ex-bar h3:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.lz-pager { display: flex; gap: 8px; margin-left: auto; }
+/* Sections match the Math Workspace (Image, Text · LaTeX, Clean text): no boxes, a line between sections,
+   12px / 16px padding, the label 8px above a shaded content area. Labels stay sentence case (no all caps). */
+.lz-ex-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.lz-ex-body > :last-child { border-bottom: 0; }
+
+.lz-row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-bottom: 1px solid var(--line); }
+.lz-row2-wide { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.lz-box { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; min-width: 0; font-size: 13.5px; }
+.lz-row2 > .lz-box { border-bottom: 0; border-right: 1px solid var(--line); }
+.lz-row2 > .lz-box:last-child { border-right: 0; }
+.lz-box-h { font-size: 12.5px; font-weight: 700; letter-spacing: .02em; color: var(--muted); line-height: 1.3; }
+.lz-box-hrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.lz-box-hrow:has(.lz-eq-tools) { flex-wrap: wrap; row-gap: 6px; }
+.lz-eq-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.lz-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0; background: var(--accent-soft); color: var(--ink); }
+
+/* The equation never wraps. It is centered when it fits; when it is wider than the box, the auto margins
+   collapse so it starts at the left edge and scrolls sideways (centering alone would cut off its left end). */
+.lz-eq { flex: 1; display: flex; align-items: center; min-height: 96px; padding: 12px; background: var(--surface-2); border: 1px dashed var(--line); font-size: 19px; overflow-x: auto; }
+.lz-eq-in { margin: 0 auto; flex: none; }
+.lz-eq mjx-container { margin: 0 !important; }
+.lz-eq-wide { grid-template-columns: minmax(0, 1fr) !important; }
+.lz-eq-wide > .lz-box { border-right: 0 !important; }
+.lz-eq-wide > .lz-box:first-child { border-bottom: 1px solid var(--line); }
+.lz-eq-wide .lz-eq { font-size: 26px; min-height: 150px; }
+.lz-code { margin: 0; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); font: 12.5px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow-y: auto; }
+.lz-mml summary { cursor: pointer; font-size: 12.5px; color: var(--muted); width: fit-content; }
+.lz-mml[open] summary { margin-bottom: 6px; }
+.lz-ms { padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
+
+.lz-flow { line-height: 1.6; }
+.lz-phrase { font-weight: 650; quotes: "“" "”"; }
+.lz-cues { display: grid; gap: 2px; padding-left: 10px !important; border-left: 3px solid var(--ink); font-size: 12.5px; color: var(--muted); }
+.lz-cues b { color: var(--ink); font-weight: 650; }
+.lz-why { color: var(--muted); }
+
+/* Try it: say or type the phrase and check it */
+.lz-try { display: grid; gap: 6px; }
+.lz-try-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.lz-try-form { flex: 1 1 220px; display: flex; gap: 6px; min-width: 0; }
+.lz-try-form .lz-input { flex: 1; min-width: 0; }
+.lz-try-live:empty, .lz-try-out:empty { display: none; }
+.lz-try-out { display: grid; gap: 4px; padding: 8px 10px; border: 1px dashed var(--line); background: var(--surface); }
+.lz-try-ok { color: var(--ok); font-weight: 700; }
+.lz-try-no { color: var(--rec); font-weight: 700; }
+.lz-try-got { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lz-try-got mjx-container { margin: 0 !important; }
+.lz-try-diff { display: grid; gap: 2px; font-size: 13px; }
+
+.lz-flowlist { display: grid; gap: 4px; counter-reset: lz-f; }
+.lz-flowlist > li { counter-increment: lz-f; position: relative; padding-left: 26px; line-height: 1.45; }
+.lz-flowlist > li::before { content: counter(lz-f); position: absolute; left: 0; top: 1px; width: 18px; height: 18px; display: grid; place-items: center; border: 1.5px solid var(--ink); font-size: 10.5px; font-weight: 700; }
+.lz-parts { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.lz-part { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--sunk); }
+
+/* ---------- Smaller or shorter screens: the page scrolls normally and sections stack ---------- */
+@media (max-width: 1100px), (max-height: 620px) {
+  .lz:not([hidden]) { height: auto; min-height: 0; }
+  .lz-grid { grid-template-columns: minmax(0, 1fr); }
+  .lz-browse, .lz-example { overflow: visible; }
+  .lz-col-body { max-height: 300px; }
+  .lz-search-results { max-height: 420px; overflow-y: auto; }
+  .lz-ex-body { overflow: visible; }
+}
+@media (max-width: 640px) {
+  .lz-row2, .lz-row2-wide { grid-template-columns: minmax(0, 1fr); }
+  .lz-row2 > .lz-box { border-right: 0; border-bottom: 1px solid var(--line); }
+  .lz-row2 > .lz-box:last-child { border-bottom: 0; }
+  .lz-summary { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, 26px); height: auto; padding: 6px 14px; }
+  .lz-pager { width: 100%; margin-left: 0; }
+  .lz-pager .lz-btn { flex: 1 1 0; }
+}
+@media (max-width: 460px) {
+  .lz-cols { grid-template-columns: minmax(0, 1fr); }
+  .lz-col { border-right: 0; border-bottom: 1px solid var(--line); }
+}

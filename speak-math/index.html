@@ -5,7 +5,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/workspace.css">
-<link rel="stylesheet" href="css/help.css">
+<!-- <link rel="stylesheet" href="css/help.css"> replaced by the Learning Zone (css/learning.css) -->
+<link rel="stylesheet" href="css/learning.css">
 <link rel="stylesheet" href="css/export.css">
 <link rel="stylesheet" href="css/organize.css">
 <link rel="stylesheet" href="css/print.css">
@@ -27,7 +28,7 @@
       <p class="eyebrow">Workspace</p>
       <nav class="nav" aria-label="Sections">
         <button type="button" data-page="workspace" aria-current="page"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>Math Workspace</button>
-        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Help</button>
+        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>Learning Zone</button>
         <button type="button" data-page="export"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>Export<span class="badge" id="logCount" aria-label="0 saved equations">0</span></button>
       </nav>
     </div>
@@ -146,61 +147,43 @@
         </div>
       </section>
 
-      <!-- ===== MathSpeak Help ===== -->
-      <section class="page" id="page-help" hidden aria-labelledby="help-title">
-        <div class="page-head">
-          <h2 id="help-title">MathSpeak Help</h2>
-          <p>How to say an equation so it converts cleanly, and how to move around it once it's on screen.</p>
+      <!-- ===== Learning Zone (start) =====
+           Markup only. Styles: css/learning.css. Code: js/learning/ (library.js, refine-panels.js, learning-zone.js).
+           The page id stays "page-help" so the existing #help link and sidebar button keep working. -->
+      <section class="page lz" id="page-help" hidden aria-labelledby="lz-title">
+        <div class="lz-head">
+          <h2 id="lz-title" class="sr">Learning Zone</h2>
+          <dl class="lz-summary" id="lz-summary" aria-label="Current selection"></dl>
         </div>
-        <div class="stack">
-          <section class="pnl" aria-labelledby="how-title">
-            <div class="pnl-h"><h3 id="how-title" class="label">How it works</h3></div>
-            <div class="how">
-              <div><b>1 · Listen</b><span>The browser's speech recognition turns your voice into words.</span></div>
-              <div><b>2 · Translate</b><span>Claude converts the words to LaTeX. A built-in rule parser covers common phrases when Claude isn't available.</span></div>
-              <div><b>3 · Render</b><span>MathJax draws the LaTeX. The page also parses it into a tree of layers and rebuilds the clean spoken text from that tree.</span></div>
-              <div><b>4 · Navigate</b><span>Each layer is tagged in all three views, so selecting one lights up the same layer everywhere.</span></div>
+        <div class="lz-grid">
+          <aside class="lz-browse pnl" aria-labelledby="lz-browse-h" data-tour="lz-search">
+            <div class="lz-browse-top">
+              <p class="lz-intro">Pick a topic, hear the example, then say it in the Math Workspace.</p>
+              <h3 id="lz-browse-h" class="lz-h">Search math topics</h3>
+              <form class="lz-search" id="lz-search-form" role="search">
+                <label class="sr" for="lz-q">Search subjects, topics and examples</label>
+                <input class="lz-input" id="lz-q" type="search" autocomplete="off" spellcheck="false" placeholder="Search: fraction, integral, ion…">
+              </form>
             </div>
-          </section>
-          <section class="pnl" aria-labelledby="say-title">
-            <div class="pnl-h"><h3 id="say-title" class="label">Scope cues</h3><span class="hint">Say these to mark where a group ends</span></div>
-            <ul class="say-list">
-              <li><b>“the quantity … close quantity”</b><span>Parentheses around a group</span></li>
-              <li><b>“square root of … end root”</b><span>Everything under the root</span></li>
-              <li><b>“… all over …”</b><span>Puts everything said so far on top of a fraction</span></li>
-              <li><b>“to the power of … end exponent”</b><span>A longer exponent</span></li>
-              <li><b>“integral from a to b of … d x”</b><span>Definite integral with limits</span></li>
-              <li><b>“sum from i equals 1 to n of …”</b><span>Summation with limits</span></li>
-            </ul>
-          </section>
-          <section class="pnl" aria-labelledby="voice-title">
-            <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">Say a command on its own, with a short pause before it</span></div>
-            <ul class="say-list">
-              <li><b>“Start listening”</b><span>Turn the mic on and dictate a new equation</span></li>
-              <li><b>“Pause”</b><span>Stop adding words; the mic keeps listening for commands</span></li>
-              <li><b>“Done”</b><span>Convert what you said (or apply the change you said)</span></li>
-              <li><b>“Clear”</b><span>Empty the box you are dictating into</span></li>
-              <li><b>“Select that”</b><span>Read back the selected layer and edit only that part</span></li>
-              <li><b>“Out a layer”, “In a layer”, “Previous”, “Next”</b><span>Move around the equation</span></li>
-              <li><b>“Delete”</b><span>Remove the selected layer</span></li>
-              <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
-              <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
-              <li><b>“Save”</b><span>Add the current equation to the Export list</span></li>
-              <li><b>“Stop listening”</b><span>Turn the mic off</span></li>
-            </ul>
-          </section>
-          <section class="pnl" aria-labelledby="keys-title">
-            <div class="pnl-h"><h3 id="keys-title" class="label">Moving through layers</h3></div>
-            <ul class="say-list">
-              <li><b><kbd>↑</kbd> Out a layer</b><span>Select the group that contains this part</span></li>
-              <li><b><kbd>↓</kbd> In a layer</b><span>Select the first part inside this one</span></li>
-              <li><b><kbd>←</kbd> <kbd>→</kbd> Previous, next</b><span>Move to a neighbor in the same layer</span></li>
-              <li><b><kbd>Esc</kbd></b><span>Back to the whole equation</span></li>
-            </ul>
-          </section>
-          <footer>Dictation uses your browser's speech recognition (Chrome or Edge work best). If the microphone is blocked here, open the page as a standalone file, or type instead.</footer>
+            <div class="lz-cols" id="lz-cols">
+              <nav class="lz-col" aria-labelledby="lz-subj-h">
+                <h4 id="lz-subj-h" class="lz-col-h">Subjects</h4>
+                <div class="lz-col-body" id="lz-subj-body"></div>
+                <p class="lz-col-foot">Open a subject, then choose an area.</p>
+              </nav>
+              <nav class="lz-col" aria-labelledby="lz-topic-h">
+                <h4 id="lz-topic-h" class="lz-col-h">Topics</h4>
+                <div class="lz-col-body" id="lz-topic-body"></div>
+                <p class="lz-col-foot">Choose a topic to see its example.</p>
+              </nav>
+            </div>
+            <div class="lz-col-body lz-search-results" id="lz-results" hidden></div>
+          </aside>
+          <section class="lz-example pnl" id="lz-example" aria-labelledby="lz-ex-title" data-tour="lz-example"></section>
         </div>
+        <div class="sr" id="lz-live" aria-live="polite"></div>
       </section>
+      <!-- ===== Learning Zone (end) ===== -->
 
       <!-- ===== Export ===== -->
       <section class="page" id="page-export" hidden aria-labelledby="export-title">
@@ -289,6 +272,11 @@
 <script src="js/export/docx.js"></script>
 <script src="js/workspace/navigate.js"></script>
 <script src="js/api-key.js"></script>
+<!-- Learning Zone -->
+<script src="js/learning/library.js"></script>
+<script src="js/learning/refine-panels.js"></script>
+<script src="js/learning/practice.js"></script>
+<script src="js/learning/learning-zone.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/main.js"></script>
 
