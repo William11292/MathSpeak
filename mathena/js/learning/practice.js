@@ -1,15 +1,15 @@
 // Speak Math. Classic script: shares top-level names with the other js/ files. Load order is set in index.html.
-// Learning Zone: "Try it" practice. The student says (or types) the example's phrase; it is converted with the same
-// built-in rules the Math Workspace uses (ruleParse) and compared with the example's LaTeX, so a pass here means the
-// phrase works in the workspace too. Feedback shows what was heard, what it converted to, and missing / extra words.
-// render(host, example, latex) is called by learning-zone.js whenever the example changes; stop() cancels listening.
+// MathSpeak Help: Practice. The student presses "Say it" (or types) the example's phrase. What they said is converted
+// with the same built-in rules the Math Workspace uses (ruleParse) and checked against the example. Then they can fix
+// THEIR equation by voice or buttons (Fix it: refine-panels.js), the way they would in the workspace, and it checks
+// again after every fix. The example itself never changes.
+// render(host, example, latex) is called by learning-zone.js whenever the example changes.
 
 const LZ_PRACTICE = (() => {
   const h = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const MIC = '<svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg>';
-  const STOP = '<svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11"/></svg>';
-  let host = null, ex = null, target = '', rec = null, cancelled = false;
+  let host = null, ex = null, target = '';
+  // attempt: what the student said or typed, the equation it became, and their fixes to it.
+  let attempt = null;   // { said, source: 'voice' | 'typed', latex, history: [], fixed, missing, extra, misheard }
 
   /* ---------- Comparing ---------- */
   const norm = (l) => l.replace(/\\left|\\right|\\,|\\cdot|\s+/g, '');
@@ -18,7 +18,7 @@ const LZ_PRACTICE = (() => {
     .split(/\s+/).filter(Boolean).map((w) => NUM[w] || w);
   // Drop the workspace commands a student may say out of habit around the phrase, and undo speech-recognition
   // typing quirks that aren't the student's mistake: a trailing period, and "dx" / "dy" / "dt" typed as one word.
-  const clean = (t) => t.replace(/^\s*start listening[\s,.]*/i, '').replace(/[\s,.]*\b(done|save|stop listening)[\s.!]*$/i, '')
+  const clean = (t) => t.replace(/^\s*(start listening|create new)[\s,.]*/i, '').replace(/[\s,.]*\b(done|save|stop listening)[\s.!]*$/i, '')
     .replace(/[.!?]+\s*$/, '').replace(/\bd([xyztur])\b/gi, 'd $1').trim();
   // Missing and extra words (grouped into runs) between the expected phrase and what was said.
   function diff(a, b) {
@@ -35,79 +35,115 @@ const LZ_PRACTICE = (() => {
     while (j < m) add(extra, b[j++], 'x');
     return { missing, extra };
   }
+  const layersOf = (latex) => { try { return Layers.build(latex); } catch (e) { return null; } };
+  const speak = (latex) => { try { return Layers.plainText(Layers.build(latex).spokenHtml); } catch (e) { return ''; } };
+  const announce = (t) => { const l = document.getElementById('lz-live'); if (l) { l.textContent = ''; requestAnimationFrame(() => { l.textContent = t; }); } };
+  const correct = () => !!(attempt && attempt.latex && norm(attempt.latex) === norm(target));
 
-  /* ---------- Checking ---------- */
-  const $ = (sel) => host && host.querySelector(sel);
-  function show(html) { const o = $('.lz-try-out'); if (o) { o.innerHTML = html; o.querySelectorAll('[data-tex]').forEach((el) => renderTex(el, el.dataset.tex, false)); } }
-  function check(raw) {
+  /* ---------- Checking what was said or typed ---------- */
+  function setAttempt(raw, source) {
     const said = clean(raw || '');
-    if (!said) { show('<p class="lz-hint">Nothing to check yet. Say or type the phrase first.</p>'); return; }
-    if (looksLikeLatex(said)) { show('<p class="lz-try-no">That’s LaTeX. Try saying it in words instead.</p>'); return; }
-    let latex = ''; try { latex = ruleParse(said); } catch (e) {}
-    const heard = '<p>We heard: <q>' + h(said) + '</q></p>';
-    if (latex && norm(latex) === norm(target)) {
-      show('<p class="lz-try-ok">✓ Correct. That converts to this example.</p>' + heard);
-      return;
-    }
+    const inp = $('#lz-try-in'); if (inp && source === 'voice') inp.value = said;
+    if (!said) { attempt = null; draw('<p class="lz-hint">Nothing to check yet. Press Say it, or type the phrase.</p>'); return; }
+    if (looksLikeLatex(said)) { attempt = null; draw('<p class="lz-try-no">That’s LaTeX. Try saying it in words instead.</p>'); return; }
+    let latex = ''; try { latex = (ruleParse(said) || '').trim(); } catch (e) {}
     const { missing, extra } = diff(words(ex.say), words(said));
-    const list = (label, xs) => xs.length ? '<li>' + label + ': ' + xs.map((w) => '<q>' + h(w) + '</q>').join(', ') + '</li>' : '';
-    const misheard = /\b(ex|why|see|bee|tee)\b/.test(said.toLowerCase()) ? '<p class="lz-hint">Speech recognition sometimes hears letters as words, like “ex” for x. Say the letter clearly, or type it.</p>' : '';
-    show('<p class="lz-try-no">Not quite. Compare with the phrase above.</p>' + heard +
-      (latex ? '<p class="lz-try-got">That converts to: <span data-tex="' + h(latex) + '"></span></p>' : '') +
-      ((missing.length || extra.length) ? '<ul class="lz-try-diff">' + list('Missing', missing) + list('Extra', extra) + '</ul>' : '') + misheard);
+    attempt = { said, source, latex: latex && layersOf(latex) ? latex : '', history: [], fixed: false, missing, extra,
+      misheard: /\b(ex|why|see|bee|tee)\b/.test(said.toLowerCase()) };
+    draw(null, true);
+    announce(correct() ? 'Correct. That converts to this example.' : 'Not quite. You can fix it below, or say it again.');
   }
-
-  /* ---------- Listening ---------- */
-  function setMicBtn(on) {
-    const b = $('[data-pr="mic"]'); if (!b) return;
-    b.setAttribute('aria-pressed', String(on)); b.innerHTML = (on ? STOP + ' Stop' : MIC + ' Try it');
+  // A fix from Fix it (Delete, a change from Claude, LaTeX typed by hand): update their equation and check again.
+  function fix(latex, message) {
+    if (!attempt) return;
+    attempt.history.push(attempt.latex); attempt.latex = latex; attempt.fixed = true;
+    draw();
+    announce(message + ' ' + (correct() ? 'Now it matches the example. Correct!' : 'Still different from the example.'));
   }
-  function startMic() {
-    let note = '';
-    // The browser allows one listener at a time: turn off the Math Workspace mic first if it is on.
-    try { if (typeof micOn !== 'undefined' && micOn && typeof stopRec === 'function') { stopRec(); note = 'The Math Workspace mic was turned off so Try it can listen. '; } } catch (e) {}
-    let finalText = ''; cancelled = false;
-    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
-    rec.onresult = (ev) => {
-      let interim = '';
-      for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) finalText += ' ' + t; else interim += t; }
-      const live = $('.lz-try-live'); if (live) live.textContent = (finalText + ' ' + interim).trim();
-      if (/\b(done|stop listening)[\s.!]*$/i.test(finalText.trim())) stopMic(false);
-    };
-    rec.onerror = (ev) => {
-      if (ev.error === 'no-speech' || ev.error === 'aborted') return;
-      const blocked = ev.error === 'not-allowed' || ev.error === 'service-not-allowed';
-      show('<p class="lz-try-no">' + (blocked ? 'The microphone is blocked here. Allow it in the browser, or type the phrase instead.' : 'Listening stopped: ' + h(ev.error) + '.') + '</p>');
-    };
-    rec.onend = () => {
-      rec = null; setMicBtn(false);
-      const live = $('.lz-try-live'); if (live) live.textContent = '';
-      if (cancelled) return;
-      if (finalText.trim()) check(finalText); else show('<p class="lz-hint">Didn’t catch anything. Press Try it and say the phrase.</p>');
-    };
-    try { rec.start(); setMicBtn(true); show('<p class="lz-hint">' + note + 'Listening. Say the phrase, then “Done” or press Stop.</p>'); }
-    catch (e) { rec = null; show('<p class="lz-try-no">Couldn’t start the mic: ' + h(e.message) + '</p>'); }
+  function undo() {
+    if (!attempt || !attempt.history.length) { announce('Nothing to undo.'); return; }
+    attempt.latex = attempt.history.pop(); attempt.fixed = attempt.history.length > 0;
+    draw();
+    announce('Undone. ' + (correct() ? 'Correct.' : 'Not quite yet.'));
   }
-  function stopMic(cancel) { cancelled = !!cancel; if (!rec) return; try { cancel ? rec.abort() : rec.stop(); } catch (e) {} }
+  function clearAll() {
+    try { LZ_REFINE.stopVoice(); } catch (e) {}
+    attempt = null; const inp = $('#lz-try-in'); if (inp) inp.value = '';
+    draw(null, true); if (inp) inp.focus();
+    announce('Cleared.');
+  }
 
   /* ---------- Drawing ---------- */
-  function render(el, example, latex) {
-    stopMic(true);
-    host = el; ex = example; target = latex;
-    if (!host) return;
-    if (!ex.say) { host.innerHTML = ''; return; }
-    host.innerHTML = '<div class="lz-try">' +
-      '<div class="lz-try-row">' +
-        '<button type="button" class="lz-btn lz-btn-primary" data-pr="mic" aria-pressed="false"' + (SR ? '' : ' disabled title="Voice needs Chrome or Edge"') + '>' + MIC + ' Try it</button>' +
-        '<form class="lz-try-form" data-pr="form"><label class="sr" for="lz-try-in">Or type what you would say</label>' +
-          '<input class="lz-input" id="lz-try-in" autocomplete="off" spellcheck="false" placeholder="' + (SR ? 'Or type what you’d say' : 'Voice needs Chrome or Edge. Type what you’d say') + '">' +
-          '<button type="submit" class="lz-btn">Check</button></form>' +
-      '</div>' +
-      '<p class="lz-try-live lz-hint"></p>' +
-      '<div class="lz-try-out" role="status" aria-live="polite"></div></div>';
-    $('[data-pr="mic"]').addEventListener('click', () => { if (rec) stopMic(false); else if (SR) startMic(); });
-    $('[data-pr="form"]').addEventListener('submit', (e) => { e.preventDefault(); check($('#lz-try-in').value); });
+  const $ = (sel) => host && host.querySelector(sel);
+  function cardHTML() {
+    if (!attempt) return '';
+    const ok = correct(), sp = attempt.latex ? speak(attempt.latex) : '', L = attempt.latex ? layersOf(attempt.latex) : null;
+    const list = (label, xs) => xs.length ? '<li>' + label + ': ' + xs.map((w) => '<q>' + h(w) + '</q>').join(', ') + '</li>' : '';
+    return '<div class="lz-att' + (ok ? ' lz-att-ok' : '') + '">' +
+      '<p class="lz-att-said">' + (attempt.source === 'voice' ? 'You said' : 'You typed') + ': <q>' + h(attempt.said) + '</q></p>' +
+      (L ? '<div class="lz-att-eq" tabindex="0" role="img" aria-label="Your equation: ' + h(sp) + '. Arrow keys move between its parts."><span data-tex="' + h(L.tagged) + '"></span></div>' +
+           '<p class="lz-hint">Reads as: “' + h(sp) + '”</p>'
+         : '<p class="lz-try-no">Couldn’t turn that into math.</p>') +
+      (ok ? '<p class="lz-try-ok">✓ Correct. ' + (attempt.fixed ? 'Your fixed equation matches the example.' : 'That converts to this example.') + '</p>'
+          : '<p class="lz-try-no">✗ Not quite. ' + (attempt.fixed ? 'Still different from the example. Keep fixing it, or Say it again.' : 'Compare with the phrase above, then fix it below or Say it again.') + '</p>' +
+            (!attempt.fixed && (attempt.missing.length || attempt.extra.length) ? '<ul class="lz-try-diff">' + list('Missing', attempt.missing) + list('Extra', attempt.extra) + '</ul>' : '') +
+            (!attempt.fixed && attempt.misheard ? '<p class="lz-hint">Speech recognition sometimes hears letters as words, like “ex” for x. Say the letter clearly, or type it.</p>' : '')) +
+      (L ? '<details class="lz-mml"><summary>Show LaTeX</summary><pre class="lz-code">' + h(attempt.latex) + '</pre></details>' : '') +
+      '</div>';
+  }
+  // Redraw the result card and the mic / Fix it controls. fresh: a new attempt (Fix it starts at the whole equation).
+  function draw(message, fresh) {
+    const card = $('#lz-attempt');
+    if (card) {
+      card.innerHTML = message || cardHTML();
+      card.querySelectorAll('[data-tex]').forEach((el) => { renderTex(el, el.dataset.tex, true); const m = el.querySelector('mjx-container'); if (m) m.setAttribute('aria-hidden', 'true'); });
+    }
+    const fixBox = $('#lz-fix-wrap'); if (fixBox) fixBox.hidden = !(attempt && attempt.latex);
+    const clr = $('[data-pr="clear"]'), inp = $('#lz-try-in'); if (clr) clr.disabled = !(attempt || (inp && inp.value.trim()));
+    try {
+      LZ_REFINE.render({ voiceBtn: $('#lz-voice-btn'), voice: $('#lz-voice'), edit: $('#lz-fix') }, {
+        latex: attempt && attempt.latex ? attempt.latex : null, layers: attempt && attempt.latex ? layersOf(attempt.latex) : null,
+        fresh: !!fresh, canUndo: !!(attempt && attempt.history.length), hasPhrase: !!(ex && ex.say),
+        edit: fix, undo, speakText: speak, announce, onPhrase: (t) => setAttempt(t, 'voice'),
+        eq: () => $('#lz-attempt .lz-att-eq'),
+      });
+    } catch (e) {}
   }
 
-  return { render, stop: () => stopMic(true) };
+  // Live view of what the mic is hearing: "Hearing" label, settled words in full color, words still being recognized lighter.
+  function setLive(el, done, pending) {
+    if (!el) return;
+    done = (done || '').trim(); pending = (pending || '').trim();
+    el.textContent = '';
+    if (!done && !pending) return;
+    const part = (cls, t) => { const s = document.createElement('span'); s.className = cls; s.textContent = t; return s; };
+    el.append(part('lz-live-label', 'Hearing'), part('lz-live-done', done), part('lz-live-pending', (done && pending ? ' ' : '') + pending));
+  }
+
+  function render(el, example, latex) {
+    host = el; ex = example; target = latex; attempt = null;
+    if (!host) return;
+    host.innerHTML = ex.say
+      ? '<p class="lz-flow">Say: <q class="lz-phrase">' + h(ex.say) + '</q></p>' +
+        '<div class="lz-try-row">' +
+          '<div id="lz-voice-btn" class="lz-voice-btn"></div>' +   // Say it / Done (refine-panels.js)
+          '<form class="lz-try-form" data-pr="form"><label class="sr" for="lz-try-in">Or type what you would say</label>' +
+            '<input class="lz-input" id="lz-try-in" autocomplete="off" spellcheck="false" placeholder="Or type it">' +
+            '<button type="submit" class="lz-btn">Check</button></form>' +
+          '<button type="button" class="lz-btn" data-pr="clear" disabled>Clear</button>' +
+        '</div>' +
+        '<div id="lz-voice"></div>' +   // mic status, what it's hearing, messages (refine-panels.js)
+        '<div id="lz-attempt" role="status" aria-live="polite"></div>' +
+        '<div class="lz-sub" id="lz-fix-wrap" role="group" aria-labelledby="lz-fix-h" hidden><h5 id="lz-fix-h" class="lz-sub-h">Fix it</h5>' +
+          '<p class="lz-hint">Change your equation by voice or with the buttons. It checks again after every change.</p>' +
+          '<div id="lz-fix" class="lz-edit"></div></div>'
+      : '<p>' + h(ex.noSay) + '</p><p class="lz-hint">With Claude conversion on, describe it in your own words in the Math Workspace, or type the LaTeX.</p>';
+    if (!ex.say) { try { LZ_REFINE.stopVoice(); } catch (e) {} return; }
+    $('[data-pr="form"]').addEventListener('submit', (e) => { e.preventDefault(); try { LZ_REFINE.stopVoice(); } catch (x) {} setAttempt($('#lz-try-in').value, 'typed'); });
+    $('#lz-try-in').addEventListener('input', () => { const c = $('[data-pr="clear"]'); if (c) c.disabled = !(attempt || $('#lz-try-in').value.trim()); });
+    $('[data-pr="clear"]').addEventListener('click', clearAll);
+    draw(null, true);
+  }
+
+  return { render, setLive, check: (t) => setAttempt(t, 'voice') };
 })();

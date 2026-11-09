@@ -12,7 +12,6 @@ const LZ = (() => {
     prev: '<path d="M19 12H5M11 6l-6 6 6 6"/>', next: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     speaker: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/>',
     stop: '<rect x="6.5" y="6.5" width="11" height="11"/>',
-    reset: '<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/>',
     open: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   };
   const ic = (n, s = 16) => '<svg class="ic" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + '</svg>';
@@ -40,11 +39,11 @@ const LZ = (() => {
 
   /* ---------- State ----------
      subject: math | phys | chem   area: e.g. Calculus   topic: a notation type (key of D.STRUCT)
-     The draft is the single source of truth for what the example shows. Library originals never change;
-     Part 2's editing will change draft.latex only, and "Reset" copies the original back. */
+     The draft is the single source of truth for what the example shows. Library originals never change.
+     Practice edits the student's own attempt (practice.js), never the example. */
   const state = { subject: 'math', area: 'Calculus', topic: 'largeop', exampleId: 8, open: { math: true, phys: false, chem: false }, q: '', eqWide: false };
   let draft = null;
-  function setDraft(ex) { draft = { exampleId: ex.id, original: ex.latex, latex: ex.latex, edited: false }; }
+  function setDraft(ex) { draft = { exampleId: ex.id, original: ex.latex, latex: ex.latex }; }
   function layersOf(latex) { try { return Layers.build(latex); } catch (e) { return null; } }
 
   /* ---------- Search ---------- */
@@ -76,7 +75,10 @@ const LZ = (() => {
   function keepFocus(container, fn) {
     const a = document.activeElement, k = a && container.contains(a) && a.dataset ? a.dataset.k : null;
     fn();
-    if (k) { const b = container.querySelector('[data-k="' + CSS.escape(k) + '"]'); if (b) b.focus({ preventScroll: true }); }
+    if (!k) return;
+    const b = container.querySelector('[data-k="' + CSS.escape(k) + '"]');
+    if (b && !b.disabled) b.focus({ preventScroll: true });
+    else { const eq = container.querySelector('.lz-eq'); if (eq) eq.focus({ preventScroll: true }); }   // e.g. Delete is disabled after an edit
   }
   function typeset(root) {
     root.querySelectorAll('[data-tex]').forEach((el) => {
@@ -137,44 +139,12 @@ const LZ = (() => {
   }
 
   /* ---------- Right: Example ---------- */
-  // Scope cues found in a dictation phrase, explained in context (only cues the rule parser supports).
-  const CUES = [
-    [/\bfraction\b.*\bend fraction\b/, '“fraction … over … end fraction”', 'starts a fraction; “over” splits top from bottom.'],
-    [/\bsquare root of\b.*\bend root\b/, '“square root of … end root”', 'everything in between goes under the root.'],
-    [/\bthe quantity\b.*\bclose quantity\b/, '“the quantity … close quantity”', 'parentheses around a group.'],
-    [/\ball over\b/, '“all over”', 'puts everything since “equals” on top of a fraction.'],
-    [/\babsolute value of\b.*\bend absolute value\b/, '“absolute value of … end absolute value”', 'bars around a group.'],
-    [/\bintegral from\b.*\bto\b.*\bof\b/, '“integral from a to b of … d x”', 'bounds first; “d x” ends the integral.'],
-    [/\bsum from\b.*\bto\b.*\bof\b/, '“sum from … to … of”', 'start and end values first, then what is added.'],
-    [/\blimit as\b.*\b(approaches|goes to)\b/, '“limit as x approaches a of”', 'the variable and its target first.'],
-    [/\b(squared|cubed)\b/, '“squared”, “cubed”', 'the exponents 2 and 3.'],
-    [/\bsub\b/, '“sub”', 'the next word is a subscript.'],
-    [/\bplus or minus\b/, '“plus or minus”', 'the ± sign.'],
-    [/\bnegative\b/, '“negative”', 'a minus sign in front of a term.'],
-  ];
-  const BINARY_OVER = [/\bover\b/, '“over”', 'a fraction of the term before and the term after.'];
-  function cuesFor(say) {
-    const found = CUES.filter(([re]) => re.test(say));
-    const rest = say.replace(/\ball over\b/g, '').replace(/\bfraction\b.*?\bend fraction\b/g, '');
-    if (BINARY_OVER[0].test(rest)) found.push(BINARY_OVER);
-    return found;
-  }
-  function sayHTML(e) {
-    if (!e.say) {
-      return '<p>' + h(e.noSay) + '</p><p class="lz-hint">With Claude conversion on, describe it in your own words in the Math Workspace, or type the LaTeX.</p>';
-    }
-    const cues = cuesFor(e.say);
-    return '<p class="lz-flow">Say: <q class="lz-phrase">' + h(e.say) + '</q></p>' +
-      '<div id="lz-try"></div>' +
-      (cues.length ? '<ul class="lz-cues" aria-label="Cues in this phrase">' + cues.map((c) => '<li><b>' + c[1] + '</b> ' + c[2] + '</li>').join('') + '</ul>' : '') +
-      '<p class="lz-hint">In the Math Workspace: <span class="lz-cmd">“Start listening”</span> → the phrase → <span class="lz-cmd">“Done”</span> → <span class="lz-cmd">“Save”</span>. Made a mistake? <span class="lz-cmd">“Pause”</span>, <span class="lz-cmd">“Clear”</span> or <span class="lz-cmd">“Stop listening”</span>.</p>';
-  }
   function exampleHTML() {
     const e = byId(state.exampleId), { list, inSearch } = walkList(), i = list.findIndex((x) => x.id === e.id);
     const speech = speakText(draft.latex), mml = mathML(draft.latex), few = list.length < 2;
     return '<div class="lz-ex-bar">' +
-        '<h3 id="lz-ex-title" class="lz-h" tabindex="-1">Example: ' + h(e.title) + '</h3>' +
-        '<span class="lz-hint">' + (i + 1) + ' of ' + list.length + (inSearch ? ' search results' : ' in ' + h(e.area)) + '</span>' +
+        // Shows "3 of 5 in Calculus"; the example's name is in the top bar (and read first to screen readers).
+        '<h3 id="lz-ex-title" class="lz-h" tabindex="-1"><span class="sr">Example: ' + h(e.title) + ', </span>' + (i + 1) + ' of ' + list.length + (inSearch ? ' search results' : ' in ' + h(e.area)) + '</h3>' +
         '<div class="lz-pager" role="group" aria-label="Examples">' +
           '<button type="button" class="lz-btn" data-act="step" data-dir="-1" data-k="prev"' + (few ? ' disabled' : '') + '>' + ic('prev', 14) + ' Previous</button>' +
           '<button type="button" class="lz-btn lz-btn-primary" data-act="step" data-dir="1" data-k="next"' + (few ? ' disabled' : '') + '>Next example ' + ic('next', 14) + '</button>' +
@@ -182,10 +152,9 @@ const LZ = (() => {
       '<div class="lz-ex-body">' +
         '<div class="lz-row2' + (state.eqWide ? ' lz-eq-wide' : '') + '" id="lz-eq-row">' +
           '<section class="lz-box" aria-labelledby="lz-eq-h"><div class="lz-box-hrow">' +
-            '<h4 id="lz-eq-h" class="lz-box-h">Equation' + (draft.edited ? ' <span class="lz-tag">Edited</span>' : '') + '</h4>' +
+            '<h4 id="lz-eq-h" class="lz-box-h">Equation</h4>' +
             '<div class="lz-eq-tools" role="group" aria-label="Equation actions">' +
               '<button type="button" class="lz-btn lz-btn-sm" data-act="eqsize" data-k="eqsize" aria-pressed="' + !!state.eqWide + '" aria-controls="lz-eq-row">' + (state.eqWide ? 'Shrink' : 'Expand') + '</button>' +
-              // A "Reset to original" button goes here once Change an element / Refine with AI can edit the draft (calls resetDraft()).
               '<button type="button" class="lz-btn lz-btn-sm" data-act="workspace" data-k="workspace">' + ic('open', 14) + ' Open in Math Workspace</button>' +
             '</div></div>' +
             // Never wraps: a long equation scrolls sideways (focus it and use the arrow keys).
@@ -198,17 +167,20 @@ const LZ = (() => {
         '<section class="lz-box" aria-labelledby="lz-ms-h"><div class="lz-box-hrow"><h4 id="lz-ms-h" class="lz-box-h">Hear the MathSpeak</h4>' +
           '<button type="button" class="lz-btn lz-btn-sm" data-act="play" data-k="play" aria-pressed="false"' + ('speechSynthesis' in window ? '' : ' disabled title="Audio isn’t available in this browser"') + '>' + ic('speaker', 14) + ' <span>Play</span></button></div>' +
           '<p class="lz-ms">' + h(speech || 'This example couldn’t be read into layers.') + '</p></section>' +
-        '<section class="lz-box" aria-labelledby="lz-say-h"><h4 id="lz-say-h" class="lz-box-h">Practice</h4>' + sayHTML(e) + '</section>' +
+        // Practice: Say it (or type it) → checked → Fix it. Built by practice.js + refine-panels.js.
+        '<section class="lz-box" aria-labelledby="lz-say-h" data-tour="lz-practice"><h4 id="lz-say-h" class="lz-box-h">Practice</h4><div id="lz-practice" class="lz-practice"></div></section>' +
         '<section class="lz-box" aria-labelledby="lz-why-h"><h4 id="lz-why-h" class="lz-box-h">Why it’s read this way</h4><p class="lz-why">' + h(D.STRUCT[e.struct][1]) + '</p></section>' +
         '<div class="lz-row2" id="lz-refine" data-tour="lz-refine"></div>' +
       '</div>';
   }
-  function renderExample() {
-    const box = $id('lz-example');
+  function renderExample(opts = {}) {
+    const box = $id('lz-example'), e = byId(state.exampleId);
     stopAudio();
-    keepFocus(box, () => { box.innerHTML = exampleHTML(); typeset(box); });
-    LZ_PRACTICE.render($id('lz-try'), byId(state.exampleId), draft.latex);
-    LZ_REFINE.render($id('lz-refine'), { draft, layers: layersOf(draft.latex) });
+    keepFocus(box, () => {
+      box.innerHTML = exampleHTML(); typeset(box);
+      LZ_PRACTICE.render($id('lz-practice'), e, e.latex);   // Say it → check → Fix it (the student's own equation)
+      LZ_REFINE.renderInfo($id('lz-refine'));               // Change an element / Refine with AI: instructions only
+    });
     renderSummary();
   }
 
@@ -234,7 +206,7 @@ const LZ = (() => {
   function showExample(id, opts = {}) {
     const e = byId(+id); if (!e) return;
     Object.assign(state, { exampleId: e.id, subject: e.subject, area: e.area, topic: e.struct }); state.open[e.subject] = true;
-    setDraft(e); renderNav(); renderExample();
+    setDraft(e); renderNav(); renderExample({ fresh: true });
     if (opts.announce !== false) announce('Example: ' + e.title + '.');
     if (opts.focusCard) { const t = $id('lz-ex-title'); if (t) { t.scrollIntoView({ block: 'start', behavior: 'smooth' }); t.focus({ preventScroll: true }); } }
   }
@@ -270,21 +242,8 @@ const LZ = (() => {
     else if (act === 'workspace') openInWorkspace();
   }
 
-  /* ---------- Draft: reset and hand-off ---------- */
-  // Part 2's Change an element / Refine with AI call editDraft(); Reset copies the library original back.
-  function editDraft(latex) {
-    if (!draft || typeof latex !== 'string' || !latex.trim()) return;
-    draft.latex = latex.trim(); draft.edited = draft.latex !== draft.original;
-    renderExample();
-  }
-  function resetDraft() {
-    if (!draft || !draft.edited) { announce('Nothing to reset. This is already the original example.'); return; }
-    draft.latex = draft.original; draft.edited = false;
-    renderExample();
-    const b = document.querySelector('#lz-example [data-act="workspace"]'); if (b) b.focus();   // the Reset button is now inactive
-    announce('Back to the original example.');
-  }
-  // Loads the shown equation (edited or not) into the Math Workspace, the same way opening a saved equation does,
+  /* ---------- Hand-off ---------- */
+  // Loads the example into the Math Workspace, the same way opening a saved equation does,
   // but leaves it unsaved so the student decides whether to Save it.
   function openInWorkspace() {
     if (typeof setLatex !== 'function' || typeof go !== 'function') { announce('The Math Workspace isn’t available.'); return; }
@@ -292,12 +251,12 @@ const LZ = (() => {
     let unsaved = false;
     try { unsaved = !!current.latex.trim() && current.latex !== next && savedLatex !== current.latex; } catch (err) {}
     if (unsaved && !window.confirm('The Math Workspace has an equation that isn’t saved. Replace it with this example?')) return;
-    stopAudio(); LZ_PRACTICE.stop();
-    try { spoken.value = draft.edited ? '' : (e.say || ''); current.source = 'typed'; } catch (err) {}
+    stopAudio(); LZ_REFINE.stopVoice();
+    try { spoken.value = e.say || ''; current.source = 'typed'; } catch (err) {}
     setLatex(next);
     try { if (typeof chatNewEquation === 'function') chatNewEquation(); } catch (err) {}
     go('workspace', true);
-    try { setStatus('Opened “' + e.title + '”' + (draft.edited ? ' (edited)' : '') + ' from MathSpeak Help. Say “Save” to keep it.', 'ok'); } catch (err) {}
+    try { setStatus('Opened “' + e.title + '” from MathSpeak Help. Say “Save” to keep it.', 'ok'); } catch (err) {}
   }
 
   /* ---------- Start-up ---------- */
@@ -310,13 +269,13 @@ const LZ = (() => {
     q.addEventListener('keydown', (e) => { if (e.key === 'Escape' && q.value) { e.preventDefault(); q.value = ''; state.q = ''; renderNav(); } });
     $id('lz-search-form').addEventListener('submit', (e) => { e.preventDefault(); const first = $id('lz-results').querySelector('.lz-result'); if (first) first.focus(); });
     // Stop audio when leaving the page; refresh when coming back (Claude may have connected meanwhile).
-    new MutationObserver(() => { if (page.hidden) { stopAudio(); LZ_PRACTICE.stop(); } else renderExample(); }).observe(page, { attributes: true, attributeFilter: ['hidden'] });
+    new MutationObserver(() => { if (page.hidden) { stopAudio(); LZ_REFINE.stopVoice(); } else renderExample(); }).observe(page, { attributes: true, attributeFilter: ['hidden'] });
     renderNav(); renderExample();
     // MathJax may finish loading after this script runs; draw the math again once it is ready.
     if (!mjReady()) { let n = 0; const t = setInterval(() => { if (mjReady() || ++n > 40) { clearInterval(t); if (mjReady()) { renderNav(); renderExample(); } } }, 250); }
   }
   init();
 
-  // Small API for the tutorial overlay and Part 2's editing.
-  return { showExample, getDraft: () => draft, editDraft, resetDraft, openInWorkspace, speakText, refresh: () => { renderNav(); renderExample(); } };
+  // Small API for the tutorial overlay.
+  return { showExample, getDraft: () => draft, openInWorkspace, speakText, refresh: () => { renderNav(); renderExample(); } };
 })();

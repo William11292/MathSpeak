@@ -28,7 +28,10 @@
    Only the words change; a name too long for its slot ends in "…" (the full name is in the Example heading). */
 .lz-head { display: block; }
 .lz-intro { color: var(--muted); font-size: 13px; }
-.lz-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; margin: 0; padding: 0 14px; height: 38px; align-items: center; background: var(--accent); color: var(--accent-ink); }
+/* Three equal sections with the same padding and a thin divider between them, so the spacing is even. */
+.lz-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 0; padding: 0; height: 38px; align-items: center; background: var(--accent); color: var(--accent-ink); }
+.lz-summary > div { padding: 0 16px; height: 100%; align-items: center; }
+.lz-summary > div + div { border-left: 1px solid color-mix(in srgb, var(--accent-ink) 30%, transparent); }
 .lz-summary div { display: flex; gap: 6px; min-width: 0; white-space: nowrap; }
 .lz-summary dt { font-weight: 700; flex: none; }
 .lz-summary dt::after { content: ":"; }
@@ -105,8 +108,6 @@
 
 .lz-flow { line-height: 1.6; }
 .lz-phrase { font-weight: 650; quotes: "“" "”"; }
-.lz-cues { display: grid; gap: 2px; padding-left: 10px !important; border-left: 3px solid var(--ink); font-size: 12.5px; color: var(--muted); }
-.lz-cues b { color: var(--ink); font-weight: 650; }
 .lz-why { color: var(--muted); }
 
 /* Try it: say or type the phrase and check it */
@@ -115,6 +116,11 @@
 .lz-try-form { flex: 1 1 220px; display: flex; gap: 6px; min-width: 0; }
 .lz-try-form .lz-input { flex: 1; min-width: 0; }
 .lz-try-live:empty, .lz-try-out:empty { display: none; }
+/* What the mic is hearing right now (Try it and Use voice): large, dark text in its own box so it's easy to follow */
+.lz-live { padding: 8px 12px; border: 1px solid var(--accent); border-left-width: 4px; background: var(--surface); font-size: 16px; line-height: 1.5; color: var(--ink); }
+.lz-live-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+.lz-live-done { font-weight: 600; }
+.lz-live-pending { color: var(--muted); }
 .lz-try-out { display: grid; gap: 4px; padding: 8px 10px; border: 1px dashed var(--line); background: var(--surface); }
 .lz-try-ok { color: var(--ok); font-weight: 700; }
 .lz-try-no { color: var(--rec); font-weight: 700; }
@@ -127,6 +133,37 @@
 .lz-flowlist > li::before { content: counter(lz-f); position: absolute; left: 0; top: 1px; width: 18px; height: 18px; display: grid; place-items: center; border: 1.5px solid var(--ink); font-size: 10.5px; font-weight: 700; }
 .lz-parts { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
 .lz-part { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--sunk); }
+button.lz-part { border: 1px solid var(--line); height: auto; min-height: 24px; color: var(--ink); cursor: pointer; }
+button.lz-part:hover { border-color: var(--ink-3); }
+
+/* Change an element / Refine with AI */
+/* The voice flow as a chain: step → step → step. The arrows are decoration only (screen readers hear a numbered list). */
+.lz-chain { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; line-height: 1.5; }
+.lz-chain > li + li::before { content: "→" / ""; margin-right: 6px; color: var(--muted); font-weight: 700; }
+.lz-eq svg [class*="mx-"] { cursor: pointer; }
+.lz-eq:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Practice: the mic on top, then "Say the equation" and "Change the equation" */
+.lz-voice { display: grid; gap: 6px; }
+.lz-voice-row { align-items: center; }
+.lz-mode { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.lz-sub { display: grid; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.lz-sub-h { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink); }
+.lz-edit { display: grid; gap: 6px; }
+/* The "Describe the change" form sits in a column, where the Practice row's flex-basis (220px) would become its height */
+.lz-edit > .lz-try-form { flex: none; align-items: center; }
+.lz-ai-on { align-items: center; justify-content: space-between; }
+.lz-ai-off { padding: 6px 10px; border: 1px dashed var(--line); }
+.lz-input:disabled { background: var(--sunk); color: var(--muted); cursor: not-allowed; }
+button.lz-part:disabled { opacity: .5; cursor: default; }
+.lz-ed-sel { padding: 2px 0 2px 10px; border-left: 3px solid var(--s1); line-height: 1.5; }
+.lz-ed-said { color: var(--muted); }
+.lz-ed-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.lz-ed-row kbd { font: 11px var(--font-mono); color: var(--muted); }
+.lz-ed-manual { display: grid; gap: 6px; }
+.lz-ed-tex { font: 12.5px/1.5 var(--font-mono); resize: vertical; }
+.lz-ed-note:empty, .lz-ed-live:empty { display: none; }
+.lz-ed-note { font-size: 13px; padding: 6px 10px; border-left: 3px solid var(--accent); background: var(--surface-2); }
+.lz-btn:disabled { opacity: .5; cursor: default; }
 
 /* ---------- Smaller or shorter screens: the page scrolls normally and sections stack ---------- */
 @media (max-width: 1100px), (max-height: 620px) {
@@ -142,6 +179,8 @@
   .lz-row2 > .lz-box { border-right: 0; border-bottom: 1px solid var(--line); }
   .lz-row2 > .lz-box:last-child { border-bottom: 0; }
   .lz-summary { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, 26px); height: auto; padding: 6px 14px; }
+  .lz-summary > div { padding: 0; }
+  .lz-summary > div + div { border-left: 0; }
   .lz-pager { width: 100%; margin-left: 0; }
   .lz-pager .lz-btn { flex: 1 1 0; }
 }
@@ -149,3 +188,21 @@
   .lz-cols { grid-template-columns: minmax(0, 1fr); }
   .lz-col { border-right: 0; border-bottom: 1px solid var(--line); }
 }
+
+/* ---------- Practice: Say it → result → Fix it ---------- */
+.lz-practice { display: grid; gap: 8px; }
+/* Say it sits on the same line as the "Or type it" box, at the same height */
+.lz-voice-btn { flex: none; display: flex; }
+.lz-say { height: 36px; padding: 0 16px; font-size: 14px; font-weight: 650; }
+.lz-try-row { align-items: center; }
+.lz-mode-on { color: var(--accent); font-weight: 650; }
+.lz-att { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--rec); background: var(--surface); }
+.lz-att-ok { border-left-color: var(--ok); }
+.lz-att-said q { font-weight: 600; }
+.lz-att-eq { overflow-x: auto; padding: 6px 4px; font-size: 18px; }
+.lz-att-eq mjx-container { margin: 0 !important; }
+.lz-att-eq svg [class*="mx-"] { cursor: pointer; }
+.lz-att-eq:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Buttons beside a text box (Check, Clear, Refine with AI) match the box's height */
+.lz-try-row .lz-btn, .lz-try-form .lz-btn { height: 36px; }
+.lz-try-form .lz-input { height: 36px; min-height: 36px; }
