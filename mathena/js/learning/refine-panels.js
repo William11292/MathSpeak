@@ -253,7 +253,7 @@ const LZ_REFINE = (() => {
       }
       case 'stop': stopVoice(); say('Mic muted.'); return;
       case 'save': setNote('“Save” works in the Math Workspace. Press “Open in Math Workspace”, then say “Save”.'); return;
-      case 'help': setNote('You’re on MathSpeak Help. ' + HINT); return;
+      case 'help': setNote('You’re on MathSpeak Tutorial. ' + HINT); return;
       case 'pgnext': case 'pgprev': setNote('“Next page” and “Previous page” work on the Export page.'); return;
       case 'export': case 'workspace':   // leaving this page: hand the command to the workspace's own handler
         stopVoice();

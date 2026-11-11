@@ -8,13 +8,13 @@ let micOffByUser = false;   // true after "Turn off the mic" or the button; stop
 let listening = false;  // true while words are being added to a box
 /* Hands-free entry points: the mic turns on with the page and waits in standby (commands only) for these */
 const ENTRY = [['create new', 'new'], ['create a new equation', 'new'], ['start new', 'new'], ['start a new equation', 'new'], ['new equation', 'new'], ['start new equation', 'new'],
-  ['start edit', 'edit'], ['start editing', 'edit'], ['edit equation', 'edit'], ['edit the equation', 'edit'],
+  ['edit', 'edit'], ['edit that', 'edit'], ['start edit', 'edit'], ['start editing', 'edit'], ['edit equation', 'edit'], ['edit the equation', 'edit'],
   ['go to export', 'export'], ['open export', 'export'], ['show export', 'export'], ['export', 'export'],
-  ['go to help', 'help'], ['open help', 'help'], ['mathspeak help', 'help'], ['math speak help', 'help'], ['help', 'help'],
+  ['go to help', 'help'], ['open help', 'help'], ['mathspeak help', 'help'], ['math speak help', 'help'], ['help', 'help'], ['go to tutorial', 'help'], ['open tutorial', 'help'], ['mathspeak tutorial', 'help'], ['math speak tutorial', 'help'], ['tutorial', 'help'],
   ['go to workspace', 'workspace'], ['open workspace', 'workspace'], ['math workspace', 'workspace'], ['go to math workspace', 'workspace'], ['workspace', 'workspace']];
 const NAV_CMDS = ['new', 'edit', 'export', 'help', 'workspace', 'start', 'stop', 'standby', 'pgnext', 'pgprev'];   // work on any page; everything else needs the Math Workspace
 const CMDS = [...ENTRY, ['next page', 'pgnext'], ['previous page', 'pgprev'], ['stop listening', 'standby'], ['stop dictating', 'standby'], ['turn off the mic', 'stop'], ['mic off', 'stop'], ['start listening', 'start'], ['resume', 'start'], ['select that', 'selthat'], ['navigate', 'selthat'],
-  ['refine with ai', 'ai'], ['refine with a i', 'ai'], ['refine with a.i.', 'ai'], ['refine manually', 'manual'], ['say a change', 'change'], ['make a change', 'change'],
+  ['refine with ai', 'ai'], ['refine with a i', 'ai'], ['refine with a.i.', 'ai'], ['toggle refine with ai', 'ai'], ['say a change', 'edit'], ['make a change', 'edit'],
   ['out a layer', 'out'], ['in a layer', 'in'], ['go out', 'out'], ['go in', 'in'], ['out', 'out'], ['in', 'in'],
   ['previous', 'left'], ['left', 'left'], ['back', 'left'], ['next', 'right'], ['right', 'right'],
   ['pause', 'pause'], ['done', 'done'], ['stop', 'done'], ['clear', 'clear'], ['delete', 'del'], ['delete that', 'del'], ['save', 'save'], ['save that', 'save'], ['save it', 'save']];
@@ -58,7 +58,7 @@ function startRec() {
   try { rec.start(); micOn = true; micBlocked = false; micOpen(); return true; } catch (e) { setStatus('Couldn\'t start the mic: ' + e.message, 'err'); return false; }
 }
 function stopRec() { micOn = false; micOffByUser = true; try { rec && rec.stop(); } catch (e) {} micClose(); setMode('off'); }
-const HANDS_FREE = 'Say “Create new” to dictate an equation, “Start edit” to change the current one, or “Go to export” or “Help”.';
+const HANDS_FREE = 'Say “Create new” to dictate an equation, “Edit” to change the current one, or “Go to export” or “Tutorial”.';
 /* Called on page load: turn the mic on in standby so nobody has to find a button first */
 function autoListen() {
   if (!SR) return;
@@ -81,6 +81,7 @@ const toStandby = () => { base = ''; setMode(micOn ? 'standby' : 'off'); };
 function handleFinal(t) {
   if (page() === 'organize' && orgHandle(t)) return;
   if (page() === 'export' && !listening && exportHandle(t)) return;
+  if (aiChoices && !listening && page() === 'workspace') { const k = choiceNum(norm(t)); if (k) { chooseOption(k); return; } }   // picking one of the 3 Refine with AI choices
   const { text, cmd } = parseChunk(t);
   if (text.trim()) {
     if (listening) addWords(text);
@@ -91,17 +92,8 @@ function handleFinal(t) {
 function setMode(m) {
   vMode = m; listening = m in DICT;
   Object.entries(DICT).forEach(([k, box]) => box().classList.toggle('target', m === k));
-  const M = { off: 'Mic off', standby: 'Ready · commands only', equation: 'Listening · equation', change: 'Listening · change', paused: 'Paused · commands only', adder: 'Listening · new block', title: 'Listening · title' };
+  const M = { off: 'Mic off', standby: 'Ready · commands only', equation: 'Listening · equation', change: 'Listening · edit', paused: 'Paused · commands only', adder: 'Listening · new block', title: 'Listening · title' };
   $('vModeText').textContent = M[m]; renderMic(); $('vMode').className = 'mode' + (listening ? ' live' : m === 'paused' || m === 'standby' ? ' paused' : '');
-  updateBar();
-}
-const manualOpen = () => !latexEl.hidden;
-function setManual(on) {
-  latexEl.hidden = !on; latexView.hidden = on;
-  $('vManual').textContent = on ? '“Done editing”' : '“Refine manually”'; $('vManual').setAttribute('aria-pressed', String(on));
-  if (on && listening) { lastTarget = vMode; setMode('paused'); }   // don't dictate into the input while the LaTeX is being edited by hand
-  if (on) { latexEl.value = current.latex; latexEl.focus(); setStatus('Editing the LaTeX by hand. Say or press “Done” when finished.'); }
-  else { latexView.focus({ preventScroll: true }); }
   updateBar();
 }
 function updateBar() {
@@ -110,10 +102,10 @@ function updateBar() {
   $('vStartText').textContent = listening ? '“Stop listening”' : vMode === 'paused' ? '“Resume”' : vMode === 'standby' ? '“Create new”' : '“Create new”';
   $('vStart').classList.toggle('on', listening); $('vStart').setAttribute('aria-pressed', String(micOn));
   B('pause').disabled = !listening;
-  B('done').disabled = vBusy || !(manualOpen() || box.value.trim() || (vMode === 'change' && has));
+  B('done').disabled = vBusy || !(box.value.trim() || (vMode === 'change' && has));
   B('clear').disabled = !box.value.trim();
   B('selthat').disabled = !has; B('del').disabled = !has;
-  B('change').disabled = !has; B('save').disabled = vBusy || !current.latex.trim() || savedLatex === current.latex; $('vSave').textContent = current.latex.trim() && savedLatex === current.latex ? '✓ Saved' : '“Save”'; B('ai').disabled = vBusy || !has; B('manual').disabled = !current.latex.trim() && !manualOpen();
+  B('change').disabled = !has; B('save').disabled = vBusy || !current.latex.trim() || savedLatex === current.latex; $('vSave').textContent = current.latex.trim() && savedLatex === current.latex ? '✓ Saved' : '“Save”'; B('ai').disabled = vBusy; B('ai').setAttribute('aria-pressed', String(aiRefine)); $('vAIState').textContent = aiRefine ? 'On' : 'Off';
 }
 function runCmd(c, byVoice) {
   if (byVoice && !NAV_CMDS.includes(c) && page() !== 'workspace') {
@@ -122,7 +114,7 @@ function runCmd(c, byVoice) {
   switch (c) {
     case 'new':
       if (page() !== 'workspace') go('workspace');
-      if (manualOpen()) setManual(false);
+      clearChoices();
       if (!startRec()) return; micOffByUser = false;
       base = ''; spoken.value = ''; current.source = 'voice'; lastTarget = 'equation'; setMode('equation');
       setStatus('Listening for a new equation. Say “Done” when finished.'); $('announce').textContent = 'Listening for a new equation.'; return;
@@ -131,14 +123,14 @@ function runCmd(c, byVoice) {
       if (!L || !current.latex.trim()) { setStatus('There\'s no equation to edit yet. Say “Create new” first.', 'err'); return; }
       if (!startRec()) return; micOffByUser = false;
       if (sel == null) sel = L.root.id;
-      highlight();
+      highlight(); clearChoices();
       const sc = scopeInfo(), said = Layers.plainText(L.speak(L.byId.get(sel)));
       base = ''; wsInput.value = ''; lastTarget = 'change'; setMode('change');
-      setStatus('Editing ' + sc.name + ': “' + said + '”. Say the change, then “Refine with AI”. Or move first with “Out a layer”, “In a layer”, “Previous”, “Next”.');
+      setStatus('Editing ' + sc.name + ': “' + said + '”. ' + (aiRefine ? 'Describe the change, then “Done” for 3 choices.' : 'Say what replaces it, then “Done”.') + ' Or move first with “Out a layer”, “In a layer”, “Previous”, “Next”.');
       $('announce').textContent = 'Editing ' + sc.name + ': ' + said; return;
     }
     case 'export': if (vMode !== 'off' && listening) toStandby(); go('export', true); setStatus('Export opened. ' + exportSummary() + ' Say “Go to workspace” to go back.'); $('announce').textContent = 'Export opened. ' + exportSummary(); return;
-    case 'help': if (vMode !== 'off' && listening) toStandby(); go('help', true); setStatus('MathSpeak Help opened. Say “Go to workspace” to go back.'); $('announce').textContent = 'MathSpeak Help opened.'; return;
+    case 'help': if (vMode !== 'off' && listening) toStandby(); go('help', true); setStatus('MathSpeak Tutorial opened. Say “Go to workspace” to go back.'); $('announce').textContent = 'MathSpeak Tutorial opened.'; return;
     case 'workspace': go('workspace', true); setStatus('Math Workspace opened. ' + HANDS_FREE); $('announce').textContent = 'Math Workspace opened.'; return;
     case 'pgnext': case 'pgprev':
       if (page() !== 'export') { setStatus('“Next page” and “Previous page” work on the Export page. Say “Go to export”.', 'err'); return; }
@@ -158,10 +150,9 @@ function runCmd(c, byVoice) {
       if (!listening) return; lastTarget = vMode; setMode('paused');
       setStatus('Paused. Words are no longer added. Say “Resume”, a command, or “Done”.'); return;
     case 'done':
-      if (manualOpen()) { setManual(false); setStatus('LaTeX updated.', 'ok'); return; }
       { const wasChange = vMode === 'change' || (vMode === 'paused' && lastTarget === 'change');
         toStandby();
-        if (wasChange) refineAI(); else convert(); }
+        if (wasChange) applyEdit(); else convert(); }
       return;
     case 'clear': { const box = targetBox(); box.value = ''; base = ''; setStatus('Cleared.'); updateBar(); return; }
     case 'selthat': selectThat(); return;
@@ -170,14 +161,13 @@ function runCmd(c, byVoice) {
     case 'in': move('ArrowDown'); return;
     case 'left': move('ArrowLeft'); return;
     case 'right': move('ArrowRight'); return;
-    case 'change':
+    case 'change':   // the “Edit” button
       if (!L) return;
-      if (byVoice || micOn) { if (!startRec()) return; micOffByUser = false; base = ''; wsInput.value = ''; lastTarget = 'change'; setMode('change');
-        setStatus('Say the change for ' + scopeInfo().name + '. Then say “Refine with AI” or “Done”.'); }
-      else { wsInput.focus(); setStatus('Type the change for ' + scopeInfo().name + ', then press “Refine with AI”.'); }
+      if (byVoice || micOn) { runCmd('edit', byVoice); return; }
+      clearChoices(); wsInput.focus();
+      setStatus('Type ' + (aiRefine ? 'the change for ' : 'what replaces ') + scopeInfo().name + ', then press Enter.' + (aiRefine ? ' You\'ll get 3 choices.' : ''));
       return;
-    case 'ai': if (listening) toStandby(); refineAI(); return;
-    case 'manual': setManual(!manualOpen()); return;
+    case 'ai': toggleRefineAI(); return;
     case 'save': if (listening) toStandby(); saveEquation(); return;
   }
 }

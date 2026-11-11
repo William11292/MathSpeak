@@ -256,7 +256,7 @@ const LZ = (() => {
     setLatex(next);
     try { if (typeof chatNewEquation === 'function') chatNewEquation(); } catch (err) {}
     go('workspace', true);
-    try { setStatus('Opened “' + e.title + '” from MathSpeak Help. Say “Save” to keep it.', 'ok'); } catch (err) {}
+    try { setStatus('Opened “' + e.title + '” from MathSpeak Tutorial. Say “Save” to keep it.', 'ok'); } catch (err) {}
   }
 
   /* ---------- Start-up ---------- */

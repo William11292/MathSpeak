@@ -97,7 +97,7 @@ function renderChat() {
   msgsEl.scrollTop = msgsEl.scrollHeight;
 }
 
-$('wsForm').addEventListener('submit', (e) => { e.preventDefault(); refineAI(); });
-wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); refineAI(); } });
+$('wsForm').addEventListener('submit', (e) => { e.preventDefault(); applyEdit(); });
+wsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); applyEdit(); } });
 $('wsScope').onclick = () => { if (L) select(L.root.id); };
 document.querySelectorAll('.cmdbar [data-mv]').forEach((b) => b.onclick = () => move(b.dataset.mv));

@@ -31,6 +31,14 @@
 .scope-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .scope-btn { font-weight: 500; display: inline-flex; gap: 8px; align-items: center; padding: 3px 10px; font-size: 12.5px; border-radius: 999px; border-width: 1px; }
 textarea#wsInput { min-height: 52px; font-size: 0.95rem; }
+/* Refine with AI: the 3 choices, shown under "Editing" */
+.choices { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.choices button { width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; text-align: left; padding: 6px 10px; }
+.choices .num { grid-row: span 2; font-weight: 700; font-size: 1rem; }
+.choices .eqv { overflow-x: auto; }
+.choices .said { font-size: 12px; color: var(--muted); }
+.cbtns button.toggle[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.cbtns button.toggle .tg { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
 
 .ws-right { display: grid; grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0; }
 .outs { overflow-y: auto; display: flex; flex-direction: column; min-height: 0; border-bottom: 0; }

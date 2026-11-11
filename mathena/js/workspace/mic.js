@@ -55,9 +55,9 @@ function renderMic() {
   const S = !SR ? ['Voice unavailable', 'Use Chrome or Edge for voice. Typing still works.']
     : micBlocked ? ['Mic blocked', 'Allow the microphone in the address bar, then press unmute.']
     : muted ? ['Muted', 'Not listening. Press to unmute.']
-    : ({ standby: ['Listening for commands', 'Say “Create new”, “Start edit”, “Go to export” or “Help”.'],
+    : ({ standby: ['Listening for commands', 'Say “Create new”, “Edit”, “Go to export” or “Tutorial”.'],
          equation: ['Dictating equation', 'Say “Done” when finished.'],
-         change: ['Dictating a change', 'Say “Refine with AI” or “Done”.'],
+         change: ['Dictating an edit', 'Say “Done” to apply it.'],
          paused: ['Paused', 'Say “Resume” or a command.'],
          adder: ['Dictating a block', 'Say “Done” to add it, or “Cancel”.'],
          title: ['Dictating the title', 'Say “Done” when finished.'] })[vMode] || ['Listening', ''];

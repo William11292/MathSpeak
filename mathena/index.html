@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Speak Math</title>
+<title>Mathena</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -23,13 +23,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js"></script>
 
 <div class="app">
-  <aside class="side" id="sidebar" aria-label="Speak Math">
-    <div class="brand"><span class="logo" aria-hidden="true">SM</span><b>Speak Math</b></div>
+  <aside class="side" id="sidebar" aria-label="Mathena">
+    <div class="brand"><span class="logo" aria-hidden="true">M</span><b>Mathena</b></div>
     <div class="side-sec">
       <p class="eyebrow">Workspace</p>
       <nav class="nav" aria-label="Sections">
         <button type="button" data-page="workspace" aria-current="page"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/></svg>Math Workspace</button>
-        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Help</button>
+        <button type="button" data-page="help"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></svg>MathSpeak Tutorial</button>
         <button type="button" data-page="export"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>Export<span class="badge" id="logCount" aria-label="0 saved equations">0</span></button>
         <button type="button" data-page="developer"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16"/></svg>Developer</button>
       </nav>
@@ -96,7 +96,8 @@
                   <button type="button" class="scope-btn" id="wsScope"><span class="sw" id="wsScopeSw"></span><span id="wsScopeText">Whole equation</span></button>
                 </div>
                 <label class="sr" for="wsInput">Edit request</label>
-                <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say “Say a change”, then the change, like “make the exponent 3”. Then “Refine with AI”."></textarea>
+                <ol class="choices" id="wsChoices" aria-label="Refine with AI choices" hidden></ol>
+                <textarea id="wsInput" rows="2" spellcheck="false" placeholder="Say “Edit”, then say what replaces the selected part. Then “Done”."></textarea>
               </form>
             </section>
           </div>
@@ -143,11 +144,10 @@
                 </div>
               </div>
               <div class="cg" role="group" aria-labelledby="cg-ref">
-                <h3 class="label" id="cg-ref">Refine</h3>
+                <h3 class="label" id="cg-ref">Edit</h3>
                 <div class="cbtns">
-                  <button type="button" data-cmd="change">“Say a change”</button>
-                  <button type="button" data-cmd="ai">“Refine with AI”</button>
-                  <button type="button" data-cmd="manual" id="vManual">“Refine manually”</button>
+                  <button type="button" data-cmd="change">“Edit”</button>
+                  <button type="button" data-cmd="ai" id="vAI" class="toggle" aria-pressed="false">“Refine with AI” <span class="tg" id="vAIState">Off</span></button>
                 </div>
               </div>
               <div class="cg" role="group" aria-labelledby="cg-save">
@@ -165,7 +165,7 @@
            The page id stays "page-help" so the existing #help link and sidebar button keep working. -->
       <section class="page lz" id="page-help" hidden aria-labelledby="lz-title">
         <div class="lz-head">
-          <h2 id="lz-title" class="sr">MathSpeak Help</h2>
+          <h2 id="lz-title" class="sr">MathSpeak Tutorial</h2>
           <dl class="lz-summary" id="lz-summary" aria-label="Current selection"></dl>
         </div>
         <div class="lz-grid">
@@ -214,16 +214,15 @@
             <div class="pnl-h"><h3 id="voice-title" class="label">Voice commands</h3><span class="hint">The mic turns on when the page opens and waits for a command. Say each command on its own, with a short pause before it</span></div>
             <ul class="say-list">
               <li><b>“Create new”</b><span>Dictate a new equation (also “Start new”)</span></li>
-              <li><b>“Start edit”</b><span>Read back the selected part of the current equation and say a change to it</span></li>
-              <li><b>“Go to export”, “Help”, “Go to workspace”</b><span>Switch pages; works from any page</span></li>
+              <li><b>“Edit”</b><span>Read back the selected part of the current equation and say a change to it (also “Start edit”)</span></li>
+              <li><b>“Go to export”, “Tutorial”, “Go to workspace”</b><span>Switch pages; works from any page</span></li>
               <li><b>“Pause”</b><span>Stop adding words; the mic keeps listening for commands</span></li>
               <li><b>“Done”</b><span>Convert what you said (or apply the change you said)</span></li>
               <li><b>“Clear”</b><span>Empty the box you are dictating into</span></li>
               <li><b>“Navigate”</b><span>Read back the selected layer and edit only that part</span></li>
               <li><b>“Out a layer”, “In a layer”, “Previous”, “Next”</b><span>Move around the equation</span></li>
               <li><b>“Delete”</b><span>Remove the selected layer</span></li>
-              <li><b>“Say a change”, then “Refine with AI”</b><span>Describe an edit to the selected layer and let Claude apply it</span></li>
-              <li><b>“Refine manually”</b><span>Open the LaTeX to edit it by hand</span></li>
+              <li><b>“Refine with AI”</b><span>Turn AI on or off for “Edit”. Off: say what replaces the selected layer. On: describe the change and pick one of 3 choices by number</span></li>
               <li><b>“Save”</b><span>Add the current equation to the Export list</span></li>
               <li><b>“Stop listening”</b><span>Stop dictating; the mic stays on for commands</span></li>
               <li><b>“Turn off the mic”</b><span>Mute: the mic closes completely. Unmute with the mic button at the bottom of the sidebar, or <kbd>Alt</kbd>+<kbd>M</kbd></span></li>

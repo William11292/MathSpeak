@@ -165,7 +165,7 @@ document.querySelectorAll('#orgBar [data-ocmd]').forEach((b) => b.onclick = () =
 document.querySelectorAll('#orgBar [data-ofmt]').forEach((b) => b.onclick = () => setFormat(b.dataset.ofmt));
 $('doExport').onclick = async () => {
   if (!blocks.length) return;
-  const title = $('docTitle').value.trim() || 'Speak Math';
+  const title = $('docTitle').value.trim() || 'Mathena';
   const base = title.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'speak-math';
   if (fmt === 'pdf') { const blob = await buildPdf(title); if (blob && await saveFile(base + '.pdf', blob, true)) setStatus('Downloaded ' + base + '.pdf.', 'ok'); return; }   // straight to the downloads folder, no print dialog
   if (fmt === 'docx') { const blob = await buildDocx(title); if (blob && await saveFile(base + '.docx', blob, true)) setStatus('Downloaded ' + base + '.docx.', 'ok'); return; }
