@@ -1,0 +1,46 @@
+/* Mathena: first-time tour (js/tour.js). The page is darkened and one part is spotlighted with a card beside it.
+   Uses the app's own tokens, so it follows light and dark mode. */
+.tour { position: fixed; inset: 0; z-index: 1000; }
+/* Catches clicks so the app behind can't be used while the tour is open */
+.tour-block { position: absolute; inset: 0; }
+.tour.tour-dim .tour-block { background: rgba(8, 8, 8, .72); }
+/* The spotlight: a clear box whose huge shadow darkens everything around it */
+.tour-hole { position: absolute; border-radius: 4px; box-shadow: 0 0 0 200vmax rgba(8, 8, 8, .72); outline: 2px solid var(--accent-ink); outline-offset: 0;
+  pointer-events: none; transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease; }
+:root[data-theme="dark"] .tour-hole { outline-color: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tour-hole { outline-color: var(--ink); } }
+
+.tour-card { position: absolute; width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;
+  background: var(--surface); color: var(--ink); border: 1.5px solid var(--line-strong); border-radius: 4px; box-shadow: var(--shadow);
+  padding: 22px 22px 18px; transition: left .25s ease, top .25s ease; }
+.tour-card:focus { outline: none; }
+.tour-card.tour-center { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); }
+.tour-card.tour-welcome { width: min(520px, calc(100vw - 32px)); padding: 30px 30px 22px; }
+
+.tour-x { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-color: transparent; background: transparent; }
+.tour-x:hover { border-color: var(--line); }
+.tour-logo { display: block; width: 46px; height: 56px; object-fit: contain; background: #fff; border-radius: 6px; padding: 4px; box-sizing: content-box; margin-bottom: 16px; }
+.tour-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+.tour-title { font-size: 19px; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; margin: 0 36px 8px 0; }
+.tour-welcome .tour-title { font-size: 28px; line-height: 1.15; margin-bottom: 12px; }
+.tour-text { font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+.tour-welcome .tour-text { font-size: 15.5px; }
+
+.tour-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; }
+.tour-chips li { font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); }
+
+.tour-foot { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+.tour-count { font-size: 12.5px; color: var(--muted); margin-right: auto; }
+.tour-btn { height: 38px; padding: 0 16px; display: inline-flex; align-items: center; gap: 6px; }
+.tour-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tour-primary:hover { opacity: .88; }
+.tour-ghost { border-color: var(--line); }
+.tour-ghost:hover { border-color: var(--ink-3); }
+
+/* The "? Tour" button at the right end of the top bar: plays the tour again */
+.tour-open { flex: none; height: 36px; padding: 0 12px 0 8px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); font-size: 13px; }
+.tour-open:hover { border-color: var(--ink); }
+.tour-q { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 12px; font-weight: 700; line-height: 1; }
+
+@media (prefers-reduced-motion: reduce) { .tour-hole, .tour-card { transition: none; } }
+@media (max-width: 520px) { .tour-welcome .tour-title { font-size: 23px; } .tour-card.tour-welcome { padding: 24px 20px 18px; } }

@@ -47,7 +47,8 @@ body.side-off { --side-w: 0px; }
 body.side-off .side { display: none; }
 body.side-off .app { grid-template-columns: minmax(0, 1fr); }   /* one column when hidden, so the main area keeps full width instead of landing in the 0px sidebar column */
 .brand { height: var(--top-h); display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); flex: none; }
-.logo { width: 30px; height: 30px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+/* The owl logo: its image has a white background, so it sits on a small white tile (also in dark mode) */
+.logo { width: 33px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px; box-sizing: content-box; flex: none; }
 .brand b { font-size: 17px; letter-spacing: -.01em; }
 .side-sec { padding: 22px 10px 0; }
 .side-sec .eyebrow { padding: 0 10px 10px; }
