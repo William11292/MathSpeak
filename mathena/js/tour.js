@@ -1,6 +1,6 @@
 // Mathena. Classic script: shares top-level names with the other js/ files. Load order is set in index.html.
 // First-time tour: darkens the app and spotlights one part at a time, with a card beside it (Back / Next / Skip).
-// Shows once (remembered in this browser); the "? Tour" button in the top bar plays it again.
+// Shows once (remembered in this browser); the "? Tour" button at the top of the sidebar plays it again.
 // It only points at things: it doesn't change the mic, voice commands or any equation. Styles: css/tour.css.
 
 const TOUR = (() => {
@@ -34,7 +34,7 @@ const TOUR = (() => {
     { page: 'export', el: () => q('#page-export .pnl') || q('#page-export'), title: 'Export your work',
       text: 'Choose saved equations, then “Organize” to add a title, headings and text, and download a Word or PDF file with equations a screen reader can read.' },
     { page: 'workspace', welcome: true, title: 'You’re ready.',
-      text: 'Say “Create new” to write your first equation. To see this tour again, press “Tour” in the top right corner.' },
+      text: 'Say “Create new” to write your first equation. To see this tour again, press “Tour” at the top of the sidebar.' },
   ];
 
   let i = 0, root = null, hole = null, card = null, before = null, startPage = null, raf = 0;

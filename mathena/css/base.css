@@ -50,6 +50,10 @@ body.side-off .app { grid-template-columns: minmax(0, 1fr); }   /* one column wh
 /* The owl logo: its image has a white background, so it sits on a small white tile (also in dark mode) */
 .logo { width: 33px; height: 40px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px; box-sizing: content-box; flex: none; }
 .brand b { font-size: 17px; letter-spacing: -.01em; }
+/* The logo and name sit at the right end of the top bar, so they stay visible when the sidebar is hidden */
+.top-brand { display: flex; align-items: center; gap: 10px; flex: none; }
+.top-brand b { font-size: 17px; letter-spacing: -.01em; white-space: nowrap; }
+@media (max-width: 420px) { .top-brand b { display: none; } }   /* very narrow screens: just the owl, so the page title still fits */
 .side-sec { padding: 22px 10px 0; }
 .side-sec .eyebrow { padding: 0 10px 10px; }
 .nav { display: flex; flex-direction: column; gap: 4px; }

@@ -37,7 +37,7 @@
 .tour-ghost { border-color: var(--line); }
 .tour-ghost:hover { border-color: var(--ink-3); }
 
-/* The "? Tour" button at the right end of the top bar: plays the tour again */
+/* The "? Tour" button in the sidebar's top corner: plays the tour again */
 .tour-open { flex: none; height: 36px; padding: 0 12px 0 8px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); font-size: 13px; }
 .tour-open:hover { border-color: var(--ink); }
 .tour-q { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 12px; font-weight: 700; line-height: 1; }

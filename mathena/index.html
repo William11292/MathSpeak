@@ -26,7 +26,7 @@
 
 <div class="app">
   <aside class="side" id="sidebar" aria-label="Mathena">
-    <div class="brand"><span class="logo-tile"><img class="logo" src="img/logo.png" alt="" width="33" height="40"></span><b>Mathena</b></div>
+    <div class="brand"><button type="button" class="tour-open" id="tourBtn" onclick="TOUR.start()" aria-label="Take the tour"><span class="tour-q" aria-hidden="true">?</span>Tour</button></div>
     <div class="side-sec">
       <p class="eyebrow">Workspace</p>
       <nav class="nav" aria-label="Sections">
@@ -76,7 +76,7 @@
       <button type="button" class="ib" id="sideBtn" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar"></button>
       <h1 id="pageTitle" tabindex="-1">Math Workspace</h1>
       <div class="status" id="status" role="status" aria-live="polite"></div>
-      <button type="button" class="tour-open" id="tourBtn" onclick="TOUR.start()" aria-label="Take the tour"><span class="tour-q" aria-hidden="true">?</span>Tour</button>
+      <div class="top-brand"><span class="logo-tile"><img class="logo" src="img/logo.png" alt="" width="33" height="40"></span><b>Mathena</b></div>
     </header>
 
     <main class="view">

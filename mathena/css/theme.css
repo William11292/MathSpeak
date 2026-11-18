@@ -48,8 +48,8 @@ body {
 .brand { border-bottom-color: var(--line); }
 /* Logo: a dark-theme version (img/logo-dark.png) with a transparent background: the owl in mist, its shading in sage,
    the face and speech bubble in charcoal. The original img/logo.png is unchanged and comes back without this theme. */
-/* "Mathena" in the sidebar: Kdam Thmor Pro, a little larger than the page title (18px). The font has one weight, so no faux bold. */
-.brand b { font-family: "Kdam Thmor Pro", var(--font-body); font-weight: 400; font-size: 22px; letter-spacing: .01em; line-height: 1; color: var(--ink); }
+/* "Mathena" at the right end of the top bar: Kdam Thmor Pro, a little larger than the page title (18px). The font has one weight, so no faux bold. */
+.top-brand b { font-family: "Kdam Thmor Pro", var(--font-body); font-weight: 400; font-size: 22px; letter-spacing: .01em; line-height: 1; color: var(--ink); }
 .logo-tile { display: inline-grid; place-items: center; flex: none; }
 .logo, .tour-logo { content: url("../img/logo-dark.png"); background: transparent; padding: 0; border-radius: 0; box-shadow: none; }
 .tour-logo { margin: 0; }
@@ -74,6 +74,11 @@ body {
 .pnl { background: linear-gradient(180deg, rgba(32, 39, 37, .66), rgba(24, 30, 28, .58)); border-color: var(--line); border-radius: var(--radius);
   box-shadow: 0 1px 0 rgba(196, 216, 201, .04) inset, 0 8px 28px rgba(0, 0, 0, .22); }
 .pnl-h { border-bottom-color: var(--line); }
+/* Rounded panels: a band inside that touches the top or bottom edge (and has its own background) follows the panel's
+   rounded corners, so no square corners show on top of them */
+.pnl > :first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+.pnl > :last-child { border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; }
+.chat-pnl .composer { background: transparent; }   /* the edit box fills its whole panel: let the panel show through */
 .stage { background: rgba(9, 12, 11, .45); border: 1px solid var(--line); border-radius: var(--radius-sm); }
 .pathbar { background: rgba(14, 19, 17, .55); border-top: 1px solid var(--line-strong); }
 .cmdbar { border-top: 1px solid var(--line-strong); }
