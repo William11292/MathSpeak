@@ -1,7 +1,8 @@
 /* Organize & Export */
-.org-head { display: flex; align-items: center; gap: 18px; margin-bottom: 12px; max-width: 1240px; }
+/* Full width, like the Math Workspace and Export pages (it used to stop at 1240px, leaving blank space on wide screens) */
+.org-head { display: flex; align-items: center; gap: 18px; margin-bottom: 12px; }
 .org-head .ghost { margin-top: 4px; }
-.org-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); gap: 18px; align-items: start; max-width: 1240px; }
+.org-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); gap: 18px; align-items: start; }
 .org-h3 { font-size: 15px; font-weight: 600; }
 .adder { display: grid; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .blocks { list-style: none; margin: 0; padding: 12px; display: grid; gap: 8px; background: var(--surface-2); }
@@ -57,6 +58,6 @@ button.wide { width: 100%; padding: 12px; font-size: 14px; }
 .paper .pe.nonum .pl { grid-column: 1; }
 .switch.off { opacity: .45; cursor: not-allowed; }
 /* Command bar, pinned to the bottom of the screen like the Math Workspace's */
-.org-bar { position: sticky; bottom: 0; z-index: 5; margin-top: 16px; max-width: 1240px; border-top-width: 1.5px; border-top-color: var(--line-strong); box-shadow: 0 -6px 16px rgba(0, 0, 0, .12); }
+.org-bar { position: sticky; bottom: 0; z-index: 5; margin-top: 16px; border-top-width: 1.5px; border-top-color: var(--line-strong); box-shadow: 0 -6px 16px rgba(0, 0, 0, .12); }
 .org-cur { color: var(--ink); border-color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 11px; }
 .org-bar [role="radio"][aria-checked="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
