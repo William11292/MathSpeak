@@ -72,7 +72,7 @@ const TOUR = (() => {
     card.innerHTML =
       '<button type="button" class="tour-x" data-t="skip" aria-label="Close the tour">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      (s.welcome ? '<img class="tour-logo" src="img/logo.png" alt="" width="46" height="56">' : '') +
+      (s.welcome ? '<span class="logo-tile tour-logo-tile"><img class="tour-logo" src="img/logo.png" alt="" width="46" height="56"></span>' : '') +
       (i === 0 ? '<p class="tour-eyebrow">Welcome to Mathena</p>' : '') +
       '<h2 class="tour-title" id="tour-title">' + h(s.title) + '</h2>' +
       '<p class="tour-text" id="tour-text">' + h(s.text) + '</p>' +
